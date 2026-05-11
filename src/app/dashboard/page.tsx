@@ -18,7 +18,8 @@ import {
   CheckCircle2, 
   Info,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  WifiOff
 } from "lucide-react"
 import { generatePreparednessInsights, type GeneratePreparednessInsightsOutput } from "@/ai/flows/generate-preparedness-insights"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -39,7 +40,19 @@ export default function Dashboard() {
   const [insights, setInsights] = useState<GeneratePreparednessInsightsOutput | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState(true);
   const [activeTopic, setActiveTopic] = useState("General");
+  const [isOnline, setIsOnline] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const handleStatus = () => setIsOnline(navigator.onLine);
+    window.addEventListener('online', handleStatus);
+    window.addEventListener('offline', handleStatus);
+    return () => {
+      window.removeEventListener('online', handleStatus);
+      window.removeEventListener('offline', handleStatus);
+    }
+  }, []);
 
   useEffect(() => {
     const cached = localStorage.getItem(`${INSIGHTS_CACHE_KEY}_${activeTopic}`);
@@ -111,9 +124,21 @@ export default function Dashboard() {
               <Activity className="h-4 w-4 text-primary" />
               <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Critical Status</h2>
             </div>
-            <p className="text-[8px] font-black uppercase text-primary tracking-widest opacity-80">When Networks Fail, AXON-AI Responds.</p>
           </div>
+          
           <StatusCard />
+          
+          <div className={cn(
+            "p-3 rounded-xl border flex items-center justify-center gap-3 transition-all duration-500",
+            isOnline 
+              ? "bg-primary/5 border-primary/10 text-primary/60" 
+              : "bg-accent/10 border-accent/30 text-accent animate-pulse"
+          )}>
+            {!isOnline && <WifiOff className="h-4 w-4 shrink-0" />}
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-center">
+              When Networks Fail, AXON-AI Responds.
+            </p>
+          </div>
         </div>
 
         {/* AI Insights Engine Section */}
