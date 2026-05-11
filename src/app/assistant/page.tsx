@@ -1,16 +1,19 @@
+
 "use client"
 
 import { useState, useRef, useEffect } from "react"
 import { Navigation } from "@/components/Navigation"
 import { emergencyAssistantGuidance } from "@/ai/flows/emergency-assistant-guidance"
+import { textToSpeech } from "@/ai/flows/text-to-speech"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Send, Bot, User, Loader2, Info, HeartPulse, ShieldAlert, Zap, AlertTriangle, Trash2, Mic, MapPin, ExternalLink } from "lucide-react"
+import { Send, Bot, User, Loader2, Info, HeartPulse, ShieldAlert, Zap, AlertTriangle, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Logo } from "@/components/Logo"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ThemeToggle } from "@/components/ThemeToggle"
+import { toast } from "@/hooks/use-toast"
 
 interface SuggestedResource {
   name: string;
@@ -24,6 +27,7 @@ interface Message {
   content: string;
   category?: 'first-aid' | 'survival' | 'safety' | 'other';
   suggestedResources?: SuggestedResource[];
+  audioUrl?: string;
 }
 
 const CHAT_HISTORY_KEY = "axon_ai_chat_history";
@@ -33,7 +37,10 @@ export default function AssistantPage() {
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeakingId, setIsSpeakingId] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const cached = localStorage.getItem(CHAT_HISTORY_KEY);
@@ -73,6 +80,9 @@ export default function AssistantPage() {
     }];
     setMessages(initialMessage);
     localStorage.removeItem(CHAT_HISTORY_KEY);
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent | string) => {
@@ -104,6 +114,78 @@ export default function AssistantPage() {
     }
   };
 
+  const toggleSpeech = async (msgIndex: number, text: string) => {
+    if (isSpeakingId === msgIndex) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        setIsSpeakingId(null);
+      }
+      return;
+    }
+
+    const message = messages[msgIndex];
+    
+    try {
+      let audioUrl = message.audioUrl;
+      
+      if (!audioUrl) {
+        setIsLoading(true);
+        const ttsResponse = await textToSpeech(text);
+        audioUrl = ttsResponse.media;
+        
+        // Cache the audio URL in the message object
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[msgIndex] = { ...updated[msgIndex], audioUrl };
+          return updated;
+        });
+      }
+
+      if (audioRef.current) {
+        audioRef.current.src = audioUrl;
+        audioRef.current.play();
+        setIsSpeakingId(msgIndex);
+        audioRef.current.onended = () => setIsSpeakingId(null);
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Voice Protocol Error",
+        description: "Could not initialize text-to-speech engine."
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const startListening = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      toast({
+        variant: "destructive",
+        title: "Not Supported",
+        description: "Speech recognition is not supported in this browser."
+      });
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+    
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setQuery(transcript);
+    };
+
+    recognition.start();
+  };
+
   const quickActions = [
     { label: "Nearby Stores", icon: MapPin, query: "Show me nearby medical stores and pharmacies" },
     { label: "CPR Protocol", icon: HeartPulse, query: "Show me step-by-step CPR instructions" },
@@ -117,6 +199,7 @@ export default function AssistantPage() {
 
   return (
     <div className="flex flex-col h-screen bg-background">
+      <audio ref={audioRef} hidden />
       <header className="p-4 border-b flex items-center justify-between bg-card/80 backdrop-blur-md sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-3">
           <Logo className="h-9 w-9" />
@@ -162,12 +245,22 @@ export default function AssistantPage() {
                   {msg.role === 'user' ? <User className="h-5 w-5" /> : <Logo className="h-6 w-6" />}
                 </div>
                 <div className="flex flex-col gap-3">
-                  <div className={`p-4 rounded-2xl text-[14px] leading-relaxed whitespace-pre-line font-medium ${
+                  <div className={`p-4 rounded-2xl text-[14px] leading-relaxed whitespace-pre-line font-medium relative group ${
                     msg.role === 'user' 
                       ? 'bg-primary text-white rounded-tr-none shadow-xl' 
                       : 'bg-card border rounded-tl-none shadow-md'
                   }`}>
                     {msg.content}
+                    {msg.role === 'assistant' && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => toggleSpeech(i, msg.content)}
+                        className={`absolute -right-12 top-0 h-9 w-9 rounded-xl transition-all ${isSpeakingId === i ? 'bg-accent text-white scale-110' : 'text-muted-foreground hover:text-primary hover:bg-primary/5'}`}
+                      >
+                        <Volume2 className={`h-5 w-5 ${isSpeakingId === i ? 'animate-pulse' : ''}`} />
+                      </Button>
+                    )}
                   </div>
                   
                   {msg.role === 'assistant' && msg.suggestedResources && msg.suggestedResources.length > 0 && (
@@ -228,15 +321,20 @@ export default function AssistantPage() {
 
       <div className="p-4 bg-background/80 backdrop-blur-md border-t pb-20 md:pb-24">
         <div className="flex gap-3 max-w-screen-xl mx-auto items-center">
-          <Button variant="outline" size="icon" className="h-14 w-14 rounded-2xl border-primary/10 text-primary">
-            <Mic className="h-6 w-6" />
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={startListening}
+            className={`h-14 w-14 rounded-2xl border-primary/10 transition-all ${isListening ? 'bg-accent text-white border-accent scale-110 shadow-lg' : 'text-primary'}`}
+          >
+            {isListening ? <MicOff className="h-6 w-6 animate-pulse" /> : <Mic className="h-6 w-6" />}
           </Button>
           <form 
             onSubmit={handleSubmit} 
             className="flex-1 flex gap-2"
           >
             <Input 
-              placeholder="Describe situation..." 
+              placeholder={isListening ? "Listening..." : "Describe situation..."} 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               disabled={isLoading}
