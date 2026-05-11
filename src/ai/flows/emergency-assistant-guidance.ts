@@ -72,9 +72,9 @@ CORE PERSONALITY:
 
 RESPONSE PROTOCOL:
 1. Acknowledge the situation calmly.
-2. Explain the possible concern clearly.
-3. Provide immediate, safe, step-by-step actions.
-4. If the query is vague (e.g., "Help me", "I'm in trouble"), use the followUpQuestions field to suggest specific emergency types (e.g., "Medical Emergency", "Fire Safety", "Personal Safety").
+2. Provide immediate, safe, step-by-step actions.
+3. If the query is vague (e.g., "Help me", "I'm in trouble"), use the followUpQuestions field to suggest specific emergency types.
+4. IMPORTANT: Always place the recommendation to contact emergency services (911/112) at the very end of your response.
 
 User Situation: {{{query}}}`,
 });
@@ -104,7 +104,8 @@ const emergencyAssistantGuidanceFlow = ai.defineFlow(
 2. Check for consciousness and regular breathing.
 3. If there is severe bleeding, apply direct pressure with a clean cloth.
 4. Keep the person warm and still.
-5. Contact emergency services (911/112) immediately if the condition is life-threatening.`,
+
+Please prioritize your immediate safety. If you are in a life-threatening situation, contact emergency services (911/112) now.`,
           category: "medical",
           followUpQuestions: ["Bleeding Control", "Breathing Support", "Unconscious Person", "Chest Pain"]
         };
@@ -117,7 +118,9 @@ const emergencyAssistantGuidanceFlow = ai.defineFlow(
 1. Drop, Cover, and Hold On. Find a sturdy table or desk.
 2. Stay away from windows, glass, and heavy furniture.
 3. If outdoors, move to an open area away from buildings and power lines.
-4. Do not use elevators.`,
+4. Do not use elevators.
+
+If you are in danger, please contact professional emergency services (911/112) immediately.`,
           category: "disaster",
           followUpQuestions: ["Aftershock Guidance", "Safe Shelter", "Structural Safety"]
         };
@@ -132,14 +135,12 @@ const emergencyAssistantGuidanceFlow = ai.defineFlow(
       }
 
       return {
-        guidance: `Please prioritize your immediate safety. If you are in a life-threatening situation, contact emergency services (911/112) now.
-
-Safe steps to take:
+        guidance: `Safe steps to take:
 1. Assess your surroundings for immediate danger.
 2. Move to a secure location if possible.
 3. Keep your phone battery conserved and notify a trusted contact of your position.
 
-Describe the specific emergency for more detailed AXON-AI guidance.`,
+Please prioritize your immediate safety. If you are in a life-threatening situation, contact emergency services (911/112) now.`,
         category: "safety",
         followUpQuestions: ["Share Location", "Nearby Medical Aid", "Emergency Kit Steps"]
       };
