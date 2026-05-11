@@ -2,8 +2,8 @@
 /**
  * @fileOverview AXON-AI Advanced Emergency Intelligence Assistant.
  * 
- * Provides calm, contextual, and resilient assistance during critical situations.
- * Prioritizes user intent over system state.
+ * Provides diagnostic-style emergency assistance. 
+ * Inspired by platforms like Ada and Infermedica for structured emergency triage.
  */
 
 import {ai} from '@/ai/genkit';
@@ -19,22 +19,22 @@ const ResourceSchema = z.object({
 const EmergencyAssistantInputSchema = z.object({
   query: z
     .string()
-    .describe("The user's question or description of their emergency situation."),
+    .describe("The user's description of their situation or symptoms."),
 });
 export type EmergencyAssistantInput = z.infer<typeof EmergencyAssistantInputSchema>;
 
 const EmergencyAssistantOutputSchema = z.object({
-  guidance: z.string().describe('Immediate, relevant, and concise emergency guidance.'),
-  category: z.enum(['medical', 'disaster', 'safety', 'infrastructure', 'other']).describe('The classified category of the emergency.'),
-  suggestedResources: z.array(ResourceSchema).optional().describe('Nearby facilities relevant to the query.'),
-  followUpQuestions: z.array(z.string()).optional().describe('Suggested buttons to narrow down the emergency.'),
+  guidance: z.string().describe('Immediate, diagnostic-style emergency guidance.'),
+  category: z.enum(['medical', 'disaster', 'safety', 'infrastructure', 'other']).describe('Classified category.'),
+  suggestedResources: z.array(ResourceSchema).optional().describe('Nearby facilities.'),
+  followUpQuestions: z.array(z.string()).optional().describe('Diagnostic buttons to narrow down the situation.'),
 });
 export type EmergencyAssistantOutput = z.infer<typeof EmergencyAssistantOutputSchema>;
 
 const findEmergencyResources = ai.defineTool(
   {
     name: 'findEmergencyResources',
-    description: 'Finds nearby hospitals, medical stores, pharmacies, or evacuation centers.',
+    description: 'Finds nearby hospitals or emergency facilities.',
     inputSchema: z.object({
       resourceType: z.string().describe('Type of resource, e.g., "pharmacy", "hospital".'),
     }),
@@ -44,8 +44,7 @@ const findEmergencyResources = ai.defineTool(
     const resources = [
       { name: "Central Medical Emergency Hospital", type: "Hospital", address: "0.8km - Sector 4", googleMapsUrl: "https://www.google.com/maps/search/Central+Medical+Emergency+Hospital" },
       { name: "LifeCare 24/7 Pharmacy", type: "Medical Store", address: "0.3km - Main Street", googleMapsUrl: "https://www.google.com/maps/search/LifeCare+Pharmacy" },
-      { name: "City Red Cross Center", type: "Medical Support", address: "1.4km - North Block", googleMapsUrl: "https://www.google.com/maps/search/City+Red+Cross+Center" },
-      { name: "Community Health Hub", type: "Pharmacy", address: "0.6km - East Ave", googleMapsUrl: "https://www.google.com/maps/search/Community+Health+Hub" }
+      { name: "City Red Cross Center", type: "Medical Support", address: "1.4km - North Block", googleMapsUrl: "https://www.google.com/maps/search/City+Red+Cross+Center" }
     ];
     const type = input.resourceType.toLowerCase();
     return resources.filter(r => r.type.toLowerCase().includes(type) || type === 'medical' || type === 'emergency');
@@ -63,18 +62,16 @@ const emergencyAssistantPrompt = ai.definePrompt({
   tools: [findEmergencyResources],
   input: {schema: EmergencyAssistantInputSchema},
   output: {schema: EmergencyAssistantOutputSchema},
-  prompt: `You are AXON-AI, an expert emergency intelligence system. Your mission is to provide calm, contextual, and resilient assistance.
+  prompt: `You are AXON-AI, a high-fidelity Emergency Medical and Disaster Intelligence system.
 
-CORE PERSONALITY:
-- Be a calm emergency companion, an intelligent responder, and a trustworthy assistant.
-- Sound composed, reassuring, and dependable.
-- NEVER mention connectivity issues, cloud failures, or rate limits in your guidance.
+MISSION:
+Provide structured, diagnostic guidance. Act like an expert Emergency Medical Dispatcher (EMD).
 
-RESPONSE PROTOCOL:
-1. Acknowledge the situation calmly.
-2. Provide immediate, safe, step-by-step actions.
-3. If the query is vague (e.g., "Help me", "I'm in trouble"), use the followUpQuestions field to suggest specific emergency types to narrow down.
-4. IMPORTANT: Always place the recommendation to contact emergency services (911/112) at the very end of your response.
+INTERACTION PROTOCOL:
+1. DIAGNOSTIC TRIAGE: If the user's input is vague (e.g., "I'm hurt", "Help"), ask a critical diagnostic question.
+2. ACTIONABLE STEPS: Provide concise, numbered survival steps.
+3. NARROW DOWN: Use the followUpQuestions field to provide "Diagnostic Buttons" that represent specific symptoms or hazards (e.g., "Bleeding Control", "Severe Pain", "Structural Collapse").
+4. SAFETY WARNING: Always place the recommendation to contact emergency services (911/112) at the very end of your response.
 
 User Situation: {{{query}}}`,
 });
@@ -91,79 +88,80 @@ const emergencyAssistantGuidanceFlow = ai.defineFlow(
       if (!output) throw new Error('No output from AI');
       return output;
     } catch (error) {
-      // RESILIENT FALLBACK ENGINE
-      // Operates locally when API quota is exhausted or connectivity is limited.
+      // RESILIENT DIAGNOSTIC FALLBACK ENGINE
       const q = input.query.toLowerCase();
       
-      // Intent: Medical Emergency
-      if (q.includes('medical') || q.includes('hurt') || q.includes('injury') || q.includes('bleeding') || q.includes('pain') || q.includes('cpr') || q.includes('breathing')) {
+      // Intent: Bleeding
+      if (q.includes('bleed') || q.includes('blood') || q.includes('cut')) {
         return {
-          guidance: `I am providing immediate medical emergency guidance. Please follow these steps:
+          guidance: `I am providing immediate hemorrhage control guidance. Follow these steps:
 
-1. Assess for consciousness and regular breathing.
-2. If the victim is not breathing, begin chest-only CPR immediately (100-120 compressions per minute).
-3. For severe bleeding, apply direct, firm pressure with a clean cloth.
-4. Keep the person warm and avoid moving them unless they are in immediate danger.
+1. Apply direct, firm pressure to the wound with a clean cloth.
+2. Do not remove the cloth if it becomes soaked; add more layers on top.
+3. If pressure does not stop the bleeding on a limb, identify if a tourniquet is needed.
+4. Keep the injured person calm and lying down.
 
 Please prioritize your immediate safety. If you are in a life-threatening situation, contact emergency services (911/112) now.`,
           category: "medical",
-          followUpQuestions: ["Bleeding Control", "Breathing Problem", "Unconscious Person", "Chest Pain", "Burn Injury"]
+          followUpQuestions: ["Wound is Deep", "Bleeding Won't Stop", "Internal Pain", "Identify Nearest Hospital"]
         };
       }
 
-      // Intent: Seismic / Earthquake
-      if (q.includes('quake') || q.includes('shake') || q.includes('earthquake')) {
+      // Intent: Breathing / Airway
+      if (q.includes('breath') || q.includes('choke') || q.includes('suffocat')) {
         return {
-          guidance: `Seismic activity protocols engaged. Your immediate physical safety is the priority:
+          guidance: `I am providing emergency airway and breathing guidance. Follow these steps:
 
-1. Drop, Cover, and Hold On. Find a sturdy table or desk.
-2. Stay away from windows, glass, and heavy furniture.
-3. If you are outdoors, move to an open area away from buildings, power lines, and trees.
-4. Do not use elevators or run outside during shaking.
+1. Check for obstructions in the mouth or throat.
+2. If the person is choking and cannot cough, perform the Heimlich Maneuver (abdominal thrusts).
+3. If they are unconscious and not breathing, begin chest-only CPR immediately.
+4. Keep the person in a position that allows for the easiest breathing.
+
+Please prioritize your immediate safety. If you are in a life-threatening situation, contact emergency services (911/112) now.`,
+          category: "medical",
+          followUpQuestions: ["How to do CPR", "Victim is Unconscious", "Allergic Reaction", "Asthma Attack"]
+        };
+      }
+
+      // Intent: Chest Pain / Heart
+      if (q.includes('chest') || q.includes('heart') || q.includes('stroke')) {
+        return {
+          guidance: `I am providing critical cardiac and stroke emergency guidance. Follow these steps:
+
+1. Have the person sit down, rest, and stay calm.
+2. Loosen any tight clothing.
+3. Ask if they have prescribed nitroglycerin or aspirin.
+4. Monitor for signs of a stroke: facial drooping, arm weakness, or speech difficulty.
+
+Please prioritize your immediate safety. If you are in a life-threatening situation, contact emergency services (911/112) now.`,
+          category: "medical",
+          followUpQuestions: ["Stroke Check (FAST)", "Aspirin Guidance", "Victim Collapsed", "Find Cardiac Center"]
+        };
+      }
+
+      // Intent: Seismic
+      if (q.includes('quake') || q.includes('shake')) {
+        return {
+          guidance: `Seismic activity protocols active. Your immediate physical safety is the priority:
+
+1. Drop, Cover, and Hold On.
+2. Stay away from glass, windows, and heavy furniture.
+3. If outdoors, move to an open area away from buildings and power lines.
+4. Do not move until the shaking stops completely.
 
 Please prioritize your immediate safety. If you are in a life-threatening situation, contact emergency services (911/112) now.`,
           category: "disaster",
-          followUpQuestions: ["Aftershock Guidance", "Structural Safety", "Check for Gas Leaks", "Evacuation Routes"]
+          followUpQuestions: ["Check for Gas Leaks", "Structural Hazard", "Aftershock Steps", "Evacuation Route"]
         };
       }
 
-      // Intent: Vague / Help
-      if (q.includes('help') || q.length < 12) {
-        return {
-          guidance: `I am AXON-AI, standing by to assist you. To provide the most accurate safety guidance, could you please describe your situation?`,
-          category: "safety",
-          followUpQuestions: ["Medical Emergency", "Fire or Disaster", "Seismic Activity", "Personal Safety Threat", "Infrastructure Issue"]
-        };
-      }
-
-      // Intent: Fire / Flood / Disaster
-      if (q.includes('fire') || q.includes('flood') || q.includes('water') || q.includes('smoke')) {
-        return {
-          guidance: `Emergency disaster protocols active. Follow these immediate survival steps:
-
-1. Move to the safest designated area (high ground for floods, low to the ground for smoke/fire).
-2. If there is smoke, cover your mouth with a damp cloth and stay low.
-3. For floods, never attempt to walk or drive through moving water.
-4. Keep your phone on low power mode and notify a contact of your location.
-
-Please prioritize your immediate safety. If you are in a life-threatening situation, contact emergency services (911/112) now.`,
-          category: "disaster",
-          followUpQuestions: ["Evacuation Plan", "Fire Safety", "Rising Water Steps", "Nearest Shelter"]
-        };
-      }
-
-      // Default Resilient Response
+      // Default Diagnostic / Vague
       return {
-        guidance: `I am prioritizing your immediate safety. Please follow these core emergency steps:
+        guidance: `I am AXON-AI, your emergency intelligence assistant. To provide the most accurate survival guidance, I need to narrow down your situation. 
 
-1. Assess your surroundings for any immediate danger before acting.
-2. Move to a secure location and try to stay calm.
-3. Conserve your phone battery and keep a trusted contact informed of your position.
-4. Identify any nearby medical or safety resources if possible.
-
-Please prioritize your immediate safety. If you are in a life-threatening situation, contact emergency services (911/112) now.`,
+Are you experiencing a medical emergency, a natural disaster, or a personal safety threat?`,
         category: "safety",
-        followUpQuestions: ["Medical Support", "Identify Hazards", "Survival Kits", "Connectivity Help"]
+        followUpQuestions: ["Medical Emergency", "Seismic/Disaster", "Fire/Smoke", "Personal Safety Threat"]
       };
     }
   }

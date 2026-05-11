@@ -7,7 +7,7 @@ import { textToSpeech } from "@/ai/flows/text-to-speech"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Send, User, Loader2, HeartPulse, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, Bell, ArrowRight, ShieldCheck, WifiOff } from "lucide-react"
+import { Send, User, Loader2, HeartPulse, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, Bell, ArrowRight, ShieldCheck, WifiOff, Stethoscope } from "lucide-react"
 import { Logo } from "@/components/Logo"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { toast } from "@/hooks/use-toast"
@@ -29,8 +29,8 @@ interface Message {
   audioUrl?: string;
 }
 
-const CHAT_HISTORY_KEY = "axon_ai_chat_history_v2";
-const INITIAL_AI_MESSAGE = "I am AXON-AI, your calm emergency companion. Describe your situation and I will provide the safest immediate steps.";
+const CHAT_HISTORY_KEY = "axon_ai_chat_history_v3";
+const INITIAL_AI_MESSAGE = "I am AXON-AI, your emergency intelligence companion. Describe your situation or symptoms, and I will provide the safest immediate protocols.";
 
 export default function AssistantPage() {
   const [query, setQuery] = useState("");
@@ -163,13 +163,6 @@ export default function AssistantPage() {
     recognition.start();
   };
 
-  const quickActions = [
-    { label: "Nearby Aid", icon: MapPin, query: "Show me nearby medical aid and pharmacies" },
-    { label: "First Aid Steps", icon: HeartPulse, query: "Provide immediate first aid steps for an emergency" },
-    { label: "Safety Protocol", icon: ShieldCheck, query: "What is the safest protocol for my current area?" },
-    { label: "Disaster Ready", icon: Bell, query: "How do I prepare for a local disaster situation?" },
-  ];
-
   return (
     <div className="flex flex-col h-screen bg-background text-foreground transition-colors duration-500">
       <audio ref={audioRef} hidden />
@@ -181,7 +174,7 @@ export default function AssistantPage() {
             {!isOnline && (
               <div className="flex items-center gap-1 mt-1">
                 <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-                <span className="text-[8px] text-accent font-black uppercase tracking-widest">Offline Assistance Active</span>
+                <span className="text-[8px] text-accent font-black uppercase tracking-widest">Resilient Mode Active</span>
               </div>
             )}
           </div>
@@ -205,7 +198,7 @@ export default function AssistantPage() {
                   {msg.role === 'user' ? <User className="h-5 w-5" /> : <Logo className="h-6 w-6" />}
                 </div>
                 <div className="flex flex-col gap-3">
-                  <div className={`p-4 rounded-[1.5rem] text-[14px] leading-relaxed whitespace-pre-line font-medium shadow-sm border ${
+                  <div className={`p-5 rounded-[1.75rem] text-[15px] leading-relaxed whitespace-pre-line font-medium shadow-sm border ${
                     msg.role === 'user' ? 'bg-primary text-white border-primary rounded-tr-none' : 'bg-card border-border rounded-tl-none'
                   }`}>
                     {msg.content}
@@ -226,8 +219,9 @@ export default function AssistantPage() {
                       {msg.followUpQuestions.map((q, idx) => (
                         <Button 
                           key={idx} variant="outline" size="sm" onClick={() => handleSubmit(q)}
-                          className="rounded-full px-4 h-8 text-[10px] font-black uppercase tracking-tight border-primary/20 hover:bg-primary/5 text-primary"
+                          className="rounded-full px-5 h-10 text-[10px] font-black uppercase tracking-tight border-primary/20 hover:bg-primary/5 text-primary bg-card/50 shadow-sm"
                         >
+                          <Stethoscope className="h-3 w-3 mr-2 opacity-50" />
                           {q}
                         </Button>
                       ))}
@@ -239,7 +233,7 @@ export default function AssistantPage() {
                       {msg.suggestedResources.map((resource, idx) => (
                         <Button 
                           key={idx} variant="outline" size="sm" onClick={() => window.open(resource.googleMapsUrl, '_blank')}
-                          className="justify-between h-auto py-3 px-4 border-primary/10 bg-primary/[0.03] hover:bg-primary/[0.06] rounded-xl group"
+                          className="justify-between h-auto py-3 px-4 border-primary/10 bg-primary/[0.03] hover:bg-primary/[0.06] rounded-2xl group"
                         >
                           <div className="flex items-center gap-3">
                             <MapPin className="h-3.5 w-3.5 text-primary" />
@@ -264,27 +258,11 @@ export default function AssistantPage() {
                 <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
                 <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
                 <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
-                <span className="text-[9px] uppercase tracking-widest ml-2 opacity-60 font-black">Axon-AI Engine Active</span>
+                <span className="text-[9px] uppercase tracking-widest ml-2 opacity-60 font-black">Axon Diagnostic Engine Active</span>
               </div>
             </div>
           )}
         </div>
-
-        {messages.length <= 1 && !isLoading && (
-          <div className="p-4 grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-bottom-4">
-            {quickActions.map((action, idx) => (
-              <Button 
-                key={idx} variant="outline" onClick={() => handleSubmit(action.query)}
-                className="justify-start gap-4 h-auto py-5 text-left border-primary/10 hover:bg-primary/5 rounded-[1.5rem] bg-card shadow-sm"
-              >
-                <div className="p-2.5 bg-primary/10 rounded-xl">
-                  <action.icon className="h-4 w-4 text-primary" />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-tight leading-tight">{action.label}</span>
-              </Button>
-            ))}
-          </div>
-        )}
       </div>
 
       <div className="p-4 bg-background/80 backdrop-blur-md border-t pb-20 md:pb-24">
@@ -300,7 +278,7 @@ export default function AssistantPage() {
           </Button>
           <form onSubmit={handleSubmit} className="flex-1 flex gap-2">
             <Input 
-              placeholder={isListening ? "Listening..." : "Describe emergency..."} 
+              placeholder={isListening ? "Listening..." : "Describe symptoms or emergency..."} 
               value={query} onChange={(e) => setQuery(e.target.value)} disabled={isLoading}
               className="flex-1 rounded-2xl border-primary/10 focus-visible:ring-primary h-14 px-6 text-[15px] font-medium shadow-inner"
             />
