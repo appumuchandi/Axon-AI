@@ -26,12 +26,11 @@ export default function Home() {
             Reliable AI Emergency Companion
           </div>
           <h1 className="text-5xl md:text-7xl font-black font-headline tracking-tight leading-[1] text-foreground">
-            The Intelligence <br />
-            <span className="text-primary">That Saves Lives</span> <br />
-            When Networks Fail.
+            When Networks Fail, <br />
+            <span className="text-primary font-black">AXON-AI Responds.</span>
           </h1>
-          <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-            AXON-AI provides trust-driven, offline-first emergency intelligence. Professional first-aid guidance and high-speed SOS triggers built for resilience.
+          <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-medium">
+            Trust-driven, offline-first emergency intelligence. Professional first-aid guidance and high-speed SOS triggers built to save lives when infrastructure disappears.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
             <Link href="/dashboard">
@@ -49,37 +48,37 @@ export default function Home() {
 
         {/* Features Grid */}
         <section className="grid md:grid-cols-3 gap-8">
-          <Card className="bg-card border-none shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+          <Card className="bg-card border-none shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-[2rem]">
             <CardContent className="p-10 space-y-4">
               <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
                 <MessageSquare className="text-primary h-7 w-7" />
               </div>
-              <h3 className="text-2xl font-bold font-headline">AI Assistant</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">
+              <h3 className="text-2xl font-bold font-headline uppercase tracking-tight">AI Assistant</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed font-medium">
                 Step-by-step first-aid and survival instructions powered by models trained for emergency response.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-card border-none shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+          <Card className="bg-card border-none shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-[2rem]">
             <CardContent className="p-10 space-y-4">
               <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center">
                 <ShieldAlert className="text-accent h-7 w-7" />
               </div>
-              <h3 className="text-2xl font-bold font-headline">SOS System</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">
+              <h3 className="text-2xl font-bold font-headline uppercase tracking-tight">SOS System</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed font-medium">
                 High-priority SOS trigger with salmon-coded alerts for maximum visibility during crises.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-card border-none shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+          <Card className="bg-card border-none shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-[2rem]">
             <CardContent className="p-10 space-y-4">
               <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
                 <Shield className="text-primary h-7 w-7" />
               </div>
-              <h3 className="text-2xl font-bold font-headline">Offline Ready</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">
+              <h3 className="text-2xl font-bold font-headline uppercase tracking-tight">Offline Ready</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed font-medium">
                 Your medical profile and critical survival data stay on your device, even without infrastructure.
               </p>
             </CardContent>
@@ -90,8 +89,8 @@ export default function Home() {
         <section className="bg-primary text-white rounded-[2.5rem] p-10 md:p-20 flex flex-col md:flex-row items-center gap-16 overflow-hidden relative shadow-2xl">
           <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl" />
           <div className="flex-1 space-y-8 relative z-10">
-            <h2 className="text-4xl md:text-6xl font-black font-headline tracking-tight">Built for Resilience</h2>
-            <p className="text-primary-foreground/90 text-xl leading-relaxed">
+            <h2 className="text-4xl md:text-6xl font-black font-headline tracking-tight uppercase">Built for Resilience</h2>
+            <p className="text-primary-foreground/90 text-xl leading-relaxed font-medium">
               When standard infrastructure fails, AXON-AI thrives. Using persistent local caching and optimized tech, we ensure intelligence stays online when you need it most.
             </p>
             <div className="flex flex-wrap gap-4">

@@ -18,6 +18,7 @@ interface Message {
 }
 
 const CHAT_HISTORY_KEY = "axon_ai_chat_history";
+const INITIAL_AI_MESSAGE = "I am AXON-AI. When networks fail, I respond. Describe your situation for instant rescue protocols.";
 
 export default function AssistantPage() {
   const [query, setQuery] = useState("");
@@ -33,13 +34,13 @@ export default function AssistantPage() {
       } catch (e) {
         setMessages([{ 
           role: 'assistant', 
-          content: "I am AXON-AI. Describe your emergency situation for instant rescue protocols." 
+          content: INITIAL_AI_MESSAGE 
         }]);
       }
     } else {
       setMessages([{ 
         role: 'assistant', 
-        content: "I am AXON-AI. Describe your emergency situation for instant rescue protocols." 
+        content: INITIAL_AI_MESSAGE 
       }]);
     }
   }, []);
@@ -59,7 +60,7 @@ export default function AssistantPage() {
   const clearChat = () => {
     const initialMessage: Message[] = [{ 
       role: 'assistant', 
-      content: "Protocol reset. I am AXON-AI. How can I assist you now?" 
+      content: "Protocol reset. How can I assist you now?" 
     }];
     setMessages(initialMessage);
     localStorage.removeItem(CHAT_HISTORY_KEY);

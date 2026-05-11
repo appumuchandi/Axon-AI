@@ -106,9 +106,12 @@ export default function Dashboard() {
       <main className="px-4 mt-6 max-w-screen-xl mx-auto space-y-8">
         {/* Device & Connection Status */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <Activity className="h-4 w-4 text-primary" />
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Critical Status</h2>
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-primary" />
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Critical Status</h2>
+            </div>
+            <p className="text-[8px] font-black uppercase text-primary tracking-widest opacity-80">When Networks Fail, AXON-AI Responds.</p>
           </div>
           <StatusCard />
         </div>
