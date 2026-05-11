@@ -142,13 +142,13 @@ Stay alert for aftershocks. Axon-AI is monitoring your safety grid.`,
       }
 
       return {
-        guidance: "I am standing by to assist you. Please prioritize your immediate safety and follow these steps:
+        guidance: `I am standing by to assist you. Please prioritize your immediate safety and follow these steps:
 
 1. Assess your surroundings for any immediate danger.
 2. If you are injured or in danger, call professional emergency services (911/112) immediately.
 3. Use the SOS features if you need to broadcast your location to your rescue network.
 
-Describe your situation in more detail, and AXON-AI will provide the safest immediate steps.",
+Describe your situation in more detail, and AXON-AI will provide the safest immediate steps.`,
         category: "safety"
       };
     }
