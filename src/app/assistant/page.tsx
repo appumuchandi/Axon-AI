@@ -7,7 +7,7 @@ import { textToSpeech } from "@/ai/flows/text-to-speech"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Send, User, Loader2, Info, HeartPulse, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, Bell, ArrowRight, ShieldCheck, WifiOff } from "lucide-react"
+import { Send, User, Loader2, Info, HeartPulse, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, Bell, ArrowRight, ShieldCheck, WifiOff, Sparkles } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Logo } from "@/components/Logo"
 import { ThemeToggle } from "@/components/ThemeToggle"
@@ -27,12 +27,13 @@ interface Message {
   content: string;
   category?: string;
   suggestedResources?: SuggestedResource[];
+  followUpQuestions?: string[];
   audioUrl?: string;
   showEmergencyPanel?: boolean;
 }
 
-const CHAT_HISTORY_KEY = "axon_ai_chat_history";
-const INITIAL_AI_MESSAGE = "I am AXON-AI, your calm emergency companion. I am here to provide clear, actionable guidance during critical situations. How can I support you right now?";
+const CHAT_HISTORY_KEY = "axon_ai_chat_history_v2";
+const INITIAL_AI_MESSAGE = "I am AXON-AI, your calm emergency companion. Describe your situation and I will provide the safest immediate steps.";
 
 export default function AssistantPage() {
   const [query, setQuery] = useState("");
@@ -81,7 +82,7 @@ export default function AssistantPage() {
   }, [messages, isLoading]);
 
   const clearChat = () => {
-    setMessages([{ role: 'assistant', content: "I'm standing by. Describe your situation and I will provide the safest immediate steps." }]);
+    setMessages([{ role: 'assistant', content: INITIAL_AI_MESSAGE }]);
     localStorage.removeItem(CHAT_HISTORY_KEY);
     if (audioRef.current) audioRef.current.pause();
   };
@@ -99,16 +100,14 @@ export default function AssistantPage() {
     try {
       const response = await emergencyAssistantGuidance({ query: userMessage });
       
-      const isUrgent = response.category === 'medical' || response.category === 'disaster' || response.category === 'safety' ||
-                       response.guidance.toLowerCase().includes('sos') || 
-                       response.guidance.toLowerCase().includes('emergency') ||
-                       response.guidance.toLowerCase().includes('safety');
+      const isUrgent = response.category === 'medical' || response.category === 'disaster' || response.category === 'safety';
 
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: response.guidance,
         category: response.category,
         suggestedResources: response.suggestedResources,
+        followUpQuestions: response.followUpQuestions,
         showEmergencyPanel: isUrgent
       }]);
     } catch (error) {
@@ -185,16 +184,12 @@ export default function AssistantPage() {
           <Logo className="h-9 w-9" />
           <div>
             <h1 className="font-black font-headline text-lg tracking-tighter text-primary uppercase leading-none">Axon Assist</h1>
-            <div className="flex items-center gap-2 mt-1">
-              {!isOnline ? (
-                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-accent/10 rounded-full">
-                  <WifiOff className="h-2 w-2 text-accent" />
-                  <span className="text-[8px] text-accent font-black uppercase tracking-widest">Offline assistance active</span>
-                </div>
-              ) : (
-                <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black opacity-50">Axon-AI Engine Active</p>
-              )}
-            </div>
+            {!isOnline && (
+              <div className="flex items-center gap-1 mt-1">
+                <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+                <span className="text-[8px] text-accent font-black uppercase tracking-widest">Offline Assistance Active</span>
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -209,13 +204,6 @@ export default function AssistantPage() {
 
       <div className="flex-1 overflow-hidden flex flex-col">
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-8 pb-6">
-          <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex gap-3 mb-4">
-            <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-            <p className="text-[11px] text-muted-foreground leading-relaxed font-semibold uppercase tracking-tight">
-              I am here to provide immediate support. For professional assistance, please prioritize contacting emergency services (911/112).
-            </p>
-          </div>
-
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
               <div className={`flex gap-3 max-w-[90%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -239,6 +227,19 @@ export default function AssistantPage() {
                     )}
                   </div>
 
+                  {msg.role === 'assistant' && msg.followUpQuestions && msg.followUpQuestions.length > 0 && (
+                    <div className="flex flex-wrap gap-2 animate-in fade-in duration-500">
+                      {msg.followUpQuestions.map((q, idx) => (
+                        <Button 
+                          key={idx} variant="outline" size="sm" onClick={() => handleSubmit(q)}
+                          className="rounded-full px-4 h-8 text-[10px] font-black uppercase tracking-tight border-primary/20 hover:bg-primary/5 text-primary"
+                        >
+                          {q}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+
                   {msg.role === 'assistant' && msg.showEmergencyPanel && (
                     <Card className="border-accent/40 border-2 bg-accent/[0.03] overflow-hidden rounded-[2rem] shadow-xl animate-in zoom-in-95 duration-500">
                       <CardHeader className="p-5 pb-3 bg-accent/5 border-b border-accent/10">
@@ -246,7 +247,6 @@ export default function AssistantPage() {
                           <Bell className="h-3 w-3" />
                           Emergency Action Panel
                         </CardTitle>
-                        <p className="text-[9px] text-muted-foreground font-bold uppercase mt-1">Quick actions are ready.</p>
                       </CardHeader>
                       <CardContent className="p-4 grid gap-3">
                         <Link href="/sos" className="w-full">
@@ -264,13 +264,6 @@ export default function AssistantPage() {
                         >
                           <span className="text-lg">📍</span>
                           Share Live Location
-                        </Button>
-                        <Button 
-                          variant="outline" className="w-full justify-start gap-3 border-primary/20 hover:bg-primary/5 text-primary font-black uppercase text-[10px] tracking-widest h-14 rounded-2xl px-5"
-                          onClick={() => toast({ title: "Contacts notified", description: "Emergency network alerted." })}
-                        >
-                          <span className="text-lg">👨‍👩‍👧</span>
-                          Notify Contacts
                         </Button>
                       </CardContent>
                     </Card>
@@ -306,7 +299,7 @@ export default function AssistantPage() {
                 <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
                 <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
                 <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
-                <span className="text-[9px] uppercase tracking-widest ml-2 opacity-60 font-black">Axon-AI Engine active</span>
+                <span className="text-[9px] uppercase tracking-widest ml-2 opacity-60 font-black">Axon-AI Engine Active</span>
               </div>
             </div>
           )}

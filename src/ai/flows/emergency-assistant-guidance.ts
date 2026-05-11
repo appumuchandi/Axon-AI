@@ -3,7 +3,7 @@
  * @fileOverview AXON-AI Advanced Emergency Intelligence Assistant.
  * 
  * Provides calm, contextual, and resilient assistance during critical situations.
- * Strictly follows the Advanced Emergency Intelligence Prompt guidelines.
+ * Prioritizes user intent over system state.
  */
 
 import {ai} from '@/ai/genkit';
@@ -27,6 +27,7 @@ const EmergencyAssistantOutputSchema = z.object({
   guidance: z.string().describe('Immediate, relevant, and concise emergency guidance.'),
   category: z.enum(['medical', 'disaster', 'safety', 'infrastructure', 'other']).describe('The classified category of the emergency.'),
   suggestedResources: z.array(ResourceSchema).optional().describe('Nearby facilities relevant to the query.'),
+  followUpQuestions: z.array(z.string()).optional().describe('Suggested buttons to narrow down the emergency.'),
 });
 export type EmergencyAssistantOutput = z.infer<typeof EmergencyAssistantOutputSchema>;
 
@@ -62,19 +63,18 @@ const emergencyAssistantPrompt = ai.definePrompt({
   tools: [findEmergencyResources],
   input: {schema: EmergencyAssistantInputSchema},
   output: {schema: EmergencyAssistantOutputSchema},
-  prompt: `You are AXON-AI, an offline-first emergency intelligence system. Your mission is to provide calm, contextual, and resilient assistance during critical real-world situations.
+  prompt: `You are AXON-AI, an expert emergency intelligence system. Your mission is to provide calm, contextual, and resilient assistance.
 
 CORE PERSONALITY:
 - Be a calm emergency companion, an intelligent responder, and a trustworthy assistant.
-- Sound composed, reassuring, practical, and dependable.
-- NEVER sound robotic, cold, alarmist, or detached.
+- Sound composed, reassuring, and dependable.
+- NEVER mention connectivity issues, cloud failures, or rate limits in your guidance.
 
 RESPONSE PROTOCOL:
-1. Briefly acknowledge the situation calmly.
-2. Explain the possible concern clearly and responsibly.
+1. Acknowledge the situation calmly.
+2. Explain the possible concern clearly.
 3. Provide immediate, safe, step-by-step actions.
-4. Recommend professional emergency services (911/112) when appropriate.
-5. Offer AXON-AI assistance actions (SOS, location sharing, emergency contacts).
+4. If the query is vague (e.g., "Help me", "I'm in trouble"), use the followUpQuestions field to suggest specific emergency types (e.g., "Medical Emergency", "Fire Safety", "Personal Safety").
 
 User Situation: {{{query}}}`,
 });
@@ -91,65 +91,57 @@ const emergencyAssistantGuidanceFlow = ai.defineFlow(
       if (!output) throw new Error('No output from AI');
       return output;
     } catch (error) {
-      console.warn('Axon-AI Engine fallback engaged.', error);
+      console.warn('Axon-AI Engine Fallback engaged.', error);
       
       const q = input.query.toLowerCase();
       
-      if (q.includes('first aid') || q.includes('steps') || q.includes('help')) {
+      // INTENT DETECTION
+      if (q.includes('medical') || q.includes('hurt') || q.includes('injury') || q.includes('bleeding')) {
         return {
-          guidance: `Here are the most important immediate first-aid priorities during an emergency:
+          guidance: `Possible medical emergency detected. Please follow these immediate safety steps:
 
-1. Ensure the area is safe before helping anyone.
-2. Check if the person is conscious and breathing.
-3. Call emergency services immediately if the condition is serious.
-4. Control severe bleeding using clean pressure if necessary.
-5. Keep the person calm and avoid unnecessary movement.
-
-Please describe the specific situation so AXON-AI can provide more tailored guidance.`,
-          category: "medical"
+1. Ensure the area is safe for both you and the victim.
+2. Check for consciousness and regular breathing.
+3. If there is severe bleeding, apply direct pressure with a clean cloth.
+4. Keep the person warm and still.
+5. Contact emergency services (911/112) immediately if the condition is life-threatening.`,
+          category: "medical",
+          followUpQuestions: ["Bleeding Control", "Breathing Support", "Unconscious Person", "Chest Pain"]
         };
       }
 
-      if (q.includes('heart') || q.includes('cardiac') || q.includes('chest pain') || q.includes('breath')) {
+      if (q.includes('quake') || q.includes('shake') || q.includes('earthquake')) {
         return {
-          guidance: `Possible medical emergency detected. Please stay calm and sit down immediately. 
-
-If you are experiencing chest pressure, pain, or difficulty breathing, seek emergency medical help (911/112) right now.
-
-Immediate Actions:
-1. Alert someone nearby.
-2. Stop all physical activity.
-3. Keep your phone nearby and remain conscious.
-4. If you have prescribed heart medication, follow your doctor's instructions.
-
-Axon-AI is standing by for SOS activation or location sharing.`,
-          category: "medical"
-        };
-      }
-
-      if (q.includes('quake') || q.includes('shake') || q.includes('seismic')) {
-        return {
-          guidance: `Seismic activity protocols active. Please prioritize your immediate physical safety.
+          guidance: `Seismic activity detected. Your immediate physical safety is the priority.
 
 1. Drop, Cover, and Hold On. Find a sturdy table or desk.
-2. Stay away from glass, windows, and heavy furniture.
+2. Stay away from windows, glass, and heavy furniture.
 3. If outdoors, move to an open area away from buildings and power lines.
-4. Do not use elevators.
+4. Do not use elevators.`,
+          category: "disaster",
+          followUpQuestions: ["Aftershock Guidance", "Safe Shelter", "Structural Safety"]
+        };
+      }
 
-Stay alert for aftershocks. Axon-AI is monitoring your safety grid.`,
-          category: "disaster"
+      if (q.includes('help') || q.length < 10) {
+        return {
+          guidance: `I am standing by to assist you. To provide the most accurate safety guidance, could you please describe your situation?`,
+          category: "safety",
+          followUpQuestions: ["Medical Emergency", "Fire or Disaster", "Personal Safety Threat", "Infrastructure Issue"]
         };
       }
 
       return {
-        guidance: `I am standing by to assist you. Please prioritize your immediate safety and follow these steps:
+        guidance: `Please prioritize your immediate safety. If you are in a life-threatening situation, contact emergency services (911/112) now.
 
-1. Assess your surroundings for any immediate danger.
-2. If you are injured or in danger, call professional emergency services (911/112) immediately.
-3. Use the SOS features if you need to broadcast your location to your rescue network.
+Safe steps to take:
+1. Assess your surroundings for immediate danger.
+2. Move to a secure location if possible.
+3. Keep your phone battery conserved and notify a trusted contact of your position.
 
-Describe your situation in more detail, and AXON-AI will provide the safest immediate steps.`,
-        category: "safety"
+Describe the specific emergency for more detailed AXON-AI guidance.`,
+        category: "safety",
+        followUpQuestions: ["Share Location", "Nearby Medical Aid", "Emergency Kit Steps"]
       };
     }
   }

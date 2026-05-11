@@ -18,15 +18,16 @@ import {
   Cpu,
   MapPin,
   Lock,
-  Zap,
   Waves,
   AlertTriangle,
-  Sparkles
+  Sparkles,
+  Zap,
+  HeartPulse
 } from "lucide-react"
 import { generatePreparednessInsights, type GeneratePreparednessInsightsOutput } from "@/ai/flows/generate-preparedness-insights"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Logo } from "@/components/Logo"
-import { cn } from "@/lib/utils"
+import { cn } from "@/utils"
 import { useToast } from "@/hooks/use-toast"
 import { ThemeToggle } from "@/components/ThemeToggle"
 
@@ -34,7 +35,7 @@ const INTELLIGENCE_MODES = [
   { id: "General", label: "🛡 General", icon: Shield, topic: "General Emergency Preparedness" },
   { id: "Seismic", label: "🌍 Seismic", icon: Activity, topic: "Earthquake Survival Steps" },
   { id: "Flood", label: "🌊 Flood", icon: Waves, topic: "Flood Water Safety" },
-  { id: "Medical", label: "❤️ Medical", icon: Activity, topic: "First-Aid Actions" },
+  { id: "Medical", label: "❤️ Medical", icon: HeartPulse, topic: "First-Aid Actions" },
 ]
 
 export default function Dashboard() {
@@ -62,7 +63,8 @@ export default function Dashboard() {
       const result = await generatePreparednessInsights({ topic: mode?.topic });
       setInsights(result);
     } catch (error: any) {
-      toast({ title: "Axon Engine Fallback", description: "Continuing with locally cached resilience intelligence." });
+      // Fallback is handled inside the flow, but we can toast for awareness
+      console.warn("Axon-AI Engine Fallback engaged.");
     } finally {
       setIsLoadingInsights(false);
     }
@@ -82,9 +84,8 @@ export default function Dashboard() {
   }
 
   const statusGrid = [
-    { label: "Network Mesh", icon: isOnline ? Wifi : WifiOff, val: isOnline ? "Active" : "Mesh Only", status: isOnline ? "ok" : "warn" },
-    { label: "GPS Accuracy", icon: MapPin, val: "Sub-Meter", status: "ok" },
-    { label: "Data Security", icon: Lock, val: "Encrypted", status: "ok" },
+    { label: "Mesh Net", icon: isOnline ? Wifi : WifiOff, val: isOnline ? "Active" : "Offline", status: isOnline ? "ok" : "warn" },
+    { label: "GPS Sync", icon: MapPin, val: "Precision", status: "ok" },
     { label: "Axon Engine", icon: Cpu, val: "Resilient", status: "ok" },
   ];
 
@@ -96,7 +97,14 @@ export default function Dashboard() {
             <Logo className="h-9 w-9" />
             <div>
               <h1 className="text-xl font-black font-headline tracking-tighter text-primary leading-none uppercase">Axon-AI</h1>
-              <p className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] opacity-50 mt-1">Command Center</p>
+              <div className="flex items-center gap-1 mt-1">
+                {!isOnline && (
+                  <div className="flex items-center gap-1">
+                    <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+                    <span className="text-[7px] text-accent font-black uppercase tracking-[0.2em]">Offline Assistance Active</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -106,31 +114,22 @@ export default function Dashboard() {
       </header>
 
       <main className="px-5 mt-8 max-w-screen-xl mx-auto space-y-10">
-        <section className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {statusGrid.map((item, i) => (
-              <div key={i} className="bg-card border-2 border-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-sm">
-                <item.icon className={cn("h-4 w-4 mb-1", item.status === 'warn' ? "text-accent" : "text-primary")} />
-                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{item.label}</span>
-                <span className={cn("text-[10px] font-black uppercase", item.status === 'warn' ? "text-accent" : "text-foreground")}>{item.val}</span>
-              </div>
-            ))}
-          </div>
+        <section className="grid grid-cols-3 gap-3">
+          {statusGrid.map((item, i) => (
+            <div key={i} className="bg-card border-2 border-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-sm">
+              <item.icon className={cn("h-4 w-4 mb-1", item.status === 'warn' ? "text-accent" : "text-primary")} />
+              <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground opacity-60 text-center">{item.label}</span>
+              <span className={cn("text-[9px] font-black uppercase", item.status === 'warn' ? "text-accent" : "text-foreground")}>{item.val}</span>
+            </div>
+          ))}
         </section>
 
         <section className="space-y-6">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
-              <Cpu className="h-4 w-4 text-primary" />
+              <Sparkles className="h-4 w-4 text-primary" />
               <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Emergency Intelligence Modes</h2>
             </div>
-            <Button 
-              variant="ghost" size="sm" className="h-6 px-3 text-[9px] font-black text-primary hover:bg-primary/5 rounded-full"
-              onClick={() => fetchInsights(activeMode)} disabled={isLoadingInsights}
-            >
-              <RefreshCw className={cn("h-3 w-3 mr-2", isLoadingInsights && "animate-spin")} />
-              Sync Engine
-            </Button>
           </div>
 
           <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
@@ -184,42 +183,17 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <section className="space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <NavIcon className="h-4 w-4 text-primary" />
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nearby Rescue Hubs</h2>
-          </div>
-          <Card className="border-none shadow-lg rounded-[2rem] overflow-hidden bg-card">
-            <CardContent className="p-0 divide-y">
-              {[
-                { name: "Central Medical Hospital", dist: "0.8km", status: "Active" },
-                { name: "City Rescue Center", dist: "1.4km", status: "Active" }
-              ].map((service, i) => (
-                <div key={i} className="flex justify-between items-center p-6 hover:bg-primary/[0.03] transition-colors cursor-pointer group">
-                  <div className="space-y-1">
-                    <p className="font-black text-[13px] uppercase text-foreground tracking-tight">{service.name}</p>
-                    <p className="text-[9px] text-muted-foreground font-black uppercase opacity-60">{service.dist} • GPS Validated</p>
-                  </div>
-                  <div className="bg-muted p-3 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all">
-                    <ArrowRight className="h-4 w-4" />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="border-none bg-primary/5 rounded-[2rem] p-7 shadow-sm border border-primary/10">
-            <div className="flex items-center gap-4">
-              <div className="bg-primary/10 p-3 rounded-xl">
-                <Database className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-[11px] font-black uppercase tracking-tight leading-none">Axon Engine Briefing</h3>
-                <p className="text-[10px] text-muted-foreground font-semibold mt-2 leading-relaxed">Local survival protocols and GPS mesh networking are enabled for infrastructure-free operation.</p>
-              </div>
+        <Card className="border-none bg-primary/5 rounded-[2rem] p-7 shadow-sm border border-primary/10">
+          <div className="flex items-center gap-4">
+            <div className="bg-primary/10 p-3 rounded-xl">
+              <Database className="h-5 w-5 text-primary" />
             </div>
-          </Card>
-        </section>
+            <div>
+              <h3 className="text-[11px] font-black uppercase tracking-tight leading-none">Axon-AI Engine Status</h3>
+              <p className="text-[10px] text-muted-foreground font-semibold mt-2 leading-relaxed">Resilient mesh networking active. Emergency modes are fully operational in local assist mode.</p>
+            </div>
+          </div>
+        </Card>
       </main>
 
       <Navigation />
