@@ -18,7 +18,6 @@ export function Logo({ className }: { className?: string }) {
         d="M50 5L89 27.5V72.5L50 95L11 72.5V27.5L50 5Z" 
         fill="url(#logo-gradient)" 
       />
-      {/* Stylized hexagonal A shape to match requested brand */}
       <path 
         d="M50 22L78 72H63L50 48L37 72H22L50 22Z" 
         fill="white" 
