@@ -56,7 +56,16 @@ const emergencyAssistantGuidanceFlow = ai.defineFlow(
     outputSchema: EmergencyAssistantOutputSchema,
   },
   async input => {
-    const {output} = await emergencyAssistantPrompt(input);
-    return output!;
+    try {
+      const {output} = await emergencyAssistantPrompt(input);
+      if (!output) throw new Error('No output from AI');
+      return output;
+    } catch (error) {
+      console.warn('AI Assistant rate limited or failed. Returning core emergency protocols.', error);
+      return {
+        guidance: "URGENT SYSTEM ALERT: AI capacity is currently exceeded. Follow these core emergency protocols:\n\n1. CALL EMERGENCY SERVICES (911/112) immediately if in danger.\n2. Administer basic first-aid: check breathing, apply pressure to stop bleeding.\n3. Secure your immediate surroundings or evacuate to a designated safe zone.\n4. Stay tuned to local emergency radio for official broadcasts.",
+        category: "safety"
+      };
+    }
   }
 );

@@ -68,7 +68,32 @@ const generatePreparednessInsightsFlow = ai.defineFlow(
     outputSchema: GeneratePreparednessInsightsOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      const {output} = await prompt(input);
+      if (!output) throw new Error('No output from AI');
+      return output;
+    } catch (error) {
+      console.warn('AI Insights Engine rate limited or failed. Returning fallback survival protocols.', error);
+      // Fallback data ensures the user always has survival information even if AI quota is exhausted
+      return {
+        insights: [
+          {
+            title: "System Resilience Active",
+            content: "AI Intelligence capacity is currently limited. Prioritize standard emergency protocols and listen to local authorities.",
+            type: "warning"
+          },
+          {
+            title: "Basic Preparedness",
+            content: "Confirm you have at least 3 days of water (1 gallon per person per day) and non-perishable food supplies.",
+            type: "action"
+          },
+          {
+            title: "Communication Plan",
+            content: "Designate an out-of-town emergency contact that all family members can call during a disaster.",
+            type: "tip"
+          }
+        ]
+      };
+    }
   }
 );

@@ -24,6 +24,7 @@ import { generatePreparednessInsights, type GeneratePreparednessInsightsOutput }
 import { Skeleton } from "@/components/ui/skeleton"
 import { Logo } from "@/components/Logo"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
 
 const TOPICS = [
   { id: "General", label: "General", icon: Shield },
@@ -36,14 +37,20 @@ export default function Dashboard() {
   const [insights, setInsights] = useState<GeneratePreparednessInsightsOutput | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState(true);
   const [activeTopic, setActiveTopic] = useState("General");
+  const { toast } = useToast();
 
   const fetchInsights = async (topic: string) => {
     setIsLoadingInsights(true);
     try {
       const result = await generatePreparednessInsights({ topic: `${topic} Safety & Preparedness` });
       setInsights(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch AI insights", error);
+      toast({
+        variant: "destructive",
+        title: "Intelligence Link Disrupted",
+        description: "AI quota exceeded or network busy. Accessing emergency survival cache.",
+      });
     } finally {
       setIsLoadingInsights(false);
     }
