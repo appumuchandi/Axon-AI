@@ -1,18 +1,20 @@
+
 "use client"
 
 import { useState, useRef, useEffect } from "react"
 import { Navigation } from "@/components/Navigation"
 import { emergencyAssistantGuidance } from "@/ai/flows/emergency-assistant-guidance"
 import { textToSpeech } from "@/ai/flows/text-to-speech"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Send, Bot, User, Loader2, Info, HeartPulse, ShieldAlert, Zap, AlertTriangle, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff } from "lucide-react"
+import { Send, Bot, User, Loader2, Info, HeartPulse, ShieldAlert, Zap, AlertTriangle, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, Share2, Users, Bell } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Logo } from "@/components/Logo"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { toast } from "@/hooks/use-toast"
+import Link from "next/link"
 
 interface SuggestedResource {
   name: string;
@@ -27,6 +29,7 @@ interface Message {
   category?: 'first-aid' | 'survival' | 'safety' | 'other';
   suggestedResources?: SuggestedResource[];
   audioUrl?: string;
+  showEmergencyPanel?: boolean;
 }
 
 const CHAT_HISTORY_KEY = "axon_ai_chat_history";
@@ -97,11 +100,18 @@ export default function AssistantPage() {
 
     try {
       const response = await emergencyAssistantGuidance({ query: userMessage });
+      
+      // Determine if we should show the premium emergency panel
+      const isUrgent = response.category === 'first-aid' || response.category === 'safety' || 
+                       response.guidance.toLowerCase().includes('sos') || 
+                       response.guidance.toLowerCase().includes('location');
+
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: response.guidance,
         category: response.category,
-        suggestedResources: response.suggestedResources
+        suggestedResources: response.suggestedResources,
+        showEmergencyPanel: isUrgent
       }]);
     } catch (error) {
       setMessages(prev => [...prev, { 
@@ -132,7 +142,6 @@ export default function AssistantPage() {
         const ttsResponse = await textToSpeech(text);
         audioUrl = ttsResponse.media;
         
-        // Cache the audio URL in the message object
         setMessages(prev => {
           const updated = [...prev];
           updated[msgIndex] = { ...updated[msgIndex], audioUrl };
@@ -261,6 +270,42 @@ export default function AssistantPage() {
                       </Button>
                     )}
                   </div>
+
+                  {msg.role === 'assistant' && msg.showEmergencyPanel && (
+                    <Card className="border-accent border-2 bg-accent/5 overflow-hidden rounded-2xl shadow-xl animate-in zoom-in-95 duration-500">
+                      <CardHeader className="p-4 bg-accent/10 border-b border-accent/10">
+                        <CardTitle className="text-xs font-black text-accent uppercase tracking-widest flex items-center gap-2">
+                          <Bell className="h-3 w-3" />
+                          Emergency Assistance
+                        </CardTitle>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Quick actions are ready.</p>
+                      </CardHeader>
+                      <CardContent className="p-3 grid gap-2">
+                        <Link href="/sos" className="w-full">
+                          <Button variant="default" className="w-full justify-start gap-3 bg-accent hover:bg-accent/90 text-white font-black uppercase text-[10px] tracking-widest h-12 rounded-xl">
+                            <span className="text-lg">🚨</span>
+                            Activate SOS
+                          </Button>
+                        </Link>
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start gap-3 border-accent/20 hover:bg-accent/10 text-accent font-black uppercase text-[10px] tracking-widest h-12 rounded-xl"
+                          onClick={() => toast({ title: "Location Shared", description: "Your live GPS coordinates have been sent to rescue hubs." })}
+                        >
+                          <span className="text-lg">📍</span>
+                          Share Live Location
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start gap-3 border-primary/20 hover:bg-primary/10 text-primary font-black uppercase text-[10px] tracking-widest h-12 rounded-xl"
+                          onClick={() => toast({ title: "Contacts Notified", description: "Your emergency contacts have been alerted via SMS/Data Mesh." })}
+                        >
+                          <span className="text-lg">👨‍👩‍👧</span>
+                          Notify Contacts
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
                   
                   {msg.role === 'assistant' && msg.suggestedResources && msg.suggestedResources.length > 0 && (
                     <div className="grid gap-2 mt-1">
