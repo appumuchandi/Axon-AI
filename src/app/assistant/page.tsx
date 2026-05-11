@@ -197,7 +197,7 @@ export default function AssistantPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background text-foreground">
       <audio ref={audioRef} hidden />
       <header className="p-4 border-b flex items-center justify-between bg-card/80 backdrop-blur-md sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-3">

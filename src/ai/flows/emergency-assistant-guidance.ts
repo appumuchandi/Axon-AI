@@ -42,8 +42,7 @@ const findEmergencyResources = ai.defineTool(
     outputSchema: z.array(ResourceSchema),
   },
   async (input) => {
-    // In a real app, this would call a Places API or a geo-query on Firestore
-    // Providing deterministic mock data for the hackathon/demo
+    // Mock data for the Resilient Intelligence Engine
     const resources = [
       { 
         name: "Central Medical Emergency Hospital", 
@@ -127,7 +126,7 @@ const emergencyAssistantGuidanceFlow = ai.defineFlow(
       
       const q = input.query.toLowerCase();
       
-      // Contextual fallbacks to "react in accordance" even when LLM is down
+      // Intelligence Link Disrupted fallbacks
       if (q.includes('cpr')) {
         return {
           guidance: "DISASTER PROTOCOL ACTIVE (CPR):\n1. Call 911/112 immediately.\n2. Push hard and fast in the center of the chest.\n3. Rate: 100-120 compressions per minute.\n4. Allow full chest recoil.",
