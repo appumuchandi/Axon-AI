@@ -47,7 +47,7 @@ const prompt = ai.definePrompt({
   name: 'generatePreparednessInsightsPrompt',
   input: {schema: GeneratePreparednessInsightsInputSchema},
   output: {schema: GeneratePreparednessInsightsOutputSchema},
-  prompt: `You are the Resilient Intelligence Engine for AXON-AI. Your mission is disaster readiness and offline-first survival intelligence.
+  prompt: `You are the Axon-AI Engine. Your mission is disaster readiness and survival intelligence.
 
 Generate highly actionable and concise insights based on the user's request.
 
@@ -73,13 +73,11 @@ const generatePreparednessInsightsFlow = ai.defineFlow(
       if (!output) throw new Error('No output from AI');
       return output;
     } catch (error) {
-      console.warn('AI Insights Engine rate limited. Returning specific survival protocols.', error);
-      // Fallback data precisely matching high-priority survival requirements
       return {
         insights: [
           {
             title: "Local Survival Protocol",
-            content: "Offline assistance is active. Prioritize standard emergency protocols and listen to local authorities.",
+            content: "Disaster-ready intelligence capacity is currently restricted. Prioritize standard emergency protocols and listen to local authorities.",
             type: "warning"
           },
           {

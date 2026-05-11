@@ -32,7 +32,7 @@ interface Message {
 }
 
 const CHAT_HISTORY_KEY = "axon_ai_chat_history";
-const INITIAL_AI_MESSAGE = "I am AXON-AI, your resilient emergency companion. I am here to provide calm, actionable guidance during critical situations. How can I support you right now?";
+const INITIAL_AI_MESSAGE = "I am AXON-AI, your calm emergency companion. I am here to provide clear, actionable guidance during critical situations. How can I support you right now?";
 
 export default function AssistantPage() {
   const [query, setQuery] = useState("");
@@ -148,7 +148,7 @@ export default function AssistantPage() {
         audioRef.current.onended = () => setIsSpeakingId(null);
       }
     } catch (error) {
-      toast({ variant: "destructive", title: "Voice link limited", description: "Continuing with text-based intelligence." });
+      toast({ variant: "destructive", title: "Voice link limited", description: "Continuing with text guidance." });
     } finally {
       setIsLoading(false);
     }
@@ -157,7 +157,7 @@ export default function AssistantPage() {
   const startListening = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      toast({ variant: "destructive", title: "Protocol Not Supported", description: "Native speech interface is unavailable." });
+      toast({ variant: "destructive", title: "Feature unavailable", description: "Voice input is not supported on this browser." });
       return;
     }
     const recognition = new SpeechRecognition();
@@ -186,10 +186,10 @@ export default function AssistantPage() {
               {!isOnline ? (
                 <div className="flex items-center gap-1.5 px-2 py-0.5 bg-accent/10 rounded-full">
                   <WifiOff className="h-2 w-2 text-accent" />
-                  <span className="text-[8px] text-accent font-black uppercase tracking-widest">Offline Assistance Active</span>
+                  <span className="text-[8px] text-accent font-black uppercase tracking-widest">Offline assistance active</span>
                 </div>
               ) : (
-                <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black opacity-50">Resilient Intelligence Active</p>
+                <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black opacity-50">Axon-AI Engine Active</p>
               )}
             </div>
           </div>
@@ -257,14 +257,14 @@ export default function AssistantPage() {
                         </Link>
                         <Button 
                           variant="outline" className="w-full justify-start gap-3 border-accent/20 hover:bg-accent/5 text-accent font-black uppercase text-[10px] tracking-widest h-14 rounded-2xl px-5"
-                          onClick={() => toast({ title: "Intelligence Shared", description: "GPS coordinates sent to rescue hubs." })}
+                          onClick={() => toast({ title: "Position shared", description: "GPS coordinates sent to rescue network." })}
                         >
                           <span className="text-lg">📍</span>
                           Share Live Location
                         </Button>
                         <Button 
                           variant="outline" className="w-full justify-start gap-3 border-primary/20 hover:bg-primary/5 text-primary font-black uppercase text-[10px] tracking-widest h-14 rounded-2xl px-5"
-                          onClick={() => toast({ title: "Contacts Notified", description: "Emergency network alerted via Resilient Mesh." })}
+                          onClick={() => toast({ title: "Contacts notified", description: "Emergency network alerted." })}
                         >
                           <span className="text-lg">👨‍👩‍👧</span>
                           Notify Contacts
@@ -303,7 +303,7 @@ export default function AssistantPage() {
                 <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
                 <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
                 <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
-                <span className="text-[9px] uppercase tracking-widest ml-2 opacity-60 font-black">Synchronizing Intelligence</span>
+                <span className="text-[9px] uppercase tracking-widest ml-2 opacity-60 font-black">Axon-AI Engine active</span>
               </div>
             </div>
           )}

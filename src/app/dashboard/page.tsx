@@ -79,10 +79,9 @@ export default function Dashboard() {
       setInsights(result);
       localStorage.setItem(`${INSIGHTS_CACHE_KEY}_${topic}`, JSON.stringify(result));
     } catch (error: any) {
-      // Fallback already handled in flow, but keep the toast minimal
       toast({
-        title: "Offline assistance active",
-        description: "Local protocols remain available.",
+        title: "Offline support active",
+        description: "Emergency support remains available.",
       });
     } finally {
       setIsLoadingInsights(false);
@@ -121,7 +120,7 @@ export default function Dashboard() {
             <Logo className="h-9 w-9" />
             <div>
               <h1 className="text-xl font-black font-headline tracking-tighter text-primary leading-none uppercase">AXON-AI</h1>
-              <p className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] opacity-50 mt-1">Resilient Command Hub</p>
+              <p className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] opacity-50 mt-1">Command Hub</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -134,7 +133,7 @@ export default function Dashboard() {
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-1">
             <Activity className="h-4 w-4 text-primary" />
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Mission Critical Status</h2>
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Emergency Status</h2>
           </div>
           
           <StatusCard />
@@ -145,7 +144,7 @@ export default function Dashboard() {
           )}>
             {isOnline ? <Wifi className="h-4 w-4 shrink-0" /> : <WifiOff className="h-4 w-4 shrink-0" />}
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-center">
-              {isOnline ? "System Link Active" : "Offline Assistance Active"}
+              {isOnline ? "Link Active" : "Offline assistance active"}
             </p>
           </div>
         </div>
@@ -154,14 +153,14 @@ export default function Dashboard() {
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <Cpu className="h-4 w-4 text-primary" />
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Resilient Intel Engine</h2>
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Axon-AI Engine</h2>
             </div>
             <Button 
               variant="ghost" size="sm" className="h-6 px-3 text-[9px] font-black text-primary hover:bg-primary/5 rounded-full"
               onClick={() => fetchInsights(activeTopic)} disabled={isLoadingInsights}
             >
               <RefreshCw className={cn("h-3 w-3 mr-2", isLoadingInsights && "animate-spin")} />
-              SYNC INTEL
+              Update Intel
             </Button>
           </div>
 
@@ -249,8 +248,8 @@ export default function Dashboard() {
                <Database className="h-6 w-6 text-primary" />
              </div>
              <div>
-               <h3 className="text-sm font-black uppercase tracking-tight leading-none">System Resilience Briefing</h3>
-               <p className="text-[11px] text-muted-foreground font-semibold mt-2 leading-relaxed">Local survival protocols and GPS mesh networking are verified and ready for infrastructure-free operation.</p>
+               <h3 className="text-sm font-black uppercase tracking-tight leading-none">Emergency Support Briefing</h3>
+               <p className="text-[11px] text-muted-foreground font-semibold mt-2 leading-relaxed">Local survival protocols and GPS mesh networking are enabled for infrastructure-free operation.</p>
              </div>
            </div>
         </Card>
