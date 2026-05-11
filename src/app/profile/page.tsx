@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -173,7 +172,7 @@ export default function ProfilePage() {
         ) : (
           <Link href="/login">
             <Button size="sm" className="h-10 rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
-              <LogIn className="h-4 w-4" /> Initialize Link
+              <LogIn className="h-4 w-4" /> Sign in
             </Button>
           </Link>
         )}
