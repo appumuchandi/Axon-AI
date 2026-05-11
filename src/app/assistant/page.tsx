@@ -7,7 +7,7 @@ import { textToSpeech } from "@/ai/flows/text-to-speech"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Send, User, Loader2, Info, HeartPulse, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, Bell, ArrowRight, ShieldCheck } from "lucide-react"
+import { Send, User, Loader2, Info, HeartPulse, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, Bell, ArrowRight, ShieldCheck, WifiOff } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Logo } from "@/components/Logo"
 import { ThemeToggle } from "@/components/ThemeToggle"
@@ -32,7 +32,7 @@ interface Message {
 }
 
 const CHAT_HISTORY_KEY = "axon_ai_chat_history";
-const INITIAL_AI_MESSAGE = "I am AXON-AI, your resilient emergency companion. I am here to provide calm, actionable guidance during critical situations, even when traditional systems fail. How can I support you right now?";
+const INITIAL_AI_MESSAGE = "I am AXON-AI, your resilient emergency companion. I am here to provide calm, actionable guidance during critical situations. How can I support you right now?";
 
 export default function AssistantPage() {
   const [query, setQuery] = useState("");
@@ -40,10 +40,17 @@ export default function AssistantPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeakingId, setIsSpeakingId] = useState<number | null>(null);
+  const [isOnline, setIsOnline] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
     const cached = localStorage.getItem(CHAT_HISTORY_KEY);
     if (cached) {
       try {
@@ -54,6 +61,11 @@ export default function AssistantPage() {
     } else {
       setMessages([{ role: 'assistant', content: INITIAL_AI_MESSAGE }]);
     }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   useEffect(() => {
@@ -100,7 +112,7 @@ export default function AssistantPage() {
         showEmergencyPanel: isUrgent
       }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "Network connectivity appears limited. AXON-AI is continuing in offline assistance mode. Please remain calm and prioritize your immediate safety." }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: "Offline assistance is active. Please remain calm and prioritize your immediate safety." }]);
     } finally {
       setIsLoading(false);
     }
@@ -170,7 +182,16 @@ export default function AssistantPage() {
           <Logo className="h-9 w-9" />
           <div>
             <h1 className="font-black font-headline text-lg tracking-tighter text-primary uppercase leading-none">Axon Assist</h1>
-            <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black opacity-50 mt-1">Resilient Intelligence Active</p>
+            <div className="flex items-center gap-2 mt-1">
+              {!isOnline ? (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-accent/10 rounded-full">
+                  <WifiOff className="h-2 w-2 text-accent" />
+                  <span className="text-[8px] text-accent font-black uppercase tracking-widest">Offline Assistance Active</span>
+                </div>
+              ) : (
+                <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black opacity-50">Resilient Intelligence Active</p>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -180,9 +201,6 @@ export default function AssistantPage() {
             </Button>
           )}
           <ThemeToggle />
-          <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] font-black tracking-tight hidden xs:flex">
-            DISASTER READY
-          </Badge>
         </div>
       </header>
 
@@ -321,7 +339,7 @@ export default function AssistantPage() {
           </Button>
           <form onSubmit={handleSubmit} className="flex-1 flex gap-2">
             <Input 
-              placeholder={isListening ? "Listening to situation..." : "Describe emergency..."} 
+              placeholder={isListening ? "Listening..." : "Describe emergency..."} 
               value={query} onChange={(e) => setQuery(e.target.value)} disabled={isLoading}
               className="flex-1 rounded-2xl border-primary/10 focus-visible:ring-primary h-14 px-6 text-[15px] font-medium shadow-inner"
             />

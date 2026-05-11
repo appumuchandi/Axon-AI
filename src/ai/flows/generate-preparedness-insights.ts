@@ -79,7 +79,7 @@ const generatePreparednessInsightsFlow = ai.defineFlow(
         insights: [
           {
             title: "Local Survival Protocol",
-            content: "Disaster-ready intelligence capacity is currently restricted. Prioritize standard emergency protocols and listen to local authorities.",
+            content: "Offline assistance is active. Prioritize standard emergency protocols and listen to local authorities.",
             type: "warning"
           },
           {

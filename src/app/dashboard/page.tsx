@@ -79,9 +79,10 @@ export default function Dashboard() {
       setInsights(result);
       localStorage.setItem(`${INSIGHTS_CACHE_KEY}_${topic}`, JSON.stringify(result));
     } catch (error: any) {
+      // Fallback already handled in flow, but keep the toast minimal
       toast({
-        title: "Resilient Intelligence Engine Active",
-        description: "Local survival protocols have been activated due to network link limits.",
+        title: "Offline assistance active",
+        description: "Local protocols remain available.",
       });
     } finally {
       setIsLoadingInsights(false);
@@ -140,11 +141,11 @@ export default function Dashboard() {
           
           <div className={cn(
             "p-4 rounded-[1.5rem] border flex items-center justify-center gap-3 transition-all duration-700 shadow-sm",
-            isOnline ? "bg-primary/5 border-primary/10 text-primary/60" : "bg-accent/10 border-accent/30 text-accent animate-pulse shadow-accent/10"
+            isOnline ? "bg-primary/5 border-primary/10 text-primary/60" : "bg-accent/10 border-accent/30 text-accent shadow-accent/10"
           )}>
-            {isOnline ? <Globe className="h-4 w-4 shrink-0" /> : <WifiOff className="h-4 w-4 shrink-0" />}
+            {isOnline ? <Wifi className="h-4 w-4 shrink-0" /> : <WifiOff className="h-4 w-4 shrink-0" />}
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-center">
-              {isOnline ? "Network Infrastructure Stable" : "Grid Link Disrupted - Offline Resilience Engaged"}
+              {isOnline ? "System Link Active" : "Offline Assistance Active"}
             </p>
           </div>
         </div>

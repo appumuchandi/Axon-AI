@@ -124,7 +124,7 @@ Would you like AXON-AI to trigger SOS mode or share your location?`,
 
       if (q.includes('medical') || q.includes('hospital') || q.includes('pharmacy')) {
         return {
-          guidance: "Network connectivity appears limited. AXON-AI is continuing in offline assistance mode with locally cached resources.",
+          guidance: "Connectivity is limited. AXON-AI remains operational with cached resources.",
           category: "infrastructure",
           suggestedResources: [
             { name: "Central Medical Emergency Hospital", type: "Hospital", address: "0.8km", googleMapsUrl: "https://www.google.com/maps/search/Central+Medical+Emergency+Hospital" },
@@ -134,7 +134,7 @@ Would you like AXON-AI to trigger SOS mode or share your location?`,
       }
 
       return {
-        guidance: "Network connectivity appears limited. AXON-AI is continuing in offline assistance mode to support you.\n\n1. Prioritize your immediate safety.\n2. Call professional emergency services if you are in danger.\n3. AXON-AI is standing by for location sharing and SOS broadcasting.",
+        guidance: "Connectivity is limited. AXON-AI remains operational to support you.\n\n1. Prioritize your immediate safety.\n2. Call professional emergency services if you are in danger.\n3. AXON-AI is standing by for location sharing and SOS broadcasting.",
         category: "infrastructure"
       };
     }
