@@ -27,7 +27,7 @@ import {
 import { generatePreparednessInsights, type GeneratePreparednessInsightsOutput } from "@/ai/flows/generate-preparedness-insights"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Logo } from "@/components/Logo"
-import { cn } from "@/utils"
+import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { ThemeToggle } from "@/components/ThemeToggle"
 
