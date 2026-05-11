@@ -1,0 +1,29 @@
+
+{
+  "entities": {
+    "EmergencyProfile": {
+      "title": "Emergency Profile",
+      "description": "Critical medical and contact information for emergency situations.",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string" },
+        "bloodGroup": { "type": "string" },
+        "allergies": { "type": "string" },
+        "medicalConditions": { "type": "string" },
+        "emergencyContacts": { "type": "string" },
+        "preferredLanguage": { "type": "string" },
+        "lastUpdated": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fullName"]
+    }
+  },
+  "auth": {
+    "providers": ["google", "password"]
+  },
+  "firestore": {
+    "/users/{userId}/profile/emergency": {
+      "schema": "EmergencyProfile",
+      "description": "User's private emergency medical profile."
+    }
+  }
+}
