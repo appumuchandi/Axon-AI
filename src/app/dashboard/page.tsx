@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Logo } from "@/components/Logo"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
+import { ThemeToggle } from "@/components/ThemeToggle"
 
 const TOPICS = [
   { id: "General", label: "General", icon: Shield },
@@ -110,8 +111,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {/* Mesh-Active Badge Removed per User Request */}
-            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <ThemeToggle />
           </div>
         </div>
       </header>

@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -7,6 +8,7 @@ import { ShieldAlert, AlertTriangle, MapPin, Share2, Phone, Volume2, X } from "l
 import { Card, CardContent } from "@/components/ui/card"
 import { useEmergencyProfile } from "@/hooks/use-emergency-profile"
 import { Logo } from "@/components/Logo"
+import { ThemeToggle } from "@/components/ThemeToggle"
 
 export default function SOSPage() {
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -66,18 +68,21 @@ export default function SOSPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-between p-6 pb-24">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-between p-6 pb-24 transition-colors">
       <header className="w-full flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Logo className="h-8 w-8" />
           <h1 className="text-xl font-black font-headline tracking-tighter text-primary uppercase">SOS LINK</h1>
         </div>
-        {isTriggered && (
-          <div className="flex items-center gap-2 bg-accent/10 text-accent px-3 py-1 rounded-full animate-pulse border border-accent/20">
-            <span className="w-2 h-2 rounded-full bg-accent" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">LIVE BROADCAST</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {isTriggered && (
+            <div className="flex items-center gap-2 bg-accent/10 text-accent px-3 py-1 rounded-full animate-pulse border border-accent/20">
+              <span className="w-2 h-2 rounded-full bg-accent" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">LIVE</span>
+            </div>
+          )}
+          <ThemeToggle />
+        </div>
       </header>
 
       <div className="flex-1 w-full flex flex-col items-center justify-center max-w-md mx-auto">

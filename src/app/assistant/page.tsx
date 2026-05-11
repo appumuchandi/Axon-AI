@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -10,6 +11,7 @@ import { Send, Bot, User, Loader2, Info, HeartPulse, ShieldAlert, Zap, AlertTria
 import { Badge } from "@/components/ui/badge"
 import { Logo } from "@/components/Logo"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { ThemeToggle } from "@/components/ThemeToggle"
 
 interface Message {
   role: 'user' | 'assistant';
@@ -39,9 +41,9 @@ export default function AssistantPage() {
       }
     } else {
       setMessages([{ 
-        role: 'assistant', 
-        content: INITIAL_AI_MESSAGE 
-      }]);
+          role: 'assistant', 
+          content: INITIAL_AI_MESSAGE 
+        }]);
     }
   }, []);
 
@@ -117,7 +119,8 @@ export default function AssistantPage() {
               <Trash2 className="h-4 w-4" />
             </Button>
           )}
-          <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] font-black tracking-tight">
+          <ThemeToggle />
+          <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] font-black tracking-tight hidden xs:flex">
             ENCRYPTED
           </Badge>
         </div>
