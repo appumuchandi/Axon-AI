@@ -7,12 +7,10 @@ import { textToSpeech } from "@/ai/flows/text-to-speech"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Send, User, Loader2, Info, HeartPulse, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, Bell, ArrowRight, ShieldCheck, WifiOff, Sparkles } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { Send, User, Loader2, HeartPulse, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, Bell, ArrowRight, ShieldCheck, WifiOff } from "lucide-react"
 import { Logo } from "@/components/Logo"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { toast } from "@/hooks/use-toast"
-import Link from "next/link"
 import { cn } from "@/lib/utils"
 
 interface SuggestedResource {
@@ -227,6 +225,40 @@ export default function AssistantPage() {
                     )}
                   </div>
 
+                  {msg.role === 'assistant' && msg.showEmergencyPanel && (
+                    <Card className="border-accent/20 border bg-accent/[0.01] overflow-hidden rounded-[1.25rem] shadow-sm animate-in zoom-in-95 duration-500 max-w-[280px]">
+                      <CardHeader className="p-2.5 pb-2 bg-accent/5 border-b border-accent/5">
+                        <CardTitle className="text-[8px] font-black text-accent uppercase tracking-widest flex items-center gap-2">
+                          <ShieldCheck className="h-3 w-3" />
+                          Quick Safety Actions
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-2.5 grid gap-1.5">
+                        <Button 
+                          variant="outline" size="sm" className="w-full justify-start gap-2 border-accent/10 hover:bg-accent/5 text-accent font-bold uppercase text-[8px] tracking-widest h-8 rounded-lg px-3"
+                          onClick={() => toast({ title: "Position shared", description: "GPS coordinates sent to rescue network." })}
+                        >
+                          <MapPin className="h-3 w-3" />
+                          Share Location
+                        </Button>
+                        <Button 
+                          variant="outline" size="sm" className="w-full justify-start gap-2 border-primary/10 hover:bg-primary/5 text-primary font-bold uppercase text-[8px] tracking-widest h-8 rounded-lg px-3"
+                          onClick={() => handleSubmit("Show me nearby medical aid and pharmacies")}
+                        >
+                          <HeartPulse className="h-3 w-3" />
+                          Nearby Medical Aid
+                        </Button>
+                        <Button 
+                          variant="outline" size="sm" className="w-full justify-start gap-2 border-primary/10 hover:bg-primary/5 text-primary font-bold uppercase text-[8px] tracking-widest h-8 rounded-lg px-3"
+                          onClick={() => handleSubmit("How do I prepare an emergency kit?")}
+                        >
+                          <ShieldCheck className="h-3 w-3" />
+                          Emergency Kit Steps
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+
                   {msg.role === 'assistant' && msg.followUpQuestions && msg.followUpQuestions.length > 0 && (
                     <div className="flex flex-wrap gap-2 animate-in fade-in duration-500">
                       {msg.followUpQuestions.map((q, idx) => (
@@ -238,35 +270,6 @@ export default function AssistantPage() {
                         </Button>
                       ))}
                     </div>
-                  )}
-
-                  {msg.role === 'assistant' && msg.showEmergencyPanel && (
-                    <Card className="border-accent/30 border-2 bg-accent/[0.02] overflow-hidden rounded-[1.5rem] shadow-lg animate-in zoom-in-95 duration-500 max-w-[320px]">
-                      <CardHeader className="p-3 pb-2 bg-accent/5 border-b border-accent/10">
-                        <CardTitle className="text-[9px] font-black text-accent uppercase tracking-widest flex items-center gap-2">
-                          <Bell className="h-3 w-3" />
-                          Emergency Action Panel
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-3 grid gap-2">
-                        <Link href="/sos" className="w-full">
-                          <Button size="sm" className="w-full justify-between bg-accent hover:bg-accent/90 text-white font-black uppercase text-[9px] tracking-widest h-10 rounded-xl px-4 shadow-sm">
-                            <span className="flex items-center gap-2">
-                              <span className="text-sm">🚨</span>
-                              Activate SOS
-                            </span>
-                            <ArrowRight className="h-3 w-3 opacity-50" />
-                          </Button>
-                        </Link>
-                        <Button 
-                          variant="outline" size="sm" className="w-full justify-start gap-2 border-accent/10 hover:bg-accent/5 text-accent font-black uppercase text-[9px] tracking-widest h-10 rounded-xl px-4"
-                          onClick={() => toast({ title: "Position shared", description: "GPS coordinates sent to rescue network." })}
-                        >
-                          <span className="text-sm">📍</span>
-                          Share Location
-                        </Button>
-                      </CardContent>
-                    </Card>
                   )}
                   
                   {msg.role === 'assistant' && msg.suggestedResources && msg.suggestedResources.length > 0 && (
