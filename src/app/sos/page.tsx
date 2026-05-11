@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { Navigation } from "@/components/Navigation"
 import { Button } from "@/components/ui/button"
-import { ShieldAlert, AlertTriangle, MapPin, Share2, Phone, Volume2, X, CheckCircle2, Loader2, Users, Bell, Info } from "lucide-react"
+import { ShieldAlert, AlertTriangle, MapPin, Share2, Phone, X, CheckCircle2, Loader2, Users, Bell, Info } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { useEmergencyProfile } from "@/hooks/use-emergency-profile"
 import { Logo } from "@/components/Logo"
@@ -14,7 +14,7 @@ import { toast } from "@/hooks/use-toast"
 interface ParsedContact {
   name: string;
   phone: string;
-  display: string;
+  relationship: string;
 }
 
 export default function SOSPage() {
@@ -25,7 +25,6 @@ export default function SOSPage() {
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const { profile } = useEmergencyProfile();
 
-  // Parse emergency contacts string into a list of objects
   const parsedContacts = useMemo(() => {
     if (!profile?.emergencyContacts) return [];
     
@@ -34,15 +33,11 @@ export default function SOSPage() {
       .map(line => line.trim())
       .filter(line => line.length > 0)
       .map(line => {
-        // Try to find a phone number (simple regex for digits/plus)
-        const phoneMatch = line.match(/(\+?[\d\s-]{7,})/);
-        const phone = phoneMatch ? phoneMatch[0].trim() : "";
-        const name = line.replace(phone, '').replace(/[-:]/g, '').trim() || "Emergency Contact";
-        
+        const parts = line.split(' - ');
         return {
-          name: name,
-          phone: phone,
-          display: line
+          name: parts[0] || "Unknown Identity",
+          relationship: parts[1] || "Contact",
+          phone: parts[2] || ""
         } as ParsedContact;
       });
   }, [profile?.emergencyContacts]);
@@ -113,7 +108,7 @@ export default function SOSPage() {
     
     const contactsToNotify = parsedContacts.length > 0 
       ? parsedContacts 
-      : [{ name: "Local Emergency Hub", phone: "911" }];
+      : [{ name: "Local Rescue Hub", relationship: "Public Service", phone: "911" }];
 
     contactsToNotify.forEach((contact, index) => {
       setTimeout(() => {
@@ -124,7 +119,7 @@ export default function SOSPage() {
             description: `Alerts sent to ${contactsToNotify.length} contacts via data mesh.`,
           });
         }
-      }, (index + 1) * 1000);
+      }, (index + 1) * 800);
     });
   };
 
@@ -166,14 +161,14 @@ export default function SOSPage() {
             </div>
             <div className="space-y-4">
               <h2 className="text-2xl font-black uppercase tracking-tighter">Emergency Deployment</h2>
-              <p className="text-muted-foreground text-sm max-w-[280px] mx-auto font-medium leading-relaxed">
+              <p className="text-muted-foreground text-sm max-w-[280px] mx-auto font-medium leading-relaxed uppercase tracking-tight">
                 Tap to initiate a precision emergency broadcast of your location and medical profile.
               </p>
             </div>
           </div>
         ) : countdown !== null ? (
           <div className="text-center space-y-10 animate-in fade-in zoom-in-95 duration-500 w-full flex flex-col items-center">
-             <div className="bg-card border border-accent/20 p-8 rounded-[2.5rem] w-full text-left mb-6 space-y-6 shadow-xl border-t-2">
+             <div className="bg-card border border-accent/20 p-8 rounded-[2.5rem] w-full text-left mb-6 space-y-6 shadow-2xl border-t-2">
                <div className="flex items-center gap-2 text-accent">
                  <Bell className="h-4 w-4" />
                  <h3 className="font-black uppercase tracking-widest text-[10px]">SOS Mode Activating</h3>
@@ -181,11 +176,11 @@ export default function SOSPage() {
                <ul className="space-y-4">
                  {[
                    { text: "Emergency assistance initiated", delay: 0 },
-                   { text: "Preparing location information", delay: 0.2 },
-                   { text: "Alerting nearby contacts", delay: 0.4 },
-                   { text: "Offline emergency support enabled", delay: 0.6 }
+                   { text: "Preparing location information", delay: 0.1 },
+                   { text: "Alerting nearby contacts", delay: 0.2 },
+                   { text: "Offline emergency support enabled", delay: 0.3 }
                  ].map((step, i) => (
-                   <li key={i} className="flex items-center gap-4 text-[12px] font-bold text-foreground/80 uppercase tracking-tight animate-in fade-in slide-in-from-left-4" style={{ animationDelay: `${step.delay}s` }}>
+                   <li key={i} className="flex items-center gap-4 text-[11px] font-black text-foreground/80 uppercase tracking-tighter animate-in fade-in slide-in-from-left-4" style={{ animationDelay: `${step.delay}s` }}>
                      <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
                      {step.text}
                    </li>
@@ -205,7 +200,7 @@ export default function SOSPage() {
               </svg>
               <div className="flex flex-col items-center">
                 <span className="text-8xl font-black text-accent leading-none tracking-tighter">{countdown}</span>
-                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-4">Transmitting in...</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-4">Transmitting...</span>
               </div>
             </div>
             
@@ -213,14 +208,14 @@ export default function SOSPage() {
                <Button 
                 variant="outline" 
                 onClick={cancelSOS}
-                className="flex-1 h-16 rounded-2xl border-2 border-muted-foreground/20 text-muted-foreground hover:bg-muted font-bold flex gap-3 shadow-sm"
+                className="flex-1 h-16 rounded-2xl border-2 border-muted-foreground/20 text-muted-foreground hover:bg-muted font-black uppercase text-[11px] tracking-widest flex gap-3 shadow-sm"
               >
                 <X className="h-5 w-5" />
                 CANCEL
               </Button>
               <Button 
                 onClick={() => setCountdown(0)}
-                className="flex-1 h-16 rounded-2xl bg-accent text-white font-black hover:bg-accent/90 shadow-lg shadow-accent/20"
+                className="flex-1 h-16 rounded-2xl bg-accent text-white font-black hover:bg-accent/90 shadow-lg shadow-accent/20 uppercase text-[11px] tracking-widest"
               >
                 SEND NOW
               </Button>
@@ -237,21 +232,21 @@ export default function SOSPage() {
                   </div>
                   <div className="space-y-2">
                     <h2 className="text-4xl font-black text-accent uppercase tracking-tighter leading-none">SOS Mode Activated</h2>
-                    <p className="text-[11px] font-bold text-accent/70 uppercase tracking-widest mt-2">Precision Broadcast Synced</p>
+                    <p className="text-[11px] font-black text-accent/70 uppercase tracking-widest mt-2">Precision Broadcast Synced</p>
                   </div>
                 </div>
 
                 {notifyingContacts && (
                   <div className="bg-muted/30 rounded-[2rem] p-6 text-left border border-primary/10 space-y-4 shadow-inner">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-2">
                       <h3 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
                         <Users className="h-3 w-3" />
-                        Notifying Emergency Contacts
+                        Notifying Emergency Network
                       </h3>
                     </div>
                     <div className="space-y-3">
-                      {(parsedContacts.length > 0 ? parsedContacts : [{ name: "Emergency Hub" }]).map((contact, i) => (
-                        <div key={i} className="flex items-center justify-between text-xs font-bold uppercase tracking-tight">
+                      {(parsedContacts.length > 0 ? parsedContacts : [{ name: "Rescue Hub" }]).map((contact, i) => (
+                        <div key={i} className="flex items-center justify-between text-[11px] font-black uppercase tracking-tight">
                           <span className={cn(notifiedList.includes(contact.name) ? "text-foreground" : "text-muted-foreground opacity-40")}>
                             {contact.name}
                           </span>
@@ -268,14 +263,14 @@ export default function SOSPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <Button 
-                    className="flex flex-col gap-2 h-auto py-7 bg-accent text-white hover:bg-accent/90 rounded-[1.5rem] shadow-lg shadow-accent/10 border-none"
+                    className="flex flex-col gap-2 h-auto py-7 bg-accent text-white hover:bg-accent/90 rounded-[1.5rem] shadow-lg shadow-accent/10 border-none transition-all active:scale-95"
                     onClick={() => window.open('tel:911')}
                   >
                     <Phone className="h-8 w-8" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Call 911/112</span>
                   </Button>
                   <Button 
-                    className="flex flex-col gap-2 h-auto py-7 bg-primary text-white hover:bg-primary/90 rounded-[1.5rem] shadow-lg shadow-primary/10 border-none" 
+                    className="flex flex-col gap-2 h-auto py-7 bg-primary text-white hover:bg-primary/90 rounded-[1.5rem] shadow-lg shadow-primary/10 border-none transition-all active:scale-95" 
                     onClick={handleShareLocation}
                   >
                     <Share2 className="h-8 w-8" />
@@ -289,7 +284,7 @@ export default function SOSPage() {
                       <MapPin className="h-4 w-4" />
                       <span className="text-[10px] uppercase tracking-[0.2em] font-black">Satellite Fix</span>
                     </div>
-                    <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
+                    <div className="w-3 h-3 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
                   </div>
                   {location ? (
                     <div className="space-y-1">
@@ -303,26 +298,32 @@ export default function SOSPage() {
                     </div>
                   )}
                   
-                  <div className="pt-6 border-t border-dashed space-y-4 border-muted/50">
-                    <p className="text-[10px] text-muted-foreground uppercase font-black opacity-60">Emergency Contact Cards</p>
+                  <div className="pt-6 border-t border-dashed space-y-5 border-muted/50">
+                    <p className="text-[10px] text-muted-foreground uppercase font-black opacity-60 tracking-widest">Emergency Identity Cards</p>
                     <div className="space-y-3">
                       {parsedContacts.length > 0 ? (
                         parsedContacts.map((contact, i) => (
-                          <div key={i} className="flex items-center gap-4 bg-muted/30 p-4 rounded-2xl border border-primary/5 hover:bg-muted/40 transition-colors">
-                            <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-lg">
-                              {i % 2 === 0 ? '👤' : '👥'}
+                          <div key={i} className="flex items-center gap-4 bg-muted/20 p-4 rounded-2xl border border-primary/5 hover:bg-muted/30 transition-colors">
+                            <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-sm">
+                               {contact.relationship === 'Mother' ? '👩' : contact.relationship === 'Brother' ? '👨' : '👤'}
                             </div>
-                            <div className="text-left">
-                              <p className="text-xs font-black uppercase">{contact.name}</p>
-                              <p className="text-[10px] text-muted-foreground font-bold tracking-widest">
-                                {contact.phone || "No number saved"}
+                            <div className="text-left flex-1">
+                              <p className="text-xs font-black uppercase text-foreground leading-none">{contact.name}</p>
+                              <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-1.5 opacity-80">
+                                {contact.relationship} • {contact.phone || "No number saved"}
                               </p>
                             </div>
+                            <Button 
+                              variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/10"
+                              onClick={() => contact.phone && window.open(`tel:${contact.phone}`)}
+                            >
+                              <Phone className="h-4 w-4" />
+                            </Button>
                           </div>
                         ))
                       ) : (
-                        <div className="p-4 bg-muted/20 rounded-2xl text-center">
-                          <p className="text-[10px] text-muted-foreground font-bold uppercase">No contacts saved in profile</p>
+                        <div className="p-6 bg-muted/20 rounded-[1.5rem] text-center border border-dashed border-muted/30">
+                          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-60">No contacts saved in profile</p>
                         </div>
                       )}
                     </div>
@@ -331,7 +332,7 @@ export default function SOSPage() {
 
                 <Button 
                   variant="ghost" 
-                  className="text-xs font-bold text-muted-foreground hover:text-accent transition-colors" 
+                  className="text-[10px] font-black text-muted-foreground hover:text-accent transition-colors uppercase tracking-widest" 
                   onClick={cancelSOS}
                 >
                   Terminate Distress Broadcast
@@ -343,7 +344,7 @@ export default function SOSPage() {
       </div>
 
       {!isTriggered && countdown === null && (
-        <div className="flex items-center gap-3 px-6 text-muted-foreground max-w-sm text-center font-bold text-[10px] uppercase tracking-[0.15em] opacity-60 mb-4 bg-muted/20 py-2 rounded-full border border-muted/30 shadow-sm">
+        <div className="flex items-center gap-3 px-6 text-muted-foreground max-w-sm text-center font-black text-[9px] uppercase tracking-[0.15em] opacity-60 mb-4 bg-muted/20 py-2.5 rounded-full border border-muted/30 shadow-sm">
           <Info className="h-3.5 w-3.5 shrink-0" />
           <span>Real-time broadcast of GPS and medical profile to rescue hubs.</span>
         </div>
