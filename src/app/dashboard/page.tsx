@@ -98,6 +98,17 @@ export default function Dashboard() {
     }
   }
 
+  const handleDirectionClick = (locationName: string) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(locationName)}`;
+    window.open(url, '_blank');
+  };
+
+  const rescueServices = [
+    { name: "Central Medical Emergency Hospital", type: "LEVEL 1 TRAUMA", dist: "0.8km", status: "Active" },
+    { name: "City Red Cross Rescue Center", type: "MEDICAL SUPPORT", dist: "1.4km", status: "Active" },
+    { name: "Safe Haven Delta Evacuation Point", type: "EVAC CENTER", dist: "2.1km", status: "Open" }
+  ];
+
   return (
     <div className="min-h-screen pb-24 bg-background">
       {/* Top Header */}
@@ -241,11 +252,12 @@ export default function Dashboard() {
           </div>
           <Card className="border-none shadow-lg rounded-3xl overflow-hidden">
             <CardContent className="p-0 divide-y border-none">
-              {[
-                { name: "Central Medical Hub", type: "LEVEL 1 TRAUMA", dist: "0.8km", status: "Active" },
-                { name: "Safe Haven Delta", type: "EVAC CENTER", dist: "2.1km", status: "Open" }
-              ].map((service, i) => (
-                <div key={i} className="flex justify-between items-center p-5 hover:bg-primary/5 transition-colors group cursor-pointer">
+              {rescueServices.map((service, i) => (
+                <div 
+                  key={i} 
+                  onClick={() => handleDirectionClick(service.name)}
+                  className="flex justify-between items-center p-5 hover:bg-primary/5 transition-colors group cursor-pointer"
+                >
                   <div className="space-y-1">
                     <p className="font-black text-[14px] uppercase text-foreground tracking-tight">{service.name}</p>
                     <div className="flex items-center gap-2">
