@@ -73,7 +73,7 @@ CORE PERSONALITY:
 RESPONSE PROTOCOL:
 1. Acknowledge the situation calmly.
 2. Provide immediate, safe, step-by-step actions.
-3. If the query is vague (e.g., "Help me", "I'm in trouble"), use the followUpQuestions field to suggest specific emergency types.
+3. If the query is vague (e.g., "Help me", "I'm in trouble"), use the followUpQuestions field to suggest specific emergency types to narrow down.
 4. IMPORTANT: Always place the recommendation to contact emergency services (911/112) at the very end of your response.
 
 User Situation: {{{query}}}`,
@@ -91,58 +91,79 @@ const emergencyAssistantGuidanceFlow = ai.defineFlow(
       if (!output) throw new Error('No output from AI');
       return output;
     } catch (error) {
-      console.warn('Axon-AI Engine Fallback engaged.', error);
-      
+      // RESILIENT FALLBACK ENGINE
+      // Operates locally when API quota is exhausted or connectivity is limited.
       const q = input.query.toLowerCase();
       
-      // INTENT DETECTION
-      if (q.includes('medical') || q.includes('hurt') || q.includes('injury') || q.includes('bleeding')) {
+      // Intent: Medical Emergency
+      if (q.includes('medical') || q.includes('hurt') || q.includes('injury') || q.includes('bleeding') || q.includes('pain') || q.includes('cpr') || q.includes('breathing')) {
         return {
-          guidance: `Possible medical emergency detected. Please follow these immediate safety steps:
+          guidance: `I am providing immediate medical emergency guidance. Please follow these steps:
 
-1. Ensure the area is safe for both you and the victim.
-2. Check for consciousness and regular breathing.
-3. If there is severe bleeding, apply direct pressure with a clean cloth.
-4. Keep the person warm and still.
+1. Assess for consciousness and regular breathing.
+2. If the victim is not breathing, begin chest-only CPR immediately (100-120 compressions per minute).
+3. For severe bleeding, apply direct, firm pressure with a clean cloth.
+4. Keep the person warm and avoid moving them unless they are in immediate danger.
 
 Please prioritize your immediate safety. If you are in a life-threatening situation, contact emergency services (911/112) now.`,
           category: "medical",
-          followUpQuestions: ["Bleeding Control", "Breathing Support", "Unconscious Person", "Chest Pain"]
+          followUpQuestions: ["Bleeding Control", "Breathing Problem", "Unconscious Person", "Chest Pain", "Burn Injury"]
         };
       }
 
+      // Intent: Seismic / Earthquake
       if (q.includes('quake') || q.includes('shake') || q.includes('earthquake')) {
         return {
-          guidance: `Seismic activity detected. Your immediate physical safety is the priority.
+          guidance: `Seismic activity protocols engaged. Your immediate physical safety is the priority:
 
 1. Drop, Cover, and Hold On. Find a sturdy table or desk.
 2. Stay away from windows, glass, and heavy furniture.
-3. If outdoors, move to an open area away from buildings and power lines.
-4. Do not use elevators.
+3. If you are outdoors, move to an open area away from buildings, power lines, and trees.
+4. Do not use elevators or run outside during shaking.
 
-If you are in danger, please contact professional emergency services (911/112) immediately.`,
+Please prioritize your immediate safety. If you are in a life-threatening situation, contact emergency services (911/112) now.`,
           category: "disaster",
-          followUpQuestions: ["Aftershock Guidance", "Safe Shelter", "Structural Safety"]
+          followUpQuestions: ["Aftershock Guidance", "Structural Safety", "Check for Gas Leaks", "Evacuation Routes"]
         };
       }
 
-      if (q.includes('help') || q.length < 10) {
+      // Intent: Vague / Help
+      if (q.includes('help') || q.length < 12) {
         return {
-          guidance: `I am standing by to assist you. To provide the most accurate safety guidance, could you please describe your situation?`,
+          guidance: `I am AXON-AI, standing by to assist you. To provide the most accurate safety guidance, could you please describe your situation?`,
           category: "safety",
-          followUpQuestions: ["Medical Emergency", "Fire or Disaster", "Personal Safety Threat", "Infrastructure Issue"]
+          followUpQuestions: ["Medical Emergency", "Fire or Disaster", "Seismic Activity", "Personal Safety Threat", "Infrastructure Issue"]
         };
       }
 
+      // Intent: Fire / Flood / Disaster
+      if (q.includes('fire') || q.includes('flood') || q.includes('water') || q.includes('smoke')) {
+        return {
+          guidance: `Emergency disaster protocols active. Follow these immediate survival steps:
+
+1. Move to the safest designated area (high ground for floods, low to the ground for smoke/fire).
+2. If there is smoke, cover your mouth with a damp cloth and stay low.
+3. For floods, never attempt to walk or drive through moving water.
+4. Keep your phone on low power mode and notify a contact of your location.
+
+Please prioritize your immediate safety. If you are in a life-threatening situation, contact emergency services (911/112) now.`,
+          category: "disaster",
+          followUpQuestions: ["Evacuation Plan", "Fire Safety", "Rising Water Steps", "Nearest Shelter"]
+        };
+      }
+
+      // Default Resilient Response
       return {
-        guidance: `Safe steps to take:
-1. Assess your surroundings for immediate danger.
-2. Move to a secure location if possible.
-3. Keep your phone battery conserved and notify a trusted contact of your position.
+        guidance: `I am prioritizing your immediate safety. Please follow these core emergency steps:
+
+1. Assess your surroundings for any immediate danger before acting.
+2. Move to a secure location and try to stay calm.
+3. Conserve your phone battery and keep a trusted contact informed of your position.
+4. Identify any nearby medical or safety resources if possible.
 
 Please prioritize your immediate safety. If you are in a life-threatening situation, contact emergency services (911/112) now.`,
         category: "safety",
-        followUpQuestions: ["Share Location", "Nearby Medical Aid", "Emergency Kit Steps"]
+        followUpQuestions: ["Medical Support", "Identify Hazards", "Survival Kits", "Connectivity Help"]
       };
     }
   }
