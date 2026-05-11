@@ -3,31 +3,64 @@
 import { useEffect, useState } from "react"
 import { Navigation } from "@/components/Navigation"
 import { StatusCard } from "@/components/StatusCard"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { AlertCircle, MapPin, Shield, Info, ArrowRight, Activity, Radio } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { 
+  AlertCircle, 
+  MapPin, 
+  Shield, 
+  ArrowRight, 
+  Activity, 
+  Radio, 
+  Lightbulb, 
+  AlertTriangle, 
+  CheckCircle2, 
+  Info,
+  Sparkles,
+  RefreshCw
+} from "lucide-react"
 import { generatePreparednessInsights, type GeneratePreparednessInsightsOutput } from "@/ai/flows/generate-preparedness-insights"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Logo } from "@/components/Logo"
 import { cn } from "@/lib/utils"
 
+const TOPICS = [
+  { id: "General", label: "General", icon: Shield },
+  { id: "Earthquake", label: "Quake", icon: Activity },
+  { id: "Flood", label: "Flood", icon: AlertCircle },
+  { id: "Medical", label: "Medical", icon: Activity },
+]
+
 export default function Dashboard() {
   const [insights, setInsights] = useState<GeneratePreparednessInsightsOutput | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState(true);
+  const [activeTopic, setActiveTopic] = useState("General");
+
+  const fetchInsights = async (topic: string) => {
+    setIsLoadingInsights(true);
+    try {
+      const result = await generatePreparednessInsights({ topic: `${topic} Safety & Preparedness` });
+      setInsights(result);
+    } catch (error) {
+      console.error("Failed to fetch AI insights", error);
+    } finally {
+      setIsLoadingInsights(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchInsights() {
-      try {
-        const result = await generatePreparednessInsights({ topic: "General Safety" });
-        setInsights(result);
-      } catch (error) {
-        console.error("Failed to fetch AI insights", error);
-      } finally {
-        setIsLoadingInsights(false);
-      }
+    fetchInsights(activeTopic);
+  }, [activeTopic]);
+
+  const getInsightIcon = (type: string) => {
+    switch (type) {
+      case 'tip': return <Lightbulb className="h-4 w-4 text-yellow-500" />;
+      case 'warning': return <AlertTriangle className="h-4 w-4 text-orange-500" />;
+      case 'action': return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+      default: return <Info className="h-4 w-4 text-blue-500" />;
     }
-    fetchInsights();
-  }, []);
+  }
 
   return (
     <div className="min-h-screen pb-24 bg-background">
@@ -57,6 +90,72 @@ export default function Dashboard() {
           <StatusCard />
         </div>
 
+        {/* AI Insights Engine Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">AI Intelligence Engine</h2>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-6 px-2 text-[10px] font-bold text-primary"
+              onClick={() => fetchInsights(activeTopic)}
+              disabled={isLoadingInsights}
+            >
+              <RefreshCw className={cn("h-3 w-3 mr-1", isLoadingInsights && "animate-spin")} />
+              REFRESH
+            </Button>
+          </div>
+
+          {/* Topic Selector */}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide no-scrollbar">
+            {TOPICS.map((topic) => (
+              <Button
+                key={topic.id}
+                variant={activeTopic === topic.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActiveTopic(topic.id)}
+                className={cn(
+                  "rounded-full px-4 font-bold text-[11px] uppercase transition-all",
+                  activeTopic === topic.id ? "bg-primary shadow-md" : "border-primary/20 text-muted-foreground hover:border-primary/50"
+                )}
+              >
+                <topic.icon className="h-3 w-3 mr-1.5" />
+                {topic.label}
+              </Button>
+            ))}
+          </div>
+          
+          <div className="grid gap-3 md:grid-cols-2">
+            {isLoadingInsights ? (
+              Array.from({ length: 2 }).map((_, i) => (
+                <Skeleton key={i} className="h-32 w-full rounded-2xl" />
+              ))
+            ) : (
+              insights?.insights.map((insight: any, idx: number) => (
+                <Card key={idx} className="bg-card border-2 border-primary/5 hover:border-primary/20 transition-all shadow-sm group">
+                  <CardHeader className="p-4 pb-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {getInsightIcon(insight.type)}
+                        <CardTitle className="text-xs font-black text-foreground uppercase tracking-tight">{insight.title}</CardTitle>
+                      </div>
+                      <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter opacity-50 border-primary/20">
+                        {insight.type}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <p className="text-[12px] text-muted-foreground leading-relaxed font-medium">{insight.content}</p>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </div>
+
         {/* Critical Emergency Alerts */}
         <Card className="border-2 border-accent/50 bg-accent/5 overflow-hidden shadow-lg shadow-accent/5">
           <CardHeader className="bg-accent/10 py-3 flex flex-row items-center justify-between border-b border-accent/20">
@@ -73,43 +172,13 @@ export default function Dashboard() {
                   <Radio className="h-5 w-5 text-accent" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm leading-tight">Flash Flood Warning - Area 4B</h4>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Evacuation routes active for Zone 4. High water levels detected in nearby basins.</p>
+                  <h4 className="font-bold text-sm leading-tight">High Risk: Zone 4B Update</h4>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Flash flood protocols remain in effect. Use the 'Medical' insight tab for water safety tips.</p>
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
-
-        {/* AI Preparedness Insights */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-primary" />
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">AI Intelligence</h2>
-            </div>
-            {isLoadingInsights && <span className="text-[8px] animate-pulse text-primary font-bold">ANALYZING...</span>}
-          </div>
-          
-          <div className="grid gap-3 md:grid-cols-2">
-            {isLoadingInsights ? (
-              Array.from({ length: 2 }).map((_, i) => (
-                <Skeleton key={i} className="h-28 w-full rounded-2xl" />
-              ))
-            ) : (
-              insights?.insights.map((insight, idx) => (
-                <Card key={idx} className="bg-card border-2 border-primary/10 hover:border-primary/30 transition-all shadow-sm">
-                  <CardHeader className="p-4 pb-1">
-                    <CardTitle className="text-sm font-black text-primary uppercase tracking-tight">{insight.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <p className="text-[13px] text-muted-foreground leading-relaxed">{insight.content}</p>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-        </div>
 
         {/* Nearby Services */}
         <div className="space-y-4">

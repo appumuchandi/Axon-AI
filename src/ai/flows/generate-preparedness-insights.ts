@@ -25,6 +25,7 @@ export type GeneratePreparednessInsightsInput = z.infer<
 const InsightSchema = z.object({
   title: z.string().describe('A concise title for the insight.'),
   content: z.string().describe('The detailed content of the insight or recommendation.'),
+  type: z.enum(['tip', 'warning', 'action', 'fact']).describe('The type of insight for visual categorization.'),
 });
 
 const GeneratePreparednessInsightsOutputSchema = z.object({
@@ -46,15 +47,18 @@ const prompt = ai.definePrompt({
   name: 'generatePreparednessInsightsPrompt',
   input: {schema: GeneratePreparednessInsightsInputSchema},
   output: {schema: GeneratePreparednessInsightsOutputSchema},
-  prompt: `You are an AI insights engine for emergency preparedness. Your task is to generate informational insights based on the user's request.
+  prompt: `You are an AI insights engine for emergency intelligence. Your task is to generate highly actionable and concise insights based on the user's request.
 
-If a specific topic is provided, focus the insights on that topic. Otherwise, provide general emergency preparedness suggestions, risk awareness tips, disaster response recommendations, and safety improvement guidance.
+If a specific topic is provided (e.g., "Earthquake", "Medical"), focus exclusively on that. Otherwise, provide general emergency resilience tips.
 
-Ensure the insights are informative, concise, and easy to understand. Provide at least 3 distinct insights.
+GUIDELINES:
+- Be concise. One or two sentences per insight.
+- Focus on immediate preparedness or safety actions.
+- Categorize each insight as 'tip' (general advice), 'warning' (risk awareness), 'action' (specific task), or 'fact' (safety info).
 
 Input Topic: {{{topic}}}
 
-Output a JSON object with an 'insights' array, where each element has a 'title' and 'content' field.`,
+Output a JSON object with an 'insights' array.`,
 });
 
 const generatePreparednessInsightsFlow = ai.defineFlow(
