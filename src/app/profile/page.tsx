@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -11,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { User, HeartPulse, Phone, Save, Loader2, CheckCircle, LogIn, LogOut, Plus, Trash2, Contact, Users } from "lucide-react"
+import { User, HeartPulse, Phone, Save, Loader2, CheckCircle, LogIn, LogOut, Plus, Trash2, Contact, Users, Sparkles } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import Link from "next/link"
 
@@ -38,12 +39,6 @@ export default function ProfilePage() {
   const [newContact, setNewContact] = useState<ContactEntry>({ name: "", relationship: "", phone: "" });
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
-  const [isPickerSupported, setIsPickerSupported] = useState(false);
-
-  useEffect(() => {
-    // Check if Contact Picker API is supported
-    setIsPickerSupported('contacts' in navigator && 'ContactsManager' in window);
-  }, []);
 
   useEffect(() => {
     if (profile) {
@@ -72,7 +67,7 @@ export default function ProfilePage() {
 
   const handleAddContact = () => {
     if (!newContact.name || !newContact.phone) {
-      toast({ variant: "destructive", title: "Incomplete Protocol", description: "Name and Phone are mission-critical fields." });
+      toast({ variant: "destructive", title: "Protocol Required", description: "Name and Phone are mission-critical fields." });
       return;
     }
     setContactList([...contactList, newContact]);
@@ -85,6 +80,15 @@ export default function ProfilePage() {
   };
 
   const pickFromContacts = async () => {
+    if (!('contacts' in navigator && 'ContactsManager' in window)) {
+      toast({ 
+        title: "Intelligence Sync Unavailable", 
+        description: "Your current browser does not support native contact syncing. Please enter details manually.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const props = ['name', 'tel'];
       const opts = { multiple: true };
@@ -263,7 +267,7 @@ export default function ProfilePage() {
 
         {/* Emergency Contacts */}
         <Card className="border-none shadow-xl rounded-[2.5rem] bg-card overflow-hidden">
-          <CardHeader className="pb-3 border-b border-muted/20 bg-muted/5 flex flex-row items-center justify-between">
+          <CardHeader className="pb-3 border-b border-muted/20 bg-muted/5">
             <CardTitle className="text-[12px] font-black uppercase tracking-widest flex items-center gap-3 text-primary">
               <Phone className="h-4 w-4" />
               Rescue Contacts
@@ -271,18 +275,22 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             
-            {/* Native Import Button */}
-            {isPickerSupported && (
+            {/* Primary Action: Native Import */}
+            <div className="space-y-4">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={pickFromContacts}
-                className="w-full h-14 rounded-2xl border-2 border-dashed border-primary/30 text-primary font-black uppercase tracking-[0.1em] text-[10px] hover:bg-primary/5 flex gap-3 transition-all active:scale-[0.98] shadow-sm"
+                className="w-full h-16 rounded-2xl border-2 border-dashed border-primary/30 text-primary font-black uppercase tracking-[0.1em] text-[11px] hover:bg-primary/5 flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-sm group"
               >
-                <Users className="h-5 w-5" />
+                <div className="bg-primary/10 p-2 rounded-lg group-hover:bg-primary/20 transition-colors">
+                  <Users className="h-5 w-5" />
+                </div>
                 Import from Phone Contacts
+                <Sparkles className="h-3 w-3 animate-pulse text-primary/60" />
               </Button>
-            )}
+              <p className="text-center text-[9px] text-muted-foreground font-black uppercase tracking-widest opacity-60">— OR ENTER MANUALLY —</p>
+            </div>
 
             <div className="space-y-4 bg-muted/10 p-5 rounded-[2rem] border border-dashed border-muted/30">
               <div className="flex items-center gap-2 mb-2">
