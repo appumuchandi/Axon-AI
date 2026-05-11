@@ -9,6 +9,7 @@ import { AlertCircle, MapPin, Shield, Info, ArrowRight } from "lucide-react"
 import { generatePreparednessInsights, type GeneratePreparednessInsightsOutput } from "@/ai/flows/generate-preparedness-insights"
 import { Skeleton } from "@/components/ui/skeleton"
 import Link from "next/link"
+import { Logo } from "@/components/Logo"
 
 export default function Dashboard() {
   const [insights, setInsights] = useState<GeneratePreparednessInsightsOutput | null>(null);
@@ -31,9 +32,12 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen pb-24 px-4 pt-8 max-w-screen-xl mx-auto">
       <header className="mb-8 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold font-headline tracking-tight text-primary">AXON-AI</h1>
-          <p className="text-muted-foreground text-sm">Emergency Intelligence Platform</p>
+        <div className="flex items-center gap-3">
+          <Logo className="h-10 w-10" />
+          <div>
+            <h1 className="text-3xl font-bold font-headline tracking-tight text-primary">AXON-AI</h1>
+            <p className="text-muted-foreground text-sm">Emergency Intelligence Platform</p>
+          </div>
         </div>
         <Badge variant="outline" className="border-primary text-primary font-bold px-3 py-1">
           RESCUE-READY

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Send, Bot, User, Loader2, Info } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Logo } from "@/components/Logo"
 
 interface Message {
   role: 'user' | 'assistant';
@@ -52,9 +53,7 @@ export default function AssistantPage() {
     <div className="flex flex-col h-screen bg-background">
       <header className="p-4 border-b flex items-center justify-between bg-card/80 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <Bot className="h-5 w-5 text-white" />
-          </div>
+          <Logo className="h-8 w-8" />
           <div>
             <h1 className="font-bold font-headline text-lg">AI Assistant</h1>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Protocol Version 4.0</p>
@@ -81,7 +80,7 @@ export default function AssistantPage() {
           >
             <div className={`flex gap-2 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
               <div className={`h-8 w-8 rounded-full shrink-0 flex items-center justify-center ${msg.role === 'user' ? 'bg-muted' : 'bg-primary'}`}>
-                {msg.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4 text-white" />}
+                {msg.role === 'user' ? <User className="h-4 w-4" /> : <Logo className="h-5 w-5" />}
               </div>
               <div className={`p-3 rounded-2xl text-sm leading-relaxed ${
                 msg.role === 'user' 

@@ -4,13 +4,14 @@ import Link from "next/link"
 import { Shield, Zap, MessageSquare, ShieldAlert, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Logo } from "@/components/Logo"
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="p-6 flex justify-between items-center border-b bg-card">
         <div className="flex items-center gap-2">
-          <ShieldAlert className="text-primary h-8 w-8" />
+          <Logo className="h-8 w-8" />
           <span className="text-2xl font-black font-headline tracking-tighter text-primary">AXON-AI</span>
         </div>
         <Link href="/dashboard">
@@ -119,7 +120,7 @@ export default function Home() {
                 </div>
                 <div className="pt-4 flex justify-center">
                    <div className="w-16 h-16 rounded-full border-4 border-white/20 flex items-center justify-center animate-pulse">
-                      <ShieldAlert className="h-8 w-8 text-white" />
+                      <Logo className="h-8 w-8 opacity-80" />
                    </div>
                 </div>
              </div>
@@ -130,7 +131,7 @@ export default function Home() {
       <footer className="p-8 border-t bg-card mt-24">
         <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
-            <ShieldAlert className="text-muted-foreground h-5 w-5" />
+            <Logo className="h-5 w-5 opacity-60" />
             <span className="font-bold text-muted-foreground">AXON-AI © 2024</span>
           </div>
           <div className="flex gap-8 text-sm font-medium text-muted-foreground">
