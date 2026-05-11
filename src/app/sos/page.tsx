@@ -25,6 +25,7 @@ export default function SOSPage() {
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const { profile } = useEmergencyProfile();
 
+  // Parse structured contacts from profile string
   const parsedContacts = useMemo(() => {
     if (!profile?.emergencyContacts) return [];
     
@@ -51,6 +52,7 @@ export default function SOSPage() {
       setCountdown(null);
       handleNotifyContacts();
       
+      // Haptic feedback for critical state
       if ('vibrate' in navigator) {
         navigator.vibrate([500, 200, 500, 200, 500]);
       }
@@ -62,6 +64,7 @@ export default function SOSPage() {
     if (isTriggered) return;
     setCountdown(5);
     
+    // Acquire location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {

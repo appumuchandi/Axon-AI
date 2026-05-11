@@ -41,6 +41,7 @@ export default function ProfilePage() {
   const [isPickerSupported, setIsPickerSupported] = useState(false);
 
   useEffect(() => {
+    // Check if Contact Picker API is supported
     setIsPickerSupported('contacts' in navigator && 'ContactsManager' in window);
   }, []);
 
@@ -108,6 +109,7 @@ export default function ProfilePage() {
     e.preventDefault();
     setIsSaving(true);
     
+    // Stringify contacts for storage
     const contactString = contactList
       .map(c => `${c.name} - ${c.relationship} - ${c.phone}`)
       .join('\n');
@@ -142,7 +144,7 @@ export default function ProfilePage() {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <div className="h-10 w-10 animate-spin border-4 border-primary border-t-transparent rounded-full" />
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Synchronizing Identity...</p>
         </div>
       </div>
