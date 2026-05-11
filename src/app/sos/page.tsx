@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Navigation } from "@/components/Navigation"
 import { Button } from "@/components/ui/button"
 import { ShieldAlert, AlertTriangle, MapPin, Share2, Phone, Volume2, X, CheckCircle2, Loader2, Users, Bell, Info } from "lucide-react"
@@ -11,6 +11,12 @@ import { ThemeToggle } from "@/components/ThemeToggle"
 import { cn } from "@/lib/utils"
 import { toast } from "@/hooks/use-toast"
 
+interface ParsedContact {
+  name: string;
+  phone: string;
+  display: string;
+}
+
 export default function SOSPage() {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isTriggered, setIsTriggered] = useState(false);
@@ -18,6 +24,28 @@ export default function SOSPage() {
   const [notifiedList, setNotifiedList] = useState<string[]>([]);
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const { profile } = useEmergencyProfile();
+
+  // Parse emergency contacts string into a list of objects
+  const parsedContacts = useMemo(() => {
+    if (!profile?.emergencyContacts) return [];
+    
+    return profile.emergencyContacts
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .map(line => {
+        // Try to find a phone number (simple regex for digits/plus)
+        const phoneMatch = line.match(/(\+?[\d\s-]{7,})/);
+        const phone = phoneMatch ? phoneMatch[0].trim() : "";
+        const name = line.replace(phone, '').replace(/[-:]/g, '').trim() || "Emergency Contact";
+        
+        return {
+          name: name,
+          phone: phone,
+          display: line
+        } as ParsedContact;
+      });
+  }, [profile?.emergencyContacts]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -28,7 +56,6 @@ export default function SOSPage() {
       setCountdown(null);
       handleNotifyContacts();
       
-      // Vibration effect for mobile
       if ('vibrate' in navigator) {
         navigator.vibrate([500, 200, 500, 200, 500]);
       }
@@ -84,17 +111,20 @@ export default function SOSPage() {
     setNotifyingContacts(true);
     setNotifiedList([]);
     
-    const contacts = ["Mother", "Brother", "Local Emergency Hub"];
-    contacts.forEach((contact, index) => {
+    const contactsToNotify = parsedContacts.length > 0 
+      ? parsedContacts 
+      : [{ name: "Local Emergency Hub", phone: "911" }];
+
+    contactsToNotify.forEach((contact, index) => {
       setTimeout(() => {
-        setNotifiedList(prev => [...prev, contact]);
-        if (index === contacts.length - 1) {
+        setNotifiedList(prev => [...prev, contact.name]);
+        if (index === contactsToNotify.length - 1) {
           toast({
-            title: "Emergency notification sent successfully.",
-            description: "All contacts have been alerted via data mesh.",
+            title: "Emergency broadcast complete",
+            description: `Alerts sent to ${contactsToNotify.length} contacts via data mesh.`,
           });
         }
-      }, (index + 1) * 1200);
+      }, (index + 1) * 1000);
     });
   };
 
@@ -220,12 +250,12 @@ export default function SOSPage() {
                       </h3>
                     </div>
                     <div className="space-y-3">
-                      {["Mother", "Brother", "Local Emergency Hub"].map((contact, i) => (
+                      {(parsedContacts.length > 0 ? parsedContacts : [{ name: "Emergency Hub" }]).map((contact, i) => (
                         <div key={i} className="flex items-center justify-between text-xs font-bold uppercase tracking-tight">
-                          <span className={cn(notifiedList.includes(contact) ? "text-foreground" : "text-muted-foreground opacity-40")}>
-                            {contact}
+                          <span className={cn(notifiedList.includes(contact.name) ? "text-foreground" : "text-muted-foreground opacity-40")}>
+                            {contact.name}
                           </span>
-                          {notifiedList.includes(contact) ? (
+                          {notifiedList.includes(contact.name) ? (
                             <CheckCircle2 className="h-4 w-4 text-primary animate-in zoom-in" />
                           ) : (
                             <Loader2 className="h-3.5 w-3.5 animate-spin text-primary opacity-30" />
@@ -276,20 +306,25 @@ export default function SOSPage() {
                   <div className="pt-6 border-t border-dashed space-y-4 border-muted/50">
                     <p className="text-[10px] text-muted-foreground uppercase font-black opacity-60">Emergency Contact Cards</p>
                     <div className="space-y-3">
-                      <div className="flex items-center gap-4 bg-muted/30 p-4 rounded-2xl border border-primary/5 hover:bg-muted/40 transition-colors">
-                        <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-lg">👩</div>
-                        <div>
-                          <p className="text-xs font-black uppercase">Mother</p>
-                          <p className="text-[10px] text-muted-foreground font-bold tracking-widest">+91 XXXXX XXXXX</p>
+                      {parsedContacts.length > 0 ? (
+                        parsedContacts.map((contact, i) => (
+                          <div key={i} className="flex items-center gap-4 bg-muted/30 p-4 rounded-2xl border border-primary/5 hover:bg-muted/40 transition-colors">
+                            <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-lg">
+                              {i % 2 === 0 ? '👤' : '👥'}
+                            </div>
+                            <div className="text-left">
+                              <p className="text-xs font-black uppercase">{contact.name}</p>
+                              <p className="text-[10px] text-muted-foreground font-bold tracking-widest">
+                                {contact.phone || "No number saved"}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-4 bg-muted/20 rounded-2xl text-center">
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase">No contacts saved in profile</p>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-4 bg-muted/30 p-4 rounded-2xl border border-primary/5 hover:bg-muted/40 transition-colors">
-                        <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-lg">👨</div>
-                        <div>
-                          <p className="text-xs font-black uppercase">Brother</p>
-                          <p className="text-[10px] text-muted-foreground font-bold tracking-widest">+91 XXXXX XXXXX</p>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
