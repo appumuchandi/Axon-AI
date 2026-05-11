@@ -27,7 +27,6 @@ interface Message {
   suggestedResources?: SuggestedResource[];
   followUpQuestions?: string[];
   audioUrl?: string;
-  showEmergencyPanel?: boolean;
 }
 
 const CHAT_HISTORY_KEY = "axon_ai_chat_history_v2";
@@ -98,15 +97,12 @@ export default function AssistantPage() {
     try {
       const response = await emergencyAssistantGuidance({ query: userMessage });
       
-      const isUrgent = response.category === 'medical' || response.category === 'disaster' || response.category === 'safety';
-
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: response.guidance,
         category: response.category,
         suggestedResources: response.suggestedResources,
-        followUpQuestions: response.followUpQuestions,
-        showEmergencyPanel: isUrgent
+        followUpQuestions: response.followUpQuestions
       }]);
     } catch (error) {
       setMessages(prev => [...prev, { 
@@ -224,40 +220,6 @@ export default function AssistantPage() {
                       </div>
                     )}
                   </div>
-
-                  {msg.role === 'assistant' && msg.showEmergencyPanel && (
-                    <Card className="border-accent/20 border bg-accent/[0.01] overflow-hidden rounded-[1.25rem] shadow-sm animate-in zoom-in-95 duration-500 max-w-[280px]">
-                      <CardHeader className="p-2.5 pb-2 bg-accent/5 border-b border-accent/5">
-                        <CardTitle className="text-[8px] font-black text-accent uppercase tracking-widest flex items-center gap-2">
-                          <ShieldCheck className="h-3 w-3" />
-                          Quick Safety Actions
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-2.5 grid gap-1.5">
-                        <Button 
-                          variant="outline" size="sm" className="w-full justify-start gap-2 border-accent/10 hover:bg-accent/5 text-accent font-bold uppercase text-[8px] tracking-widest h-8 rounded-lg px-3"
-                          onClick={() => toast({ title: "Position shared", description: "GPS coordinates sent to rescue network." })}
-                        >
-                          <MapPin className="h-3 w-3" />
-                          Share Location
-                        </Button>
-                        <Button 
-                          variant="outline" size="sm" className="w-full justify-start gap-2 border-primary/10 hover:bg-primary/5 text-primary font-bold uppercase text-[8px] tracking-widest h-8 rounded-lg px-3"
-                          onClick={() => handleSubmit("Show me nearby medical aid and pharmacies")}
-                        >
-                          <HeartPulse className="h-3 w-3" />
-                          Nearby Medical Aid
-                        </Button>
-                        <Button 
-                          variant="outline" size="sm" className="w-full justify-start gap-2 border-primary/10 hover:bg-primary/5 text-primary font-bold uppercase text-[8px] tracking-widest h-8 rounded-lg px-3"
-                          onClick={() => handleSubmit("How do I prepare an emergency kit?")}
-                        >
-                          <ShieldCheck className="h-3 w-3" />
-                          Emergency Kit Steps
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )}
 
                   {msg.role === 'assistant' && msg.followUpQuestions && msg.followUpQuestions.length > 0 && (
                     <div className="flex flex-wrap gap-2 animate-in fade-in duration-500">
