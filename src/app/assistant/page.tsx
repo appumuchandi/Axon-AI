@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -8,7 +7,7 @@ import { textToSpeech } from "@/ai/flows/text-to-speech"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Send, Bot, User, Loader2, Info, HeartPulse, ShieldAlert, Zap, AlertTriangle, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, Share2, Users, Bell } from "lucide-react"
+import { Send, Bot, User, Loader2, Info, HeartPulse, ShieldAlert, Zap, AlertTriangle, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, Share2, Users, Bell, ArrowRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Logo } from "@/components/Logo"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -50,16 +49,10 @@ export default function AssistantPage() {
       try {
         setMessages(JSON.parse(cached));
       } catch (e) {
-        setMessages([{ 
-          role: 'assistant', 
-          content: INITIAL_AI_MESSAGE 
-        }]);
+        setMessages([{ role: 'assistant', content: INITIAL_AI_MESSAGE }]);
       }
     } else {
-      setMessages([{ 
-          role: 'assistant', 
-          content: INITIAL_AI_MESSAGE 
-        }]);
+      setMessages([{ role: 'assistant', content: INITIAL_AI_MESSAGE }]);
     }
   }, []);
 
@@ -76,15 +69,10 @@ export default function AssistantPage() {
   }, [messages, isLoading]);
 
   const clearChat = () => {
-    const initialMessage: Message[] = [{ 
-      role: 'assistant', 
-      content: "I'm standing by. Describe your situation and I will provide the safest immediate steps." 
-    }];
+    const initialMessage: Message[] = [{ role: 'assistant', content: "I'm standing by. Describe your situation and I will provide the safest immediate steps." }];
     setMessages(initialMessage);
     localStorage.removeItem(CHAT_HISTORY_KEY);
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
+    if (audioRef.current) audioRef.current.pause();
   };
 
   const handleSubmit = async (e: React.FormEvent | string) => {
@@ -101,10 +89,10 @@ export default function AssistantPage() {
     try {
       const response = await emergencyAssistantGuidance({ query: userMessage });
       
-      // Determine if we should show the premium emergency panel
       const isUrgent = response.category === 'first-aid' || response.category === 'safety' || 
                        response.guidance.toLowerCase().includes('sos') || 
-                       response.guidance.toLowerCase().includes('location');
+                       response.guidance.toLowerCase().includes('location') ||
+                       response.guidance.toLowerCase().includes('pain');
 
       setMessages(prev => [...prev, { 
         role: 'assistant', 
@@ -114,10 +102,7 @@ export default function AssistantPage() {
         showEmergencyPanel: isUrgent
       }]);
     } catch (error) {
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: "Network access appears limited. AXON-AI is continuing to assist you in offline mode. Please remain calm and prioritize your immediate safety." 
-      }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: "Network access appears limited. AXON-AI is continuing to assist you in offline mode. Please remain calm and prioritize your immediate safety." }]);
     } finally {
       setIsLoading(false);
     }
@@ -133,15 +118,12 @@ export default function AssistantPage() {
     }
 
     const message = messages[msgIndex];
-    
     try {
       let audioUrl = message.audioUrl;
-      
       if (!audioUrl) {
         setIsLoading(true);
         const ttsResponse = await textToSpeech(text);
         audioUrl = ttsResponse.media;
-        
         setMessages(prev => {
           const updated = [...prev];
           updated[msgIndex] = { ...updated[msgIndex], audioUrl };
@@ -156,41 +138,22 @@ export default function AssistantPage() {
         audioRef.current.onended = () => setIsSpeakingId(null);
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Voice link limited",
-        description: "I'm continuing to provide text-based guidance while audio is limited."
-      });
+      toast({ variant: "destructive", title: "Voice link limited", description: "I'm continuing to provide text-based guidance while audio is limited." });
     } finally {
       setIsLoading(false);
     }
   };
 
   const startListening = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      toast({
-        variant: "destructive",
-        title: "Not Supported",
-        description: "Speech recognition is not available on this browser."
-      });
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ variant: "destructive", title: "Not Supported", description: "Speech recognition is not available." });
       return;
     }
-
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-
     recognition.onstart = () => setIsListening(true);
     recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
-    
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setQuery(transcript);
-    };
-
+    recognition.onresult = (event: any) => setQuery(event.results[0][0].transcript);
     recognition.start();
   };
 
@@ -201,10 +164,6 @@ export default function AssistantPage() {
     { label: "Stop Bleeding", icon: AlertTriangle, query: "How can I help someone with severe bleeding?" },
   ];
 
-  const handleResourceClick = (url: string) => {
-    window.open(url, '_blank');
-  };
-
   return (
     <div className="flex flex-col h-screen bg-background text-foreground">
       <audio ref={audioRef} hidden />
@@ -212,8 +171,8 @@ export default function AssistantPage() {
         <div className="flex items-center gap-3">
           <Logo className="h-9 w-9" />
           <div>
-            <h1 className="font-black font-headline text-lg tracking-tighter text-primary uppercase">AXON ASSIST</h1>
-            <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black opacity-70">Resilient Companion Active</p>
+            <h1 className="font-black font-headline text-lg tracking-tighter text-primary uppercase">Axon Assist</h1>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black opacity-70">Resilient Intelligence Active</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -230,11 +189,8 @@ export default function AssistantPage() {
       </header>
 
       <div className="flex-1 overflow-hidden flex flex-col">
-        <div 
-          ref={scrollRef}
-          className="flex-1 overflow-y-auto p-4 space-y-6 pb-6"
-        >
-          <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex gap-3 mb-6">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-8 pb-6">
+          <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex gap-3 mb-4">
             <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <p className="text-[11px] text-muted-foreground leading-relaxed font-semibold uppercase tracking-tight">
               I am here to provide immediate support. For professional assistance, please prioritize contacting emergency services (911/112).
@@ -242,63 +198,57 @@ export default function AssistantPage() {
           </div>
 
           {messages.map((msg, i) => (
-            <div 
-              key={i} 
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
-            >
-              <div className={`flex gap-3 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div className={`h-9 w-9 rounded-xl shrink-0 flex items-center justify-center shadow-md ${
-                  msg.role === 'user' ? 'bg-muted border border-border' : 'bg-primary'
-                }`}>
+            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+              <div className={`flex gap-3 max-w-[88%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div className={`h-9 w-9 rounded-xl shrink-0 flex items-center justify-center shadow-md ${msg.role === 'user' ? 'bg-muted border' : 'bg-primary'}`}>
                   {msg.role === 'user' ? <User className="h-5 w-5" /> : <Logo className="h-6 w-6" />}
                 </div>
                 <div className="flex flex-col gap-3">
-                  <div className={`p-4 rounded-2xl text-[14px] leading-relaxed whitespace-pre-line font-medium relative group ${
-                    msg.role === 'user' 
-                      ? 'bg-primary text-white rounded-tr-none shadow-xl' 
-                      : 'bg-card border rounded-tl-none shadow-md'
+                  <div className={`p-4 rounded-[1.5rem] text-[14px] leading-relaxed whitespace-pre-line font-medium shadow-sm border ${
+                    msg.role === 'user' ? 'bg-primary text-white border-primary rounded-tr-none' : 'bg-card border-border rounded-tl-none'
                   }`}>
                     {msg.content}
                     {msg.role === 'assistant' && (
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => toggleSpeech(i, msg.content)}
-                        className={`absolute -right-12 top-0 h-9 w-9 rounded-xl transition-all ${isSpeakingId === i ? 'bg-accent text-white scale-110' : 'text-muted-foreground hover:text-primary hover:bg-primary/5'}`}
-                      >
-                        <Volume2 className={`h-5 w-5 ${isSpeakingId === i ? 'animate-pulse' : ''}`} />
-                      </Button>
+                      <div className="flex justify-end mt-2 pt-2 border-t border-border/5">
+                        <Button 
+                          variant="ghost" size="icon" onClick={() => toggleSpeech(i, msg.content)}
+                          className={`h-8 w-8 rounded-full ${isSpeakingId === i ? 'bg-accent text-white scale-110' : 'text-muted-foreground hover:text-primary'}`}
+                        >
+                          <Volume2 className={`h-4 w-4 ${isSpeakingId === i ? 'animate-pulse' : ''}`} />
+                        </Button>
+                      </div>
                     )}
                   </div>
 
                   {msg.role === 'assistant' && msg.showEmergencyPanel && (
-                    <Card className="border-accent border-2 bg-accent/5 overflow-hidden rounded-2xl shadow-xl animate-in zoom-in-95 duration-500">
-                      <CardHeader className="p-4 bg-accent/10 border-b border-accent/10">
-                        <CardTitle className="text-xs font-black text-accent uppercase tracking-widest flex items-center gap-2">
+                    <Card className="border-accent/40 border-2 bg-accent/[0.03] overflow-hidden rounded-[2rem] shadow-xl animate-in zoom-in-95 duration-500">
+                      <CardHeader className="p-5 pb-3 bg-accent/5 border-b border-accent/10">
+                        <CardTitle className="text-[10px] font-black text-accent uppercase tracking-widest flex items-center gap-2">
                           <Bell className="h-3 w-3" />
-                          Emergency Assistance
+                          Emergency Action Panel
                         </CardTitle>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Quick actions are ready.</p>
+                        <p className="text-[9px] text-muted-foreground font-bold uppercase mt-1">Quick actions are ready.</p>
                       </CardHeader>
-                      <CardContent className="p-3 grid gap-2">
+                      <CardContent className="p-4 grid gap-3">
                         <Link href="/sos" className="w-full">
-                          <Button variant="default" className="w-full justify-start gap-3 bg-accent hover:bg-accent/90 text-white font-black uppercase text-[10px] tracking-widest h-12 rounded-xl">
-                            <span className="text-lg">🚨</span>
-                            Activate SOS
+                          <Button className="w-full justify-between bg-accent hover:bg-accent/90 text-white font-black uppercase text-[10px] tracking-widest h-14 rounded-2xl px-5">
+                            <span className="flex items-center gap-3">
+                              <span className="text-lg">🚨</span>
+                              Activate SOS
+                            </span>
+                            <ArrowRight className="h-4 w-4 opacity-50" />
                           </Button>
                         </Link>
                         <Button 
-                          variant="outline" 
-                          className="w-full justify-start gap-3 border-accent/20 hover:bg-accent/10 text-accent font-black uppercase text-[10px] tracking-widest h-12 rounded-xl"
-                          onClick={() => toast({ title: "Location Shared", description: "Your live GPS coordinates have been sent to rescue hubs." })}
+                          variant="outline" className="w-full justify-start gap-3 border-accent/20 hover:bg-accent/5 text-accent font-black uppercase text-[10px] tracking-widest h-14 rounded-2xl px-5"
+                          onClick={() => toast({ title: "Location Shared", description: "GPS coordinates sent to rescue hubs." })}
                         >
                           <span className="text-lg">📍</span>
                           Share Live Location
                         </Button>
                         <Button 
-                          variant="outline" 
-                          className="w-full justify-start gap-3 border-primary/20 hover:bg-primary/10 text-primary font-black uppercase text-[10px] tracking-widest h-12 rounded-xl"
-                          onClick={() => toast({ title: "Contacts Notified", description: "Your emergency contacts have been alerted via SMS/Data Mesh." })}
+                          variant="outline" className="w-full justify-start gap-3 border-primary/20 hover:bg-primary/5 text-primary font-black uppercase text-[10px] tracking-widest h-14 rounded-2xl px-5"
+                          onClick={() => toast({ title: "Contacts Notified", description: "Emergency contacts alerted via Data Mesh." })}
                         >
                           <span className="text-lg">👨‍👩‍👧</span>
                           Notify Contacts
@@ -311,16 +261,13 @@ export default function AssistantPage() {
                     <div className="grid gap-2 mt-1">
                       {msg.suggestedResources.map((resource, idx) => (
                         <Button 
-                          key={idx}
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleResourceClick(resource.googleMapsUrl)}
-                          className="justify-between h-auto py-3 px-4 border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-xl group"
+                          key={idx} variant="outline" size="sm" onClick={() => window.open(resource.googleMapsUrl, '_blank')}
+                          className="justify-between h-auto py-4 px-5 border-primary/10 bg-primary/[0.03] hover:bg-primary/[0.06] rounded-2xl group"
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-4">
                             <MapPin className="h-4 w-4 text-primary" />
                             <div className="text-left">
-                              <p className="text-xs font-black uppercase tracking-tight leading-none">{resource.name}</p>
+                              <p className="text-xs font-black uppercase tracking-tight">{resource.name}</p>
                               <p className="text-[9px] text-muted-foreground font-bold uppercase mt-1">{resource.type} • {resource.address}</p>
                             </div>
                           </div>
@@ -335,28 +282,28 @@ export default function AssistantPage() {
           ))}
 
           {isLoading && (
-            <div className="flex justify-start animate-pulse">
-              <div className="flex gap-3 items-center text-primary font-black">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span className="text-[10px] uppercase tracking-[0.2em]">AXON is thinking...</span>
+            <div className="flex justify-start items-center gap-3 px-2 py-4 animate-pulse">
+              <div className="flex gap-2 items-center text-primary font-black">
+                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
+                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
+                <span className="text-[9px] uppercase tracking-widest ml-2 opacity-60 font-black">Synchronizing Intelligence</span>
               </div>
             </div>
           )}
         </div>
 
         {messages.length <= 1 && !isLoading && (
-          <div className="p-4 grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-bottom-4">
+          <div className="p-4 grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-bottom-4">
             {quickActions.map((action, idx) => (
               <Button 
-                key={idx} 
-                variant="outline" 
-                className="justify-start gap-3 h-auto py-4 text-left border-primary/10 hover:bg-primary/5 hover:border-primary/30 rounded-2xl bg-card shadow-sm"
-                onClick={() => handleSubmit(action.query)}
+                key={idx} variant="outline" onClick={() => handleSubmit(action.query)}
+                className="justify-start gap-4 h-auto py-5 text-left border-primary/10 hover:bg-primary/5 rounded-[1.5rem] bg-card shadow-sm"
               >
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <action.icon className="h-4 w-4 text-primary shrink-0" />
+                <div className="p-2.5 bg-primary/10 rounded-xl">
+                  <action.icon className="h-4 w-4 text-primary" />
                 </div>
-                <span className="text-xs font-black uppercase tracking-tight leading-tight">{action.label}</span>
+                <span className="text-[10px] font-black uppercase tracking-tight leading-tight">{action.label}</span>
               </Button>
             ))}
           </div>
@@ -366,29 +313,18 @@ export default function AssistantPage() {
       <div className="p-4 bg-background/80 backdrop-blur-md border-t pb-20 md:pb-24">
         <div className="flex gap-3 max-w-screen-xl mx-auto items-center">
           <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={startListening}
-            className={`h-14 w-14 rounded-2xl border-primary/10 transition-all ${isListening ? 'bg-accent text-white border-accent scale-110 shadow-lg' : 'text-primary'}`}
+            variant="outline" size="icon" onClick={startListening}
+            className={`h-14 w-14 rounded-2xl border-primary/10 transition-all ${isListening ? 'bg-accent text-white border-accent scale-105 shadow-lg' : 'text-primary'}`}
           >
             {isListening ? <MicOff className="h-6 w-6 animate-pulse" /> : <Mic className="h-6 w-6" />}
           </Button>
-          <form 
-            onSubmit={handleSubmit} 
-            className="flex-1 flex gap-2"
-          >
+          <form onSubmit={handleSubmit} className="flex-1 flex gap-2">
             <Input 
-              placeholder={isListening ? "I'm listening..." : "How can I help you?"} 
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              disabled={isLoading}
-              className="flex-1 rounded-2xl border-primary/10 focus-visible:ring-primary h-14 px-6 text-base font-medium shadow-inner"
+              placeholder={isListening ? "Listening to situation..." : "Describe emergency..."} 
+              value={query} onChange={(e) => setQuery(e.target.value)} disabled={isLoading}
+              className="flex-1 rounded-2xl border-primary/10 focus-visible:ring-primary h-14 px-6 text-[15px] font-medium shadow-inner"
             />
-            <Button 
-              type="submit" 
-              disabled={isLoading || !query.trim()} 
-              className="rounded-2xl w-14 h-14 p-0 bg-primary hover:bg-primary/90 shadow-xl"
-            >
+            <Button type="submit" disabled={isLoading || !query.trim()} className="rounded-2xl w-14 h-14 p-0 bg-primary hover:bg-primary/90 shadow-lg">
               {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Send className="h-6 w-6" />}
             </Button>
           </form>

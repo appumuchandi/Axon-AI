@@ -19,7 +19,9 @@ import {
   Info,
   Sparkles,
   RefreshCw,
-  WifiOff
+  WifiOff,
+  Database,
+  Navigation as NavIcon
 } from "lucide-react"
 import { generatePreparednessInsights, type GeneratePreparednessInsightsOutput } from "@/ai/flows/generate-preparedness-insights"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -73,10 +75,9 @@ export default function Dashboard() {
       setInsights(result);
       localStorage.setItem(`${INSIGHTS_CACHE_KEY}_${topic}`, JSON.stringify(result));
     } catch (error: any) {
-      console.error("Failed to fetch AI insights", error);
       toast({
-        title: "Resilient Intelligence Mode",
-        description: "Network link limited. AXON-AI is continuing with locally cached protocols.",
+        title: "Resilient Intelligence Active",
+        description: "Local survival protocols have been activated due to network link limits.",
       });
     } finally {
       setIsLoadingInsights(false);
@@ -87,12 +88,12 @@ export default function Dashboard() {
     fetchInsights(activeTopic);
   }, [activeTopic]);
 
-  const getInsightIcon = (type: string) => {
+  const getInsightCategory = (type: string) => {
     switch (type) {
-      case 'tip': return <Lightbulb className="h-4 w-4 text-blue-500" />;
-      case 'warning': return <AlertTriangle className="h-4 w-4 text-accent" />;
-      case 'action': return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      default: return <Info className="h-4 w-4 text-primary" />;
+      case 'tip': return { label: '🛡 Guidance', icon: Lightbulb, color: 'text-blue-500' };
+      case 'warning': return { label: '⚠ Alert', icon: AlertTriangle, color: 'text-accent' };
+      case 'action': return { label: '📡 Connectivity', icon: CheckCircle2, color: 'text-green-500' };
+      default: return { label: '🤖 AI Insight', icon: Sparkles, color: 'text-primary' };
     }
   }
 
@@ -109,14 +110,13 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen pb-24 bg-background">
-      {/* Top Header */}
-      <header className="px-4 pt-6 pb-4 bg-card border-b sticky top-0 z-20 shadow-sm">
+      <header className="px-5 pt-7 pb-5 bg-card/80 backdrop-blur-md border-b sticky top-0 z-20 shadow-sm">
         <div className="max-w-screen-xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Logo className="h-9 w-9" />
             <div>
               <h1 className="text-xl font-black font-headline tracking-tighter text-primary leading-none uppercase">AXON-AI</h1>
-              <p className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] opacity-60">AI That Survives Disasters.</p>
+              <p className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] opacity-50 mt-1">Resilient Command Hub</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -125,59 +125,48 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="px-4 mt-6 max-w-screen-xl mx-auto space-y-8">
-        {/* Device & Connection Status */}
+      <main className="px-5 mt-8 max-w-screen-xl mx-auto space-y-10">
         <div className="space-y-4">
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-primary" />
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Resilience Status</h2>
-            </div>
+          <div className="flex items-center gap-2 px-1">
+            <Activity className="h-4 w-4 text-primary" />
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Mission Critical Status</h2>
           </div>
           
           <StatusCard />
           
           <div className={cn(
-            "p-3 rounded-xl border flex items-center justify-center gap-3 transition-all duration-500",
-            isOnline 
-              ? "bg-primary/5 border-primary/10 text-primary/60" 
-              : "bg-accent/10 border-accent/30 text-accent animate-pulse"
+            "p-4 rounded-[1.5rem] border flex items-center justify-center gap-3 transition-all duration-700",
+            isOnline ? "bg-primary/5 border-primary/10 text-primary/60" : "bg-accent/10 border-accent/30 text-accent animate-pulse shadow-lg"
           )}>
             {!isOnline && <WifiOff className="h-4 w-4 shrink-0" />}
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-center">
-              When Networks Fail, AXON-AI Responds.
+              {isOnline ? "Network Infrastructure Stable" : "Grid Link Disrupted - Offline Resilience Engaged"}
             </p>
           </div>
         </div>
 
-        {/* AI Insights Engine Section */}
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
               <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Resilient Intel Engine</h2>
             </div>
             <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-6 px-2 text-[10px] font-black text-primary hover:bg-primary/5"
-              onClick={() => fetchInsights(activeTopic)}
-              disabled={isLoadingInsights}
+              variant="ghost" size="sm" className="h-6 px-3 text-[9px] font-black text-primary hover:bg-primary/5 rounded-full"
+              onClick={() => fetchInsights(activeTopic)} disabled={isLoadingInsights}
             >
-              <RefreshCw className={cn("h-3 w-3 mr-1.5", isLoadingInsights && "animate-spin")} />
-              UPDATE INTEL
+              <RefreshCw className={cn("h-3 w-3 mr-2", isLoadingInsights && "animate-spin")} />
+              SYNC INTEL
             </Button>
           </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide no-scrollbar">
+          <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide no-scrollbar">
             {TOPICS.map((topic) => (
               <Button
-                key={topic.id}
-                variant={activeTopic === topic.id ? "default" : "outline"}
-                size="sm"
+                key={topic.id} variant={activeTopic === topic.id ? "default" : "outline"} size="sm"
                 onClick={() => setActiveTopic(topic.id)}
                 className={cn(
-                  "rounded-full px-5 font-black text-[10px] uppercase transition-all border-2",
+                  "rounded-full px-6 font-black text-[10px] uppercase transition-all border-2",
                   activeTopic === topic.id ? "bg-primary shadow-lg border-primary" : "border-primary/10 text-muted-foreground hover:border-primary/40"
                 )}
               >
@@ -187,85 +176,59 @@ export default function Dashboard() {
             ))}
           </div>
           
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             {isLoadingInsights && !insights ? (
-              Array.from({ length: 2 }).map((_, i) => (
-                <Skeleton key={i} className="h-36 w-full rounded-2xl" />
-              ))
+              Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-40 w-full rounded-[2rem]" />)
             ) : (
-              insights?.insights.map((insight: any, idx: number) => (
-                <Card key={idx} className="bg-card border-none hover:shadow-xl transition-all shadow-md group rounded-2xl">
-                  <CardHeader className="p-5 pb-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/5 rounded-xl">
-                          {getInsightIcon(insight.type)}
+              insights?.insights.map((insight: any, idx: number) => {
+                const cat = getInsightCategory(insight.type);
+                return (
+                  <Card key={idx} className="bg-card border-none hover:shadow-xl transition-all shadow-md group rounded-[2rem] overflow-hidden">
+                    <CardHeader className="p-6 pb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={cn("p-2 bg-muted/30 rounded-xl", cat.color)}>
+                            <cat.icon className="h-4 w-4" />
+                          </div>
+                          <CardTitle className="text-sm font-black text-foreground uppercase tracking-tight">{insight.title}</CardTitle>
                         </div>
-                        <CardTitle className="text-sm font-black text-foreground uppercase tracking-tight">{insight.title}</CardTitle>
+                        <Badge variant="secondary" className="text-[8px] font-black uppercase tracking-tighter opacity-60 bg-muted/50">
+                          {cat.label}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter opacity-40 border-primary/20">
-                        {insight.type}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-5 pt-2">
-                    <p className="text-[13px] text-muted-foreground leading-relaxed font-semibold">{insight.content}</p>
-                  </CardContent>
-                </Card>
-              ))
+                    </CardHeader>
+                    <CardContent className="p-6 pt-2">
+                      <p className="text-[13px] text-muted-foreground leading-relaxed font-semibold">{insight.content}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })
             )}
           </div>
         </div>
 
-        {/* Critical Emergency Alerts */}
-        <Card className="border-none bg-accent/5 overflow-hidden shadow-xl rounded-3xl relative">
-          <div className="absolute top-0 left-0 w-1 h-full bg-accent" />
-          <CardHeader className="bg-accent/5 py-4 flex flex-row items-center justify-between border-b border-accent/10">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="text-accent h-5 w-5" />
-              <CardTitle className="text-xs font-black text-accent uppercase tracking-widest leading-none">Resilience Updates</CardTitle>
-            </div>
-            <span className="w-2.5 h-2.5 rounded-full bg-accent animate-ping" />
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <div className="flex gap-4 items-start">
-                <div className="bg-accent/10 p-3 rounded-2xl">
-                  <Radio className="h-5 w-5 text-accent" />
-                </div>
-                <div>
-                  <h4 className="font-black text-sm uppercase text-foreground leading-none">Survival Intelligence Cached</h4>
-                  <p className="text-xs text-muted-foreground mt-2 leading-relaxed font-semibold">Local protocols for water purification and basic wound care are synced and ready for offline use.</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Rescue Centers */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-1">
-            <MapPin className="h-4 w-4 text-primary" />
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nearby Support</h2>
+            <NavIcon className="h-4 w-4 text-primary" />
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nearby Rescue Hubs</h2>
           </div>
-          <Card className="border-none shadow-lg rounded-3xl overflow-hidden">
+          <Card className="border-none shadow-lg rounded-[2.5rem] overflow-hidden bg-card">
             <CardContent className="p-0 divide-y border-none">
               {rescueServices.map((service, i) => (
                 <div 
-                  key={i} 
-                  onClick={() => handleDirectionClick(service.name)}
-                  className="flex justify-between items-center p-5 hover:bg-primary/5 transition-colors group cursor-pointer"
+                  key={i} onClick={() => handleDirectionClick(service.name)}
+                  className="flex justify-between items-center p-6 hover:bg-primary/[0.03] transition-colors group cursor-pointer"
                 >
-                  <div className="space-y-1">
-                    <p className="font-black text-[14px] uppercase text-foreground tracking-tight">{service.name}</p>
+                  <div className="space-y-1.5">
+                    <p className="font-black text-[14px] uppercase text-foreground tracking-tight leading-none">{service.name}</p>
                     <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-black text-primary uppercase tracking-widest">{service.type}</span>
+                      <span className="text-[9px] font-black text-primary uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded-md">{service.type}</span>
                       <span className="text-[9px] text-muted-foreground font-black opacity-50">• {service.dist}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <Badge variant="outline" className="text-[8px] font-black border-primary/20 text-primary uppercase">{service.status}</Badge>
-                    <div className="bg-primary/10 p-2.5 rounded-xl group-hover:bg-primary group-hover:text-white transition-all">
+                    <Badge variant="outline" className="text-[8px] font-black border-primary/20 text-primary uppercase px-3 py-1 rounded-full">{service.status}</Badge>
+                    <div className="bg-muted p-3 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
                       <ArrowRight className="h-4 w-4 text-primary group-hover:text-white" />
                     </div>
                   </div>
@@ -274,6 +237,18 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="border-none bg-primary/5 rounded-[2.5rem] overflow-hidden p-7 shadow-sm">
+           <div className="flex items-center gap-4">
+             <div className="bg-primary/10 p-4 rounded-[1.25rem]">
+               <Database className="h-6 w-6 text-primary" />
+             </div>
+             <div>
+               <h3 className="text-sm font-black uppercase tracking-tight leading-none">System Resilience Briefing</h3>
+               <p className="text-[11px] text-muted-foreground font-semibold mt-2 leading-relaxed">Local survival protocols and GPS mesh networking are verified and ready for infrastructure-free operation.</p>
+             </div>
+           </div>
+        </Card>
       </main>
 
       <Navigation />

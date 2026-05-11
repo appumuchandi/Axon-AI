@@ -18,7 +18,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
 
-    /* Salmon: SOS & Alerts */
+    /* Salmon: SOS & Alerts (Microsoft-style Salmon) */
     --accent: 6 93% 71%;
     --accent-foreground: 0 0% 100%;
 
@@ -34,7 +34,7 @@
     --border: 0 0% 88%;
     --input: 0 0% 88%;
     --ring: 197 100% 50%;
-    --radius: 1rem;
+    --radius: 1.25rem;
   }
   .dark {
     --background: 197 40% 5%;
@@ -68,5 +68,18 @@
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline font-bold;
+  }
+}
+
+@layer utilities {
+  .animate-slow-pulse {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
