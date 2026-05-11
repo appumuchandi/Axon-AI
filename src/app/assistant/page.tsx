@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -7,20 +6,28 @@ import { emergencyAssistantGuidance } from "@/ai/flows/emergency-assistant-guida
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Send, Bot, User, Loader2, Info, HeartPulse, ShieldAlert, Zap, AlertTriangle, Trash2, Mic } from "lucide-react"
+import { Send, Bot, User, Loader2, Info, HeartPulse, ShieldAlert, Zap, AlertTriangle, Trash2, Mic, MapPin, ExternalLink } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Logo } from "@/components/Logo"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ThemeToggle } from "@/components/ThemeToggle"
 
+interface SuggestedResource {
+  name: string;
+  type: string;
+  address: string;
+  googleMapsUrl: string;
+}
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   category?: 'first-aid' | 'survival' | 'safety' | 'other';
+  suggestedResources?: SuggestedResource[];
 }
 
 const CHAT_HISTORY_KEY = "axon_ai_chat_history";
-const INITIAL_AI_MESSAGE = "I am AXON-AI. When networks fail, I respond. Describe your situation for instant rescue protocols.";
+const INITIAL_AI_MESSAGE = "I am AXON-AI. When networks fail, I respond. Describe your situation or ask for nearby medical stores for instant rescue protocols.";
 
 export default function AssistantPage() {
   const [query, setQuery] = useState("");
@@ -84,7 +91,8 @@ export default function AssistantPage() {
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: response.guidance,
-        category: response.category 
+        category: response.category,
+        suggestedResources: response.suggestedResources
       }]);
     } catch (error) {
       setMessages(prev => [...prev, { 
@@ -97,11 +105,15 @@ export default function AssistantPage() {
   };
 
   const quickActions = [
+    { label: "Nearby Stores", icon: MapPin, query: "Show me nearby medical stores and pharmacies" },
     { label: "CPR Protocol", icon: HeartPulse, query: "Show me step-by-step CPR instructions" },
     { label: "Earthquake Tips", icon: Zap, query: "What to do during an earthquake?" },
     { label: "Bleeding Control", icon: AlertTriangle, query: "How to stop severe bleeding?" },
-    { label: "Hazard Safety", icon: ShieldAlert, query: "What are the essential safety steps for gas leaks?" },
   ];
+
+  const handleResourceClick = (url: string) => {
+    window.open(url, '_blank');
+  };
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -149,12 +161,37 @@ export default function AssistantPage() {
                 }`}>
                   {msg.role === 'user' ? <User className="h-5 w-5" /> : <Logo className="h-6 w-6" />}
                 </div>
-                <div className={`p-4 rounded-2xl text-[14px] leading-relaxed whitespace-pre-line font-medium ${
-                  msg.role === 'user' 
-                    ? 'bg-primary text-white rounded-tr-none shadow-xl' 
-                    : 'bg-card border rounded-tl-none shadow-md'
-                }`}>
-                  {msg.content}
+                <div className="flex flex-col gap-3">
+                  <div className={`p-4 rounded-2xl text-[14px] leading-relaxed whitespace-pre-line font-medium ${
+                    msg.role === 'user' 
+                      ? 'bg-primary text-white rounded-tr-none shadow-xl' 
+                      : 'bg-card border rounded-tl-none shadow-md'
+                  }`}>
+                    {msg.content}
+                  </div>
+                  
+                  {msg.role === 'assistant' && msg.suggestedResources && msg.suggestedResources.length > 0 && (
+                    <div className="grid gap-2 mt-1">
+                      {msg.suggestedResources.map((resource, idx) => (
+                        <Button 
+                          key={idx}
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleResourceClick(resource.googleMapsUrl)}
+                          className="justify-between h-auto py-3 px-4 border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-xl group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <MapPin className="h-4 w-4 text-primary" />
+                            <div className="text-left">
+                              <p className="text-xs font-black uppercase tracking-tight leading-none">{resource.name}</p>
+                              <p className="text-[9px] text-muted-foreground font-bold uppercase mt-1">{resource.type} • {resource.address}</p>
+                            </div>
+                          </div>
+                          <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
