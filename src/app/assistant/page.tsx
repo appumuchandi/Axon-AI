@@ -30,7 +30,7 @@ interface Message {
 }
 
 const CHAT_HISTORY_KEY = "axon_ai_chat_history";
-const INITIAL_AI_MESSAGE = "I am AXON-AI, your Emergency Intelligence System. Disaster-ready and offline-optimized. Describe your situation for instant rescue protocols.";
+const INITIAL_AI_MESSAGE = "I am AXON-AI, your resilient emergency companion. I am here to provide calm, actionable guidance during critical situations, even when traditional systems fail. How can I support you right now?";
 
 export default function AssistantPage() {
   const [query, setQuery] = useState("");
@@ -75,7 +75,7 @@ export default function AssistantPage() {
   const clearChat = () => {
     const initialMessage: Message[] = [{ 
       role: 'assistant', 
-      content: "Protocol reset. Emergency Intelligence System standing by." 
+      content: "I'm standing by. Describe your situation and I will provide the safest immediate steps." 
     }];
     setMessages(initialMessage);
     localStorage.removeItem(CHAT_HISTORY_KEY);
@@ -106,7 +106,7 @@ export default function AssistantPage() {
     } catch (error) {
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: "Network link disrupted. Falling back to local resilience protocols. Please remain calm." 
+        content: "Network access appears limited. AXON-AI is continuing to assist you in offline mode. Please remain calm and prioritize your immediate safety." 
       }]);
     } finally {
       setIsLoading(false);
@@ -149,8 +149,8 @@ export default function AssistantPage() {
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Voice Protocol Error",
-        description: "Could not initialize text-to-speech engine."
+        title: "Voice link limited",
+        description: "I'm continuing to provide text-based guidance while audio is limited."
       });
     } finally {
       setIsLoading(false);
@@ -162,7 +162,7 @@ export default function AssistantPage() {
       toast({
         variant: "destructive",
         title: "Not Supported",
-        description: "Speech recognition is not supported in this browser."
+        description: "Speech recognition is not available on this browser."
       });
       return;
     }
@@ -186,10 +186,10 @@ export default function AssistantPage() {
   };
 
   const quickActions = [
-    { label: "Nearby Stores", icon: MapPin, query: "Show me nearby medical stores and pharmacies" },
-    { label: "CPR Protocol", icon: HeartPulse, query: "Show me step-by-step CPR instructions" },
-    { label: "Earthquake Tips", icon: Zap, query: "What to do during an earthquake?" },
-    { label: "Bleeding Control", icon: AlertTriangle, query: "How to stop severe bleeding?" },
+    { label: "Nearby Aid", icon: MapPin, query: "Show me nearby medical aid and pharmacies" },
+    { label: "First Aid Steps", icon: HeartPulse, query: "What are the first aid steps for an emergency?" },
+    { label: "Safe Evacuation", icon: Zap, query: "How do I safely evacuate?" },
+    { label: "Stop Bleeding", icon: AlertTriangle, query: "How can I help someone with severe bleeding?" },
   ];
 
   const handleResourceClick = (url: string) => {
@@ -204,7 +204,7 @@ export default function AssistantPage() {
           <Logo className="h-9 w-9" />
           <div>
             <h1 className="font-black font-headline text-lg tracking-tighter text-primary uppercase">AXON ASSIST</h1>
-            <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black opacity-70">Resilient System Active</p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black opacity-70">Resilient Companion Active</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -228,7 +228,7 @@ export default function AssistantPage() {
           <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex gap-3 mb-6">
             <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <p className="text-[11px] text-muted-foreground leading-relaxed font-semibold uppercase tracking-tight">
-              Emergency Intelligence System guidance is for critical reference. Priority 1: Contact professional services (911/112).
+              I am here to provide immediate support. For professional assistance, please prioritize contacting emergency services (911/112).
             </p>
           </div>
 
@@ -293,7 +293,7 @@ export default function AssistantPage() {
             <div className="flex justify-start animate-pulse">
               <div className="flex gap-3 items-center text-primary font-black">
                 <Loader2 className="h-5 w-5 animate-spin" />
-                <span className="text-[10px] uppercase tracking-[0.2em]">Synchronizing Intelligence...</span>
+                <span className="text-[10px] uppercase tracking-[0.2em]">AXON is thinking...</span>
               </div>
             </div>
           )}
@@ -333,7 +333,7 @@ export default function AssistantPage() {
             className="flex-1 flex gap-2"
           >
             <Input 
-              placeholder={isListening ? "Listening..." : "Describe emergency..."} 
+              placeholder={isListening ? "I'm listening..." : "How can I help you?"} 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               disabled={isLoading}

@@ -90,25 +90,27 @@ const emergencyAssistantPrompt = ai.definePrompt({
   tools: [findEmergencyResources],
   input: {schema: EmergencyAssistantInputSchema},
   output: {schema: EmergencyAssistantOutputSchema},
-  prompt: `You are AXON-AI, a high-intelligence, resilient Emergency Assistant.
+  prompt: `You are AXON-AI, a calm, intelligent emergency companion. Your mission is to assist people during critical situations when traditional infrastructure might be failing.
 
-When a user describes a critical medical symptom (e.g., chest pain, heart pain, difficulty breathing, severe bleeding):
-1. SOUND CALM AND HUMAN-CENTERED. Do not use technical jargon or "system alert" language.
-2. BE ACTIONABLE. Provide immediate, life-saving steps.
-3. BE MEDICALLY APPROPRIATE.
+CORE PERSONALITY:
+- Sound composed, reassuring, and practical.
+- Be human-centered and action-oriented.
+- NEVER use robotic phrases like "SYSTEM FAILURE" or "THREAT DETECTED".
+- Use "Possible [emergency] detected" instead of "CRITICAL ALERT".
 
-Example for Cardiac Pain:
+EMERGENCY RESPONSE STRUCTURE:
+1. Briefly acknowledge the issue with calm reassurance.
+2. Explain possible concerns clearly and informatively.
+3. Provide immediate, safe, step-by-step actions.
+4. Recommend seeking professional emergency help (911/112).
+5. Offer AXON-AI SOS options if appropriate.
+
+SPECIFIC GUIDANCE FOR CARDIAC PAIN:
 - Acknowledge: "Possible cardiac emergency detected."
 - Advice: "Please stay calm and sit down in a safe position."
-- Check symptoms: Chest pressure, breathing difficulty, pain spreading to arm/jaw, back pain, dizziness, or sweating.
-- Immediate Actions: Call 911/112, avoid physical activity, take prescribed heart medication.
-- Offer Next Steps: Ask if they would like AXON-AI to trigger SOS mode, share their location, or alert emergency contacts.
-
-For general emergencies:
-- Use numbered lists for steps.
-- Always include a disclaimer to contact professional emergency services (911/112).
-- If resources are needed, use the findEmergencyResources tool.
-- Be concise. Seconds matter.
+- Check symptoms: Chest pressure, breathing difficulty, pain spreading to arm/jaw, or sweating.
+- Immediate Actions: Call emergency services, avoid activity, take prescribed medication.
+- Offer: Ask if they want to trigger SOS mode or share location.
 
 User's Situation/Question: {{{query}}}`,
 });
@@ -161,14 +163,21 @@ Would you like AXON-AI to:
       // CPR Fallback
       if (q.includes('cpr')) {
         return {
-          guidance: "DISASTER PROTOCOL ACTIVE (CPR):\n1. Call 911/112 immediately.\n2. Push hard and fast in the center of the chest.\n3. Rate: 100-120 compressions per minute.\n4. Allow full chest recoil.",
+          guidance: `Possible medical emergency requiring CPR.
+
+1. Call emergency services (911/112) immediately.
+2. Place the heel of one hand in the center of the chest.
+3. Push hard and fast (100-120 compressions per minute).
+4. Allow the chest to recoil fully between compressions.
+
+I can assist with an SOS broadcast if needed.`,
           category: "first-aid"
         };
       }
       
       if (q.includes('medical') || q.includes('store') || q.includes('hospital') || q.includes('pharmacy')) {
         return {
-          guidance: "Intelligence Link Disrupted. Accessing locally cached medical resources from the Resilient Intelligence Engine. Priority: Seek professional care at the nearest Trauma Center.",
+          guidance: "I've accessed locally cached medical resources to assist you while connectivity is limited. Please prioritize seeking professional care at the nearest facility.",
           category: "safety",
           suggestedResources: [
             { name: "Central Medical Emergency Hospital", type: "Hospital", address: "0.8km", googleMapsUrl: "https://www.google.com/maps/search/Central+Medical+Emergency+Hospital" },
@@ -178,7 +187,7 @@ Would you like AXON-AI to:
       }
 
       return {
-        guidance: "SYSTEM CRITICAL ALERT: Cloud intelligence is restricted. Follow these Resilience Protocols:\n\n1. CALL EMERGENCY SERVICES (911/112) immediately if in danger.\n2. Administer basic first-aid: check breathing, apply pressure to stop bleeding.\n3. Secure your immediate surroundings or evacuate to a designated safe zone.",
+        guidance: "Network access appears limited, but AXON-AI is continuing in offline mode to support you.\n\n1. CALL EMERGENCY SERVICES (911/112) immediately if you are in danger.\n2. Administer basic first-aid: check breathing and apply pressure to any wounds.\n3. Secure your immediate surroundings or move to a safe zone.",
         category: "safety"
       };
     }
