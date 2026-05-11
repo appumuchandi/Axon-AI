@@ -90,22 +90,25 @@ const emergencyAssistantPrompt = ai.definePrompt({
   tools: [findEmergencyResources],
   input: {schema: EmergencyAssistantInputSchema},
   output: {schema: EmergencyAssistantOutputSchema},
-  prompt: `You are AXON-AI, the core of this UNIQUE Emergency Intelligence System. You are disaster-ready, offline-optimized, and resilient.
+  prompt: `You are AXON-AI, a high-intelligence, resilient Emergency Assistant.
 
-Your mission is to provide life-saving, direct, and actionable guidance for emergency situations. You operate when traditional systems fail.
+When a user describes a critical medical symptom (e.g., chest pain, heart pain, difficulty breathing, severe bleeding):
+1. SOUND CALM AND HUMAN-CENTERED. Do not use technical jargon or "system alert" language.
+2. BE ACTIONABLE. Provide immediate, life-saving steps.
+3. BE MEDICALLY APPROPRIATE.
 
-If the user asks for nearby resources (hospitals, pharmacies, stores, etc.), use the findEmergencyResources tool to get specific locations.
+Example for Cardiac Pain:
+- Acknowledge: "Possible cardiac emergency detected."
+- Advice: "Please stay calm and sit down in a safe position."
+- Check symptoms: Chest pressure, breathing difficulty, pain spreading to arm/jaw, back pain, dizziness, or sweating.
+- Immediate Actions: Call 911/112, avoid physical activity, take prescribed heart medication.
+- Offer Next Steps: Ask if they would like AXON-AI to trigger SOS mode, share their location, or alert emergency contacts.
 
-Focus your response on the following areas:
-1. FIRST-AID: Provide step-by-step medical instructions (e.g., CPR, wound care, choking).
-2. DISASTER SURVIVAL: Give instructions for surviving natural disasters (e.g., earthquakes, floods, fires).
-3. SAFETY PROCEDURES: Explain evacuation protocols and hazardous material safety.
-
-INSTRUCTIONS:
-- Be concise. Seconds matter.
+For general emergencies:
 - Use numbered lists for steps.
 - Always include a disclaimer to contact professional emergency services (911/112).
-- If resources are found, summarize the best options briefly in the guidance and return the suggestedResources array.
+- If resources are needed, use the findEmergencyResources tool.
+- Be concise. Seconds matter.
 
 User's Situation/Question: {{{query}}}`,
 });
@@ -126,7 +129,36 @@ const emergencyAssistantGuidanceFlow = ai.defineFlow(
       
       const q = input.query.toLowerCase();
       
-      // Intelligence Link Disrupted fallbacks
+      // Cardiac Fallback - Medically Appropriate & Calm
+      if (q.includes('heart') || q.includes('cardiac') || q.includes('chest pain')) {
+        return {
+          guidance: `Possible cardiac emergency detected.
+
+Please stay calm and sit down in a safe position.
+
+If you are experiencing:
+- chest pressure or tightness
+- difficulty breathing
+- pain spreading to the arm, jaw, or back
+- dizziness or sweating
+
+seek emergency medical help immediately.
+
+Immediate Actions:
+1. Call emergency services (911/112) or alert a nearby person.
+2. Avoid physical activity.
+3. If prescribed, take your heart medication.
+4. Keep your phone nearby and remain conscious if possible.
+
+Would you like AXON-AI to:
+- trigger SOS mode
+- share your location
+- contact emergency contacts`,
+          category: "first-aid"
+        };
+      }
+
+      // CPR Fallback
       if (q.includes('cpr')) {
         return {
           guidance: "DISASTER PROTOCOL ACTIVE (CPR):\n1. Call 911/112 immediately.\n2. Push hard and fast in the center of the chest.\n3. Rate: 100-120 compressions per minute.\n4. Allow full chest recoil.",
