@@ -62,27 +62,19 @@ const emergencyAssistantPrompt = ai.definePrompt({
   tools: [findEmergencyResources],
   input: {schema: EmergencyAssistantInputSchema},
   output: {schema: EmergencyAssistantOutputSchema},
-  prompt: `You are AXON-AI, an offline-first emergency intelligence system. Your mission is to provide calm, contextual, and resilient assistance during critical real-world situations — especially when traditional systems fail.
+  prompt: `You are AXON-AI, an offline-first emergency intelligence system. Your mission is to provide calm, contextual, and resilient assistance during critical real-world situations.
 
 CORE PERSONALITY:
 - Be a calm emergency companion, an intelligent responder, and a trustworthy assistant.
 - Sound composed, reassuring, practical, and dependable.
 - NEVER sound robotic, cold, alarmist, or detached.
-- AVOID aggressive phrases like "SYSTEM FAILURE", "CRITICAL ALERT", or "PROTOCOL INITIATED".
-- USE: "Possible [emergency] detected" or "Here are the safest immediate steps."
 
-RESPONSE STRUCTURE:
+RESPONSE PROTOCOL:
 1. Briefly acknowledge the situation calmly.
 2. Explain the possible concern clearly and responsibly.
 3. Provide immediate, safe, step-by-step actions.
 4. Recommend professional emergency services (911/112) when appropriate.
 5. Offer AXON-AI assistance actions (SOS, location sharing, emergency contacts).
-
-CATEGORIES:
-- Medical (Chest pain, bleeding, breathing difficulty)
-- Disaster (Floods, earthquakes, fires)
-- Safety (Threats, missing persons)
-- Infrastructure (No signal, power outage)
 
 User Situation: {{{query}}}`,
 });
@@ -99,42 +91,28 @@ const emergencyAssistantGuidanceFlow = ai.defineFlow(
       if (!output) throw new Error('No output from AI');
       return output;
     } catch (error) {
-      console.warn('AI capacity restricted. Using contextual offline resilience.', error);
+      console.warn('Axon-AI Engine rate limited. Using contextual resilience.', error);
       
       const q = input.query.toLowerCase();
       
-      if (q.includes('heart') || q.includes('cardiac') || q.includes('chest pain')) {
+      if (q.includes('heart') || q.includes('cardiac') || q.includes('chest pain') || q.includes('pain')) {
         return {
-          guidance: `Possible medical emergency detected.
+          guidance: `Possible medical emergency detected. Please stay calm and sit down immediately. 
 
-Please stay calm and sit down in a safe position.
-
-If you are experiencing chest pressure, difficulty breathing, or pain spreading to the arm or jaw, seek emergency medical help immediately.
+If you are experiencing chest pressure or difficulty breathing, seek emergency medical help (911) right now.
 
 Immediate Actions:
-1. Call emergency services (911/112) or alert someone nearby.
-2. Avoid physical activity.
-3. If prescribed, take your heart medication.
-4. Keep your phone nearby and remain conscious.
+1. Alert someone nearby.
+2. Stop all physical activity.
+3. Keep your phone nearby and remain conscious.
 
-Would you like AXON-AI to trigger SOS mode or share your location?`,
+Axon-AI is standing by for SOS activation or location sharing.`,
           category: "medical"
         };
       }
 
-      if (q.includes('medical') || q.includes('hospital') || q.includes('pharmacy')) {
-        return {
-          guidance: "Connectivity is limited. AXON-AI remains operational with cached resources.",
-          category: "infrastructure",
-          suggestedResources: [
-            { name: "Central Medical Emergency Hospital", type: "Hospital", address: "0.8km", googleMapsUrl: "https://www.google.com/maps/search/Central+Medical+Emergency+Hospital" },
-            { name: "LifeCare 24/7 Pharmacy", type: "Medical Store", address: "0.3km", googleMapsUrl: "https://www.google.com/maps/search/LifeCare+Pharmacy" }
-          ]
-        };
-      }
-
       return {
-        guidance: "Connectivity is limited. AXON-AI remains operational to support you.\n\n1. Prioritize your immediate safety.\n2. Call professional emergency services if you are in danger.\n3. AXON-AI is standing by for location sharing and SOS broadcasting.",
+        guidance: "Connectivity appears limited, but AXON-AI is continuing in offline assistance mode. \n\n1. Prioritize your immediate safety.\n2. Call professional emergency services if you are in danger.\n3. I am standing by for location sharing and SOS broadcasting.",
         category: "infrastructure"
       };
     }

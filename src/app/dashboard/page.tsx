@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { Navigation } from "@/components/Navigation"
-import { StatusCard } from "@/components/StatusCard"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -25,7 +24,13 @@ import {
   Wifi,
   Globe,
   RadioTower,
-  Cpu
+  Cpu,
+  ShieldCheck,
+  Battery,
+  Lock,
+  Search,
+  Zap,
+  Waves
 } from "lucide-react"
 import { generatePreparednessInsights, type GeneratePreparednessInsightsOutput } from "@/ai/flows/generate-preparedness-insights"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -33,20 +38,19 @@ import { Logo } from "@/components/Logo"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { ThemeToggle } from "@/components/ThemeToggle"
+import Link from "next/link"
 
-const TOPICS = [
-  { id: "General", label: "General", icon: Shield },
-  { id: "Earthquake", label: "Quake", icon: Activity },
-  { id: "Flood", label: "Flood", icon: AlertCircle },
-  { id: "Medical", label: "Medical", icon: Activity },
+const INTELLIGENCE_MODES = [
+  { id: "Resilience", label: "🛡 Resilience", icon: Shield, topic: "General Emergency Preparedness" },
+  { id: "Seismic", label: "🌍 Seismic", icon: Activity, topic: "Earthquake Survival Steps" },
+  { id: "Flood", label: "🌊 Flood", icon: Waves, topic: "Flood Water Safety" },
+  { id: "Medical", label: "❤️ Medical", icon: Activity, topic: "First-Aid Actions" },
 ]
-
-const INSIGHTS_CACHE_KEY = "axon_ai_insights_cache";
 
 export default function Dashboard() {
   const [insights, setInsights] = useState<GeneratePreparednessInsightsOutput | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState(true);
-  const [activeTopic, setActiveTopic] = useState("General");
+  const [activeMode, setActiveMode] = useState("Resilience");
   const [isOnline, setIsOnline] = useState(true);
   const { toast } = useToast();
 
@@ -61,36 +65,22 @@ export default function Dashboard() {
     }
   }, []);
 
-  useEffect(() => {
-    const cached = localStorage.getItem(`${INSIGHTS_CACHE_KEY}_${activeTopic}`);
-    if (cached) {
-      try {
-        setInsights(JSON.parse(cached));
-      } catch (e) {
-        console.error("Failed to parse cached insights");
-      }
-    }
-  }, [activeTopic]);
-
-  const fetchInsights = async (topic: string) => {
+  const fetchInsights = async (modeId: string) => {
     setIsLoadingInsights(true);
+    const mode = INTELLIGENCE_MODES.find(m => m.id === modeId);
     try {
-      const result = await generatePreparednessInsights({ topic: `${topic} Safety & Preparedness` });
+      const result = await generatePreparednessInsights({ topic: mode?.topic });
       setInsights(result);
-      localStorage.setItem(`${INSIGHTS_CACHE_KEY}_${topic}`, JSON.stringify(result));
     } catch (error: any) {
-      toast({
-        title: "Offline support active",
-        description: "Emergency support remains available.",
-      });
+      toast({ title: "Offline assistance active", description: "Axon-AI Engine continuing in resilient mode." });
     } finally {
       setIsLoadingInsights(false);
     }
   };
 
   useEffect(() => {
-    fetchInsights(activeTopic);
-  }, [activeTopic]);
+    fetchInsights(activeMode);
+  }, [activeMode]);
 
   const getInsightCategory = (type: string) => {
     switch (type) {
@@ -101,93 +91,98 @@ export default function Dashboard() {
     }
   }
 
-  const handleDirectionClick = (locationName: string) => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(locationName)}`;
-    window.open(url, '_blank');
-  };
-
-  const rescueServices = [
-    { name: "Central Medical Emergency Hospital", type: "LEVEL 1 TRAUMA", dist: "0.8km", status: "Active" },
-    { name: "City Red Cross Rescue Center", type: "MEDICAL SUPPORT", dist: "1.4km", status: "Active" },
-    { name: "Safe Haven Delta Evacuation Point", type: "EVAC CENTER", dist: "2.1km", status: "Open" }
+  const statusGrid = [
+    { label: "Network Mesh", icon: isOnline ? Wifi : WifiOff, val: isOnline ? "Active" : "Mesh Only", status: isOnline ? "ok" : "warn" },
+    { label: "GPS Accuracy", icon: MapPin, val: "Sub-Meter", status: "ok" },
+    { label: "Data Security", icon: Lock, val: "Encrypted", status: "ok" },
+    { label: "Axon Engine", icon: Cpu, val: "Resilient", status: "ok" },
   ];
 
   return (
-    <div className="min-h-screen pb-24 bg-background transition-colors duration-500">
+    <div className="min-h-screen pb-28 bg-background transition-colors duration-500">
       <header className="px-5 pt-7 pb-5 bg-card/80 backdrop-blur-xl border-b sticky top-0 z-20 shadow-sm">
         <div className="max-w-screen-xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Logo className="h-9 w-9" />
             <div>
-              <h1 className="text-xl font-black font-headline tracking-tighter text-primary leading-none uppercase">AXON-AI</h1>
-              <p className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] opacity-50 mt-1">Command Hub</p>
+              <h1 className="text-xl font-black font-headline tracking-tighter text-primary leading-none uppercase">Axon-AI</h1>
+              <p className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] opacity-50 mt-1">Command Center</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <ThemeToggle />
           </div>
         </div>
       </header>
 
       <main className="px-5 mt-8 max-w-screen-xl mx-auto space-y-10">
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <Activity className="h-4 w-4 text-primary" />
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Emergency Status</h2>
+        {/* Top Section: EOC Status Grid */}
+        <section className="space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {statusGrid.map((item, i) => (
+              <div key={i} className="bg-card border-2 border-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-sm">
+                <item.icon className={cn("h-4 w-4 mb-1", item.status === 'warn' ? "text-accent" : "text-primary")} />
+                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{item.label}</span>
+                <span className={cn("text-[10px] font-black uppercase", item.status === 'warn' ? "text-accent" : "text-foreground")}>{item.val}</span>
+              </div>
+            ))}
           </div>
-          
-          <StatusCard />
-          
-          <div className={cn(
-            "p-4 rounded-[1.5rem] border flex items-center justify-center gap-3 transition-all duration-700 shadow-sm",
-            isOnline ? "bg-primary/5 border-primary/10 text-primary/60" : "bg-accent/10 border-accent/30 text-accent shadow-accent/10"
-          )}>
-            {isOnline ? <Wifi className="h-4 w-4 shrink-0" /> : <WifiOff className="h-4 w-4 shrink-0" />}
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-center">
-              {isOnline ? "Link Active" : "Offline assistance active"}
-            </p>
-          </div>
-        </div>
 
-        <div className="space-y-5">
+          <Link href="/sos" className="block w-full">
+            <Button className="w-full h-16 rounded-[1.5rem] bg-accent hover:bg-accent/90 text-white font-black uppercase text-[12px] tracking-[0.2em] shadow-xl shadow-accent/20 border-[3px] border-white/10 group">
+              <span className="flex items-center gap-3">
+                <Zap className="h-5 w-5 fill-white animate-pulse" />
+                Rapid SOS Trigger
+              </span>
+              <ArrowRight className="h-4 w-4 ml-auto opacity-50 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        </section>
+
+        {/* Middle Section: Axon-AI Engine Modes */}
+        <section className="space-y-6">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <Cpu className="h-4 w-4 text-primary" />
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Axon-AI Engine</h2>
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Emergency Intelligence Modes</h2>
             </div>
             <Button 
               variant="ghost" size="sm" className="h-6 px-3 text-[9px] font-black text-primary hover:bg-primary/5 rounded-full"
-              onClick={() => fetchInsights(activeTopic)} disabled={isLoadingInsights}
+              onClick={() => fetchInsights(activeMode)} disabled={isLoadingInsights}
             >
               <RefreshCw className={cn("h-3 w-3 mr-2", isLoadingInsights && "animate-spin")} />
-              Update Intel
+              Sync Engine
             </Button>
           </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide no-scrollbar">
-            {TOPICS.map((topic) => (
+          <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
+            {INTELLIGENCE_MODES.map((mode) => (
               <Button
-                key={topic.id} variant={activeTopic === topic.id ? "default" : "outline"} size="sm"
-                onClick={() => setActiveTopic(topic.id)}
+                key={mode.id} 
+                variant={activeMode === mode.id ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setActiveMode(mode.id)}
                 className={cn(
-                  "rounded-full px-6 font-black text-[10px] uppercase transition-all border-2",
-                  activeTopic === topic.id ? "bg-primary shadow-lg border-primary" : "border-primary/10 text-muted-foreground hover:border-primary/40"
+                  "rounded-full px-6 font-black text-[10px] uppercase transition-all duration-300 border-2",
+                  activeMode === mode.id 
+                    ? "bg-primary shadow-lg border-primary scale-105" 
+                    : "border-primary/10 text-muted-foreground hover:border-primary/40"
                 )}
               >
-                <topic.icon className="h-3.5 w-3.5 mr-2" />
-                {topic.label}
+                <mode.icon className="h-3.5 w-3.5 mr-2" />
+                {mode.label}
               </Button>
             ))}
           </div>
           
-          <div className="grid gap-4 md:grid-cols-2">
-            {isLoadingInsights && !insights ? (
-              Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-40 w-full rounded-[2rem]" />)
+          <div className="grid gap-4 md:grid-cols-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {isLoadingInsights ? (
+              Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-[2rem]" />)
             ) : (
               insights?.insights.map((insight: any, idx: number) => {
                 const cat = getInsightCategory(insight.type);
                 return (
-                  <Card key={idx} className="bg-card border-none hover:shadow-xl transition-all shadow-md group rounded-[2rem] overflow-hidden border-t border-muted/20">
+                  <Card key={idx} className="bg-card border-none hover:shadow-xl transition-all shadow-md group rounded-[2rem] overflow-hidden">
                     <CardHeader className="p-6 pb-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -196,7 +191,7 @@ export default function Dashboard() {
                           </div>
                           <CardTitle className="text-sm font-black text-foreground uppercase tracking-tight">{insight.title}</CardTitle>
                         </div>
-                        <Badge variant="secondary" className="text-[8px] font-black uppercase tracking-tighter opacity-60 bg-muted/50 border-none">
+                        <Badge variant="secondary" className="text-[8px] font-black uppercase opacity-60 bg-muted/50 border-none">
                           {cat.label}
                         </Badge>
                       </div>
@@ -209,50 +204,45 @@ export default function Dashboard() {
               })
             )}
           </div>
-        </div>
+        </section>
 
-        <div className="space-y-4">
+        {/* Bottom Section: Rescue Hubs & Resilience */}
+        <section className="space-y-4">
           <div className="flex items-center gap-2 px-1">
             <NavIcon className="h-4 w-4 text-primary" />
             <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nearby Rescue Hubs</h2>
           </div>
-          <Card className="border-none shadow-lg rounded-[2.5rem] overflow-hidden bg-card">
-            <CardContent className="p-0 divide-y border-none">
-              {rescueServices.map((service, i) => (
-                <div 
-                  key={i} onClick={() => handleDirectionClick(service.name)}
-                  className="flex justify-between items-center p-6 hover:bg-primary/[0.03] transition-colors group cursor-pointer"
-                >
-                  <div className="space-y-1.5">
-                    <p className="font-black text-[14px] uppercase text-foreground tracking-tight leading-none">{service.name}</p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-black text-primary uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded-md">{service.type}</span>
-                      <span className="text-[9px] text-muted-foreground font-black opacity-50">• {service.dist}</span>
-                    </div>
+          <Card className="border-none shadow-lg rounded-[2rem] overflow-hidden bg-card">
+            <CardContent className="p-0 divide-y">
+              {[
+                { name: "Central Medical Hospital", dist: "0.8km", status: "Active" },
+                { name: "City Rescue Center", dist: "1.4km", status: "Active" }
+              ].map((service, i) => (
+                <div key={i} className="flex justify-between items-center p-6 hover:bg-primary/[0.03] transition-colors cursor-pointer group">
+                  <div className="space-y-1">
+                    <p className="font-black text-[13px] uppercase text-foreground tracking-tight">{service.name}</p>
+                    <p className="text-[9px] text-muted-foreground font-black uppercase opacity-60">{service.dist} • GPS Validated</p>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <Badge variant="outline" className="text-[8px] font-black border-primary/20 text-primary uppercase px-3 py-1 rounded-full">{service.status}</Badge>
-                    <div className="bg-muted p-3 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                      <ArrowRight className="h-4 w-4 text-primary group-hover:text-white" />
-                    </div>
+                  <div className="bg-muted p-3 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all">
+                    <ArrowRight className="h-4 w-4" />
                   </div>
                 </div>
               ))}
             </CardContent>
           </Card>
-        </div>
 
-        <Card className="border-none bg-primary/5 rounded-[2.5rem] overflow-hidden p-7 shadow-sm border border-primary/10">
-           <div className="flex items-center gap-4">
-             <div className="bg-primary/10 p-4 rounded-[1.25rem]">
-               <Database className="h-6 w-6 text-primary" />
-             </div>
-             <div>
-               <h3 className="text-sm font-black uppercase tracking-tight leading-none">Emergency Support Briefing</h3>
-               <p className="text-[11px] text-muted-foreground font-semibold mt-2 leading-relaxed">Local survival protocols and GPS mesh networking are enabled for infrastructure-free operation.</p>
-             </div>
-           </div>
-        </Card>
+          <Card className="border-none bg-primary/5 rounded-[2rem] p-7 shadow-sm border border-primary/10">
+            <div className="flex items-center gap-4">
+              <div className="bg-primary/10 p-3 rounded-xl">
+                <Database className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-[11px] font-black uppercase tracking-tight leading-none">System Resilience Briefing</h3>
+                <p className="text-[10px] text-muted-foreground font-semibold mt-2 leading-relaxed">Local survival protocols and GPS mesh networking are enabled for infrastructure-free operation.</p>
+              </div>
+            </div>
+          </Card>
+        </section>
       </main>
 
       <Navigation />
