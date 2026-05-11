@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react";
@@ -9,6 +10,7 @@ export interface EmergencyProfile {
   medicalConditions: string;
   emergencyContacts: string;
   preferredLanguage: string;
+  lastUpdated?: string;
 }
 
 const STORAGE_KEY = "axon_ai_emergency_profile";
@@ -30,9 +32,18 @@ export function useEmergencyProfile() {
   }, []);
 
   const updateProfile = (newProfile: EmergencyProfile) => {
-    setProfile(newProfile);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newProfile));
+    const updatedProfile = {
+      ...newProfile,
+      lastUpdated: new Date().toISOString()
+    };
+    setProfile(updatedProfile);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProfile));
   };
 
-  return { profile, updateProfile, isLoading };
+  const clearProfile = () => {
+    setProfile(null);
+    localStorage.removeItem(STORAGE_KEY);
+  };
+
+  return { profile, updateProfile, clearProfile, isLoading };
 }

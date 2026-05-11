@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -33,23 +34,39 @@ const TOPICS = [
   { id: "Medical", label: "Medical", icon: Activity },
 ]
 
+const INSIGHTS_CACHE_KEY = "axon_ai_insights_cache";
+
 export default function Dashboard() {
   const [insights, setInsights] = useState<GeneratePreparednessInsightsOutput | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState(true);
   const [activeTopic, setActiveTopic] = useState("General");
   const { toast } = useToast();
 
+  // Load cached insights on mount
+  useEffect(() => {
+    const cached = localStorage.getItem(`${INSIGHTS_CACHE_KEY}_${activeTopic}`);
+    if (cached) {
+      try {
+        setInsights(JSON.parse(cached));
+      } catch (e) {
+        console.error("Failed to parse cached insights");
+      }
+    }
+  }, [activeTopic]);
+
   const fetchInsights = async (topic: string) => {
     setIsLoadingInsights(true);
     try {
       const result = await generatePreparednessInsights({ topic: `${topic} Safety & Preparedness` });
       setInsights(result);
+      // Persist for offline use
+      localStorage.setItem(`${INSIGHTS_CACHE_KEY}_${topic}`, JSON.stringify(result));
     } catch (error: any) {
       console.error("Failed to fetch AI insights", error);
       toast({
         variant: "destructive",
         title: "Intelligence Link Disrupted",
-        description: "AI quota exceeded or network busy. Accessing emergency survival cache.",
+        description: "Accessing locally cached emergency survival intelligence.",
       });
     } finally {
       setIsLoadingInsights(false);
@@ -81,9 +98,14 @@ export default function Dashboard() {
               <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em]">Operational Status</p>
             </div>
           </div>
-          <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 font-black px-3 py-1">
-            ACTIVE
-          </Badge>
+          <div className="flex items-center gap-2">
+            <div className="flex flex-col items-end">
+               <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 font-black px-3 py-1 text-[10px]">
+                OFFLINE-ACTIVE
+              </Badge>
+              <span className="text-[8px] font-black uppercase text-muted-foreground mt-1 tracking-tighter">Persistence Layer v1.0</span>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -136,7 +158,7 @@ export default function Dashboard() {
           </div>
           
           <div className="grid gap-3 md:grid-cols-2">
-            {isLoadingInsights ? (
+            {isLoadingInsights && !insights ? (
               Array.from({ length: 2 }).map((_, i) => (
                 <Skeleton key={i} className="h-32 w-full rounded-2xl" />
               ))
@@ -159,6 +181,12 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
               ))
+            )}
+            {!isLoadingInsights && (!insights || insights.insights.length === 0) && (
+              <div className="col-span-full py-12 text-center border-2 border-dashed rounded-2xl border-muted">
+                <Shield className="h-8 w-8 text-muted mx-auto mb-2 opacity-20" />
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">No intelligence cached for this topic.</p>
+              </div>
             )}
           </div>
         </div>

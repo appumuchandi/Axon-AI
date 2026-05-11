@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -6,7 +7,7 @@ import { emergencyAssistantGuidance } from "@/ai/flows/emergency-assistant-guida
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Send, Bot, User, Loader2, Info, HeartPulse, ShieldAlert, Zap, AlertTriangle } from "lucide-react"
+import { Send, Bot, User, Loader2, Info, HeartPulse, ShieldAlert, Zap, AlertTriangle, Trash2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Logo } from "@/components/Logo"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -17,22 +18,55 @@ interface Message {
   category?: 'first-aid' | 'survival' | 'safety' | 'other';
 }
 
+const CHAT_HISTORY_KEY = "axon_ai_chat_history";
+
 export default function AssistantPage() {
   const [query, setQuery] = useState("");
-  const [messages, setMessages] = useState<Message[]>([
-    { 
-      role: 'assistant', 
-      content: "I am AXON-AI. Describe your emergency or select a category below for instant protocols." 
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Initialize from local cache
+  useEffect(() => {
+    const cached = localStorage.getItem(CHAT_HISTORY_KEY);
+    if (cached) {
+      try {
+        setMessages(JSON.parse(cached));
+      } catch (e) {
+        setMessages([{ 
+          role: 'assistant', 
+          content: "I am AXON-AI. Describe your emergency or select a category below for instant protocols." 
+        }]);
+      }
+    } else {
+      setMessages([{ 
+        role: 'assistant', 
+        content: "I am AXON-AI. Describe your emergency or select a category below for instant protocols." 
+      }]);
+    }
+  }, []);
+
+  // Save to cache whenever messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(messages));
+    }
+  }, [messages]);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isLoading]);
+
+  const clearChat = () => {
+    const initialMessage: Message[] = [{ 
+      role: 'assistant', 
+      content: "Protocol reset. I am AXON-AI. How can I assist you now?" 
+    }];
+    setMessages(initialMessage);
+    localStorage.removeItem(CHAT_HISTORY_KEY);
+  };
 
   const handleSubmit = async (e: React.FormEvent | string) => {
     const userMessage = typeof e === 'string' ? e : query.trim();
@@ -40,7 +74,8 @@ export default function AssistantPage() {
     
     if (!userMessage || isLoading) return;
 
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    const newMessages = [...messages, { role: 'user', content: userMessage } as Message];
+    setMessages(newMessages);
     setQuery("");
     setIsLoading(true);
 
@@ -54,7 +89,7 @@ export default function AssistantPage() {
     } catch (error) {
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: "Network disrupted. Please follow standard emergency procedures or use the offline SOS features in the main menu." 
+        content: "Network disrupted. Please follow standard emergency procedures. Your medical profile and previous guidance remain accessible offline." 
       }]);
     } finally {
       setIsLoading(false);
@@ -75,12 +110,19 @@ export default function AssistantPage() {
           <Logo className="h-9 w-9" />
           <div>
             <h1 className="font-black font-headline text-lg tracking-tight text-primary">AI ASSISTANT</h1>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">AXON Intelligence v4.0</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Local-First Cache Active</p>
           </div>
         </div>
-        <Badge variant="outline" className="border-primary text-primary bg-primary/5">
-          RESCUE-ENABLED
-        </Badge>
+        <div className="flex items-center gap-2">
+          {messages.length > 1 && (
+            <Button variant="ghost" size="icon" onClick={clearChat} className="h-8 w-8 text-muted-foreground hover:text-accent">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+          <Badge variant="outline" className="border-primary text-primary bg-primary/5 text-[9px]">
+            PERSISTENT
+          </Badge>
+        </div>
       </header>
 
       <div className="flex-1 overflow-hidden flex flex-col">
@@ -91,7 +133,7 @@ export default function AssistantPage() {
           <div className="bg-primary/5 p-4 rounded-2xl border border-primary/20 flex gap-3 mb-6">
             <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground leading-relaxed font-medium">
-              Information provided is for emergency reference only. Always call 911/112 first if you are in immediate danger.
+              Protocols are saved locally. Information provided is for emergency reference only. Call 911/112 first if in danger.
             </p>
           </div>
 
@@ -121,13 +163,13 @@ export default function AssistantPage() {
             <div className="flex justify-start animate-pulse">
               <div className="flex gap-3 items-center text-primary font-bold">
                 <Loader2 className="h-5 w-5 animate-spin" />
-                <span className="text-xs uppercase tracking-widest">Generating Rescue Protocol...</span>
+                <span className="text-xs uppercase tracking-widest">Compiling Local Protocol...</span>
               </div>
             </div>
           )}
         </div>
 
-        {messages.length === 1 && !isLoading && (
+        {messages.length <= 1 && !isLoading && (
           <div className="p-4 grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-bottom-4">
             {quickActions.map((action, idx) => (
               <Button 
@@ -150,7 +192,7 @@ export default function AssistantPage() {
           className="flex gap-2 max-w-screen-xl mx-auto items-center"
         >
           <Input 
-            placeholder="Describe emergency (e.g. 'How to treat a burn?')..." 
+            placeholder="Describe emergency situation..." 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             disabled={isLoading}
