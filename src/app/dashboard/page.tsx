@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -109,9 +110,8 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge className="bg-primary/10 text-primary border-primary/20 font-black px-3 py-1 text-[9px] uppercase tracking-tighter">
-              MESH-ACTIVE
-            </Badge>
+            {/* Mesh-Active Badge Removed per User Request */}
+            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
           </div>
         </div>
       </header>
