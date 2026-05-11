@@ -21,7 +21,11 @@ import {
   RefreshCw,
   WifiOff,
   Database,
-  Navigation as NavIcon
+  Navigation as NavIcon,
+  Wifi,
+  Globe,
+  RadioTower,
+  Cpu
 } from "lucide-react"
 import { generatePreparednessInsights, type GeneratePreparednessInsightsOutput } from "@/ai/flows/generate-preparedness-insights"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -76,7 +80,7 @@ export default function Dashboard() {
       localStorage.setItem(`${INSIGHTS_CACHE_KEY}_${topic}`, JSON.stringify(result));
     } catch (error: any) {
       toast({
-        title: "Resilient Intelligence Active",
+        title: "Resilient Intelligence Engine Active",
         description: "Local survival protocols have been activated due to network link limits.",
       });
     } finally {
@@ -90,9 +94,9 @@ export default function Dashboard() {
 
   const getInsightCategory = (type: string) => {
     switch (type) {
-      case 'tip': return { label: '🛡 Guidance', icon: Lightbulb, color: 'text-blue-500' };
+      case 'tip': return { label: '🛡 Guidance', icon: Shield, color: 'text-blue-500' };
       case 'warning': return { label: '⚠ Alert', icon: AlertTriangle, color: 'text-accent' };
-      case 'action': return { label: '📡 Connectivity', icon: CheckCircle2, color: 'text-green-500' };
+      case 'action': return { label: '📡 Connectivity', icon: RadioTower, color: 'text-green-500' };
       default: return { label: '🤖 AI Insight', icon: Sparkles, color: 'text-primary' };
     }
   }
@@ -109,8 +113,8 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen pb-24 bg-background">
-      <header className="px-5 pt-7 pb-5 bg-card/80 backdrop-blur-md border-b sticky top-0 z-20 shadow-sm">
+    <div className="min-h-screen pb-24 bg-background transition-colors duration-500">
+      <header className="px-5 pt-7 pb-5 bg-card/80 backdrop-blur-xl border-b sticky top-0 z-20 shadow-sm">
         <div className="max-w-screen-xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Logo className="h-9 w-9" />
@@ -135,10 +139,10 @@ export default function Dashboard() {
           <StatusCard />
           
           <div className={cn(
-            "p-4 rounded-[1.5rem] border flex items-center justify-center gap-3 transition-all duration-700",
-            isOnline ? "bg-primary/5 border-primary/10 text-primary/60" : "bg-accent/10 border-accent/30 text-accent animate-pulse shadow-lg"
+            "p-4 rounded-[1.5rem] border flex items-center justify-center gap-3 transition-all duration-700 shadow-sm",
+            isOnline ? "bg-primary/5 border-primary/10 text-primary/60" : "bg-accent/10 border-accent/30 text-accent animate-pulse shadow-accent/10"
           )}>
-            {!isOnline && <WifiOff className="h-4 w-4 shrink-0" />}
+            {isOnline ? <Globe className="h-4 w-4 shrink-0" /> : <WifiOff className="h-4 w-4 shrink-0" />}
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-center">
               {isOnline ? "Network Infrastructure Stable" : "Grid Link Disrupted - Offline Resilience Engaged"}
             </p>
@@ -148,7 +152,7 @@ export default function Dashboard() {
         <div className="space-y-5">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
+              <Cpu className="h-4 w-4 text-primary" />
               <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Resilient Intel Engine</h2>
             </div>
             <Button 
@@ -183,7 +187,7 @@ export default function Dashboard() {
               insights?.insights.map((insight: any, idx: number) => {
                 const cat = getInsightCategory(insight.type);
                 return (
-                  <Card key={idx} className="bg-card border-none hover:shadow-xl transition-all shadow-md group rounded-[2rem] overflow-hidden">
+                  <Card key={idx} className="bg-card border-none hover:shadow-xl transition-all shadow-md group rounded-[2rem] overflow-hidden border-t border-muted/20">
                     <CardHeader className="p-6 pb-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -192,7 +196,7 @@ export default function Dashboard() {
                           </div>
                           <CardTitle className="text-sm font-black text-foreground uppercase tracking-tight">{insight.title}</CardTitle>
                         </div>
-                        <Badge variant="secondary" className="text-[8px] font-black uppercase tracking-tighter opacity-60 bg-muted/50">
+                        <Badge variant="secondary" className="text-[8px] font-black uppercase tracking-tighter opacity-60 bg-muted/50 border-none">
                           {cat.label}
                         </Badge>
                       </div>
@@ -238,7 +242,7 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <Card className="border-none bg-primary/5 rounded-[2.5rem] overflow-hidden p-7 shadow-sm">
+        <Card className="border-none bg-primary/5 rounded-[2.5rem] overflow-hidden p-7 shadow-sm border border-primary/10">
            <div className="flex items-center gap-4">
              <div className="bg-primary/10 p-4 rounded-[1.25rem]">
                <Database className="h-6 w-6 text-primary" />

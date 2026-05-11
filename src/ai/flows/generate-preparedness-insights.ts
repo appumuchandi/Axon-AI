@@ -54,7 +54,7 @@ Generate highly actionable and concise insights based on the user's request.
 GUIDELINES:
 - Be concise. One or two sentences per insight.
 - Focus on immediate preparedness or safety actions.
-- Categorize each insight as 'tip' (general advice), 'warning' (risk awareness), 'action' (specific task), or 'fact' (safety info).
+- Categorize each insight as 'tip' (guidance), 'warning' (alert), 'action' (connectivity/readiness), or 'fact' (info).
 
 Input Topic: {{{topic}}}
 
@@ -73,8 +73,8 @@ const generatePreparednessInsightsFlow = ai.defineFlow(
       if (!output) throw new Error('No output from AI');
       return output;
     } catch (error) {
-      console.warn('AI Insights Engine rate limited or failed. Returning fallback survival protocols.', error);
-      // Fallback data ensures the user always has survival information even if AI quota is exhausted
+      console.warn('AI Insights Engine rate limited. Returning specific survival protocols.', error);
+      // Fallback data precisely matching high-priority survival requirements
       return {
         insights: [
           {
