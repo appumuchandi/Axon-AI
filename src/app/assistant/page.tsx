@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -31,7 +30,7 @@ interface Message {
 }
 
 const CHAT_HISTORY_KEY = "axon_ai_chat_history";
-const INITIAL_AI_MESSAGE = "I am AXON-AI. When networks fail, I respond. Describe your situation or ask for nearby medical stores for instant rescue protocols.";
+const INITIAL_AI_MESSAGE = "I am AXON-AI, your Emergency Intelligence System. Disaster-ready and offline-optimized. Describe your situation for instant rescue protocols.";
 
 export default function AssistantPage() {
   const [query, setQuery] = useState("");
@@ -76,7 +75,7 @@ export default function AssistantPage() {
   const clearChat = () => {
     const initialMessage: Message[] = [{ 
       role: 'assistant', 
-      content: "Protocol reset. How can I assist you now?" 
+      content: "Protocol reset. Emergency Intelligence System standing by." 
     }];
     setMessages(initialMessage);
     localStorage.removeItem(CHAT_HISTORY_KEY);
@@ -107,7 +106,7 @@ export default function AssistantPage() {
     } catch (error) {
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: "Network link disrupted. Falling back to local survival protocols. Please remain calm." 
+        content: "Network link disrupted. Falling back to local resilience protocols. Please remain calm." 
       }]);
     } finally {
       setIsLoading(false);
@@ -205,7 +204,7 @@ export default function AssistantPage() {
           <Logo className="h-9 w-9" />
           <div>
             <h1 className="font-black font-headline text-lg tracking-tighter text-primary uppercase">AXON ASSIST</h1>
-            <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black opacity-70">Intelligent Response Active</p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black opacity-70">Resilient System Active</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -216,7 +215,7 @@ export default function AssistantPage() {
           )}
           <ThemeToggle />
           <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] font-black tracking-tight hidden xs:flex">
-            ENCRYPTED
+            DISASTER READY
           </Badge>
         </div>
       </header>
@@ -229,7 +228,7 @@ export default function AssistantPage() {
           <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex gap-3 mb-6">
             <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <p className="text-[11px] text-muted-foreground leading-relaxed font-semibold uppercase tracking-tight">
-              AI guidance is for emergency reference. Priority 1: Contact professional services (911/112).
+              Emergency Intelligence System guidance is for critical reference. Priority 1: Contact professional services (911/112).
             </p>
           </div>
 
@@ -294,7 +293,7 @@ export default function AssistantPage() {
             <div className="flex justify-start animate-pulse">
               <div className="flex gap-3 items-center text-primary font-black">
                 <Loader2 className="h-5 w-5 animate-spin" />
-                <span className="text-[10px] uppercase tracking-[0.2em]">Compiling Guidance...</span>
+                <span className="text-[10px] uppercase tracking-[0.2em]">Synchronizing Intelligence...</span>
               </div>
             </div>
           )}
@@ -334,7 +333,7 @@ export default function AssistantPage() {
             className="flex-1 flex gap-2"
           >
             <Input 
-              placeholder={isListening ? "Listening..." : "Describe situation..."} 
+              placeholder={isListening ? "Listening..." : "Describe emergency..."} 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               disabled={isLoading}

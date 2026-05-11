@@ -91,7 +91,9 @@ const emergencyAssistantPrompt = ai.definePrompt({
   tools: [findEmergencyResources],
   input: {schema: EmergencyAssistantInputSchema},
   output: {schema: EmergencyAssistantOutputSchema},
-  prompt: `You are AXON-AI, an expert emergency intelligence assistant. Your mission is to provide life-saving, direct, and actionable guidance for emergency situations.
+  prompt: `You are AXON-AI, the core of this UNIQUE Emergency Intelligence System. You are disaster-ready, offline-optimized, and resilient.
+
+Your mission is to provide life-saving, direct, and actionable guidance for emergency situations. You operate when traditional systems fail.
 
 If the user asks for nearby resources (hospitals, pharmacies, stores, etc.), use the findEmergencyResources tool to get specific locations.
 
@@ -128,14 +130,14 @@ const emergencyAssistantGuidanceFlow = ai.defineFlow(
       // Contextual fallbacks to "react in accordance" even when LLM is down
       if (q.includes('cpr')) {
         return {
-          guidance: "URGENT PROTOCOL (CPR):\n1. Call 911/112.\n2. Push hard and fast in the center of the chest.\n3. Rate: 100-120 compressions per minute.\n4. Allow full chest recoil.",
+          guidance: "DISASTER PROTOCOL ACTIVE (CPR):\n1. Call 911/112 immediately.\n2. Push hard and fast in the center of the chest.\n3. Rate: 100-120 compressions per minute.\n4. Allow full chest recoil.",
           category: "first-aid"
         };
       }
       
       if (q.includes('medical') || q.includes('store') || q.includes('hospital') || q.includes('pharmacy')) {
         return {
-          guidance: "AI capacity limited. Accessing locally cached medical resources. Priority: Seek professional care at the nearest Trauma Center.",
+          guidance: "Intelligence Link Disrupted. Accessing locally cached medical resources from the Resilient Intelligence Engine. Priority: Seek professional care at the nearest Trauma Center.",
           category: "safety",
           suggestedResources: [
             { name: "Central Medical Emergency Hospital", type: "Hospital", address: "0.8km", googleMapsUrl: "https://www.google.com/maps/search/Central+Medical+Emergency+Hospital" },
@@ -145,7 +147,7 @@ const emergencyAssistantGuidanceFlow = ai.defineFlow(
       }
 
       return {
-        guidance: "URGENT SYSTEM ALERT: AI capacity is currently exceeded. Follow these core emergency protocols:\n\n1. CALL EMERGENCY SERVICES (911/112) immediately if in danger.\n2. Administer basic first-aid: check breathing, apply pressure to stop bleeding.\n3. Secure your immediate surroundings or evacuate to a designated safe zone.",
+        guidance: "SYSTEM CRITICAL ALERT: Cloud intelligence is restricted. Follow these Resilience Protocols:\n\n1. CALL EMERGENCY SERVICES (911/112) immediately if in danger.\n2. Administer basic first-aid: check breathing, apply pressure to stop bleeding.\n3. Secure your immediate surroundings or evacuate to a designated safe zone.",
         category: "safety"
       };
     }

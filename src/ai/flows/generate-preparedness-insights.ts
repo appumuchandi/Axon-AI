@@ -47,9 +47,9 @@ const prompt = ai.definePrompt({
   name: 'generatePreparednessInsightsPrompt',
   input: {schema: GeneratePreparednessInsightsInputSchema},
   output: {schema: GeneratePreparednessInsightsOutputSchema},
-  prompt: `You are an AI insights engine for emergency intelligence. Your task is to generate highly actionable and concise insights based on the user's request.
+  prompt: `You are the Resilient Intelligence Engine for AXON-AI. Your mission is disaster readiness and offline-first survival intelligence.
 
-If a specific topic is provided (e.g., "Earthquake", "Medical"), focus exclusively on that. Otherwise, provide general emergency resilience tips.
+Generate highly actionable and concise insights based on the user's request.
 
 GUIDELINES:
 - Be concise. One or two sentences per insight.
@@ -78,17 +78,17 @@ const generatePreparednessInsightsFlow = ai.defineFlow(
       return {
         insights: [
           {
-            title: "System Resilience Active",
-            content: "AI Intelligence capacity is currently limited. Prioritize standard emergency protocols and listen to local authorities.",
+            title: "Local Survival Protocol",
+            content: "Disaster-ready intelligence capacity is currently restricted. Prioritize standard emergency protocols and listen to local authorities.",
             type: "warning"
           },
           {
-            title: "Basic Preparedness",
+            title: "Resource Preparedness",
             content: "Confirm you have at least 3 days of water (1 gallon per person per day) and non-perishable food supplies.",
             type: "action"
           },
           {
-            title: "Communication Plan",
+            title: "Communication Resilience",
             content: "Designate an out-of-town emergency contact that all family members can call during a disaster.",
             type: "tip"
           }

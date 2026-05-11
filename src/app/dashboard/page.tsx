@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -77,8 +76,8 @@ export default function Dashboard() {
       console.error("Failed to fetch AI insights", error);
       toast({
         variant: "destructive",
-        title: "Intelligence Link Disrupted",
-        description: "Accessing locally cached emergency survival intelligence.",
+        title: "Intelligence Link Restricted",
+        description: "Accessing locally cached Emergency Intelligence protocols.",
       });
     } finally {
       setIsLoadingInsights(false);
@@ -157,7 +156,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">AI Intelligence Engine</h2>
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Resilient Intel Engine</h2>
             </div>
             <Button 
               variant="ghost" 
@@ -167,7 +166,7 @@ export default function Dashboard() {
               disabled={isLoadingInsights}
             >
               <RefreshCw className={cn("h-3 w-3 mr-1.5", isLoadingInsights && "animate-spin")} />
-              REFRESH INTEL
+              UPDATE INTEL
             </Button>
           </div>
 
@@ -225,7 +224,7 @@ export default function Dashboard() {
           <CardHeader className="bg-accent/5 py-4 flex flex-row items-center justify-between border-b border-accent/10">
             <div className="flex items-center gap-3">
               <AlertCircle className="text-accent h-5 w-5" />
-              <CardTitle className="text-xs font-black text-accent uppercase tracking-widest leading-none">Emergency Alerts</CardTitle>
+              <CardTitle className="text-xs font-black text-accent uppercase tracking-widest leading-none">Intelligence Alerts</CardTitle>
             </div>
             <span className="w-2.5 h-2.5 rounded-full bg-accent animate-ping" />
           </CardHeader>
@@ -236,8 +235,8 @@ export default function Dashboard() {
                   <Radio className="h-5 w-5 text-accent" />
                 </div>
                 <div>
-                  <h4 className="font-black text-sm uppercase text-foreground leading-none">Local Protocol Update</h4>
-                  <p className="text-xs text-muted-foreground mt-2 leading-relaxed font-semibold">Mesh networks stable in Sector 7. Access 'Medical' intel for water purification steps.</p>
+                  <h4 className="font-black text-sm uppercase text-foreground leading-none">Resilience Protocol Update</h4>
+                  <p className="text-xs text-muted-foreground mt-2 leading-relaxed font-semibold">Local survival intelligence synchronized. Access 'Medical' intel for offline water purification steps.</p>
                 </div>
               </div>
             </div>
