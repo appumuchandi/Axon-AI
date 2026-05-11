@@ -7,13 +7,13 @@ import { textToSpeech } from "@/ai/flows/text-to-speech"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Send, Bot, User, Loader2, Info, HeartPulse, ShieldAlert, Zap, AlertTriangle, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, Share2, Users, Bell, ArrowRight } from "lucide-react"
+import { Send, User, Loader2, Info, HeartPulse, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, Bell, ArrowRight, ShieldCheck } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Logo } from "@/components/Logo"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { toast } from "@/hooks/use-toast"
 import Link from "next/link"
+import { cn } from "@/lib/utils"
 
 interface SuggestedResource {
   name: string;
@@ -25,7 +25,7 @@ interface SuggestedResource {
 interface Message {
   role: 'user' | 'assistant';
   content: string;
-  category?: 'first-aid' | 'survival' | 'safety' | 'other';
+  category?: string;
   suggestedResources?: SuggestedResource[];
   audioUrl?: string;
   showEmergencyPanel?: boolean;
@@ -69,8 +69,7 @@ export default function AssistantPage() {
   }, [messages, isLoading]);
 
   const clearChat = () => {
-    const initialMessage: Message[] = [{ role: 'assistant', content: "I'm standing by. Describe your situation and I will provide the safest immediate steps." }];
-    setMessages(initialMessage);
+    setMessages([{ role: 'assistant', content: "I'm standing by. Describe your situation and I will provide the safest immediate steps." }]);
     localStorage.removeItem(CHAT_HISTORY_KEY);
     if (audioRef.current) audioRef.current.pause();
   };
@@ -81,18 +80,17 @@ export default function AssistantPage() {
     
     if (!userMessage || isLoading) return;
 
-    const newMessages = [...messages, { role: 'user', content: userMessage } as Message];
-    setMessages(newMessages);
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setQuery("");
     setIsLoading(true);
 
     try {
       const response = await emergencyAssistantGuidance({ query: userMessage });
       
-      const isUrgent = response.category === 'first-aid' || response.category === 'safety' || 
+      const isUrgent = response.category === 'medical' || response.category === 'disaster' || response.category === 'safety' ||
                        response.guidance.toLowerCase().includes('sos') || 
-                       response.guidance.toLowerCase().includes('location') ||
-                       response.guidance.toLowerCase().includes('pain');
+                       response.guidance.toLowerCase().includes('emergency') ||
+                       response.guidance.toLowerCase().includes('safety');
 
       setMessages(prev => [...prev, { 
         role: 'assistant', 
@@ -102,7 +100,7 @@ export default function AssistantPage() {
         showEmergencyPanel: isUrgent
       }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "Network access appears limited. AXON-AI is continuing to assist you in offline mode. Please remain calm and prioritize your immediate safety." }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: "Network connectivity appears limited. AXON-AI is continuing in offline assistance mode. Please remain calm and prioritize your immediate safety." }]);
     } finally {
       setIsLoading(false);
     }
@@ -138,7 +136,7 @@ export default function AssistantPage() {
         audioRef.current.onended = () => setIsSpeakingId(null);
       }
     } catch (error) {
-      toast({ variant: "destructive", title: "Voice link limited", description: "I'm continuing to provide text-based guidance while audio is limited." });
+      toast({ variant: "destructive", title: "Voice link limited", description: "Continuing with text-based intelligence." });
     } finally {
       setIsLoading(false);
     }
@@ -147,7 +145,7 @@ export default function AssistantPage() {
   const startListening = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      toast({ variant: "destructive", title: "Not Supported", description: "Speech recognition is not available." });
+      toast({ variant: "destructive", title: "Protocol Not Supported", description: "Native speech interface is unavailable." });
       return;
     }
     const recognition = new SpeechRecognition();
@@ -159,20 +157,20 @@ export default function AssistantPage() {
 
   const quickActions = [
     { label: "Nearby Aid", icon: MapPin, query: "Show me nearby medical aid and pharmacies" },
-    { label: "First Aid Steps", icon: HeartPulse, query: "What are the first aid steps for an emergency?" },
-    { label: "Safe Evacuation", icon: Zap, query: "How do I safely evacuate?" },
-    { label: "Stop Bleeding", icon: AlertTriangle, query: "How can I help someone with severe bleeding?" },
+    { label: "First Aid Steps", icon: HeartPulse, query: "Provide immediate first aid steps for an emergency" },
+    { label: "Safety Protocol", icon: ShieldCheck, query: "What is the safest protocol for my current area?" },
+    { label: "Disaster Ready", icon: Bell, query: "How do I prepare for a local disaster situation?" },
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground">
+    <div className="flex flex-col h-screen bg-background text-foreground transition-colors duration-500">
       <audio ref={audioRef} hidden />
       <header className="p-4 border-b flex items-center justify-between bg-card/80 backdrop-blur-md sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-3">
           <Logo className="h-9 w-9" />
           <div>
-            <h1 className="font-black font-headline text-lg tracking-tighter text-primary uppercase">Axon Assist</h1>
-            <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black opacity-70">Resilient Intelligence Active</p>
+            <h1 className="font-black font-headline text-lg tracking-tighter text-primary uppercase leading-none">Axon Assist</h1>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black opacity-50 mt-1">Resilient Intelligence Active</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -199,7 +197,7 @@ export default function AssistantPage() {
 
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-              <div className={`flex gap-3 max-w-[88%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+              <div className={`flex gap-3 max-w-[90%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                 <div className={`h-9 w-9 rounded-xl shrink-0 flex items-center justify-center shadow-md ${msg.role === 'user' ? 'bg-muted border' : 'bg-primary'}`}>
                   {msg.role === 'user' ? <User className="h-5 w-5" /> : <Logo className="h-6 w-6" />}
                 </div>
@@ -231,7 +229,7 @@ export default function AssistantPage() {
                       </CardHeader>
                       <CardContent className="p-4 grid gap-3">
                         <Link href="/sos" className="w-full">
-                          <Button className="w-full justify-between bg-accent hover:bg-accent/90 text-white font-black uppercase text-[10px] tracking-widest h-14 rounded-2xl px-5">
+                          <Button className="w-full justify-between bg-accent hover:bg-accent/90 text-white font-black uppercase text-[10px] tracking-widest h-14 rounded-2xl px-5 shadow-lg shadow-accent/20">
                             <span className="flex items-center gap-3">
                               <span className="text-lg">🚨</span>
                               Activate SOS
@@ -241,14 +239,14 @@ export default function AssistantPage() {
                         </Link>
                         <Button 
                           variant="outline" className="w-full justify-start gap-3 border-accent/20 hover:bg-accent/5 text-accent font-black uppercase text-[10px] tracking-widest h-14 rounded-2xl px-5"
-                          onClick={() => toast({ title: "Location Shared", description: "GPS coordinates sent to rescue hubs." })}
+                          onClick={() => toast({ title: "Intelligence Shared", description: "GPS coordinates sent to rescue hubs." })}
                         >
                           <span className="text-lg">📍</span>
                           Share Live Location
                         </Button>
                         <Button 
                           variant="outline" className="w-full justify-start gap-3 border-primary/20 hover:bg-primary/5 text-primary font-black uppercase text-[10px] tracking-widest h-14 rounded-2xl px-5"
-                          onClick={() => toast({ title: "Contacts Notified", description: "Emergency contacts alerted via Data Mesh." })}
+                          onClick={() => toast({ title: "Contacts Notified", description: "Emergency network alerted via Resilient Mesh." })}
                         >
                           <span className="text-lg">👨‍👩‍👧</span>
                           Notify Contacts
@@ -268,7 +266,7 @@ export default function AssistantPage() {
                             <MapPin className="h-4 w-4 text-primary" />
                             <div className="text-left">
                               <p className="text-xs font-black uppercase tracking-tight">{resource.name}</p>
-                              <p className="text-[9px] text-muted-foreground font-bold uppercase mt-1">{resource.type} • {resource.address}</p>
+                              <p className="text-[9px] text-muted-foreground font-black uppercase mt-1 opacity-70">{resource.type} • {resource.address}</p>
                             </div>
                           </div>
                           <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -282,7 +280,7 @@ export default function AssistantPage() {
           ))}
 
           {isLoading && (
-            <div className="flex justify-start items-center gap-3 px-2 py-4 animate-pulse">
+            <div className="flex justify-start items-center gap-3 px-2 py-4">
               <div className="flex gap-2 items-center text-primary font-black">
                 <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
                 <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
@@ -314,7 +312,10 @@ export default function AssistantPage() {
         <div className="flex gap-3 max-w-screen-xl mx-auto items-center">
           <Button 
             variant="outline" size="icon" onClick={startListening}
-            className={`h-14 w-14 rounded-2xl border-primary/10 transition-all ${isListening ? 'bg-accent text-white border-accent scale-105 shadow-lg' : 'text-primary'}`}
+            className={cn(
+              "h-14 w-14 rounded-2xl border-primary/10 transition-all",
+              isListening ? "bg-accent text-white border-accent scale-105 shadow-lg" : "text-primary hover:bg-primary/5"
+            )}
           >
             {isListening ? <MicOff className="h-6 w-6 animate-pulse" /> : <Mic className="h-6 w-6" />}
           </Button>
@@ -324,7 +325,7 @@ export default function AssistantPage() {
               value={query} onChange={(e) => setQuery(e.target.value)} disabled={isLoading}
               className="flex-1 rounded-2xl border-primary/10 focus-visible:ring-primary h-14 px-6 text-[15px] font-medium shadow-inner"
             />
-            <Button type="submit" disabled={isLoading || !query.trim()} className="rounded-2xl w-14 h-14 p-0 bg-primary hover:bg-primary/90 shadow-lg">
+            <Button type="submit" disabled={isLoading || !query.trim()} className="rounded-2xl w-14 h-14 p-0 bg-primary hover:bg-primary/90 shadow-lg transition-all active:scale-90">
               {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Send className="h-6 w-6" />}
             </Button>
           </form>
