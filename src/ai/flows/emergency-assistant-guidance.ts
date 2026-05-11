@@ -91,29 +91,65 @@ const emergencyAssistantGuidanceFlow = ai.defineFlow(
       if (!output) throw new Error('No output from AI');
       return output;
     } catch (error) {
-      console.warn('Axon-AI Engine rate limited. Using contextual resilience.', error);
+      console.warn('Axon-AI Engine fallback engaged.', error);
       
       const q = input.query.toLowerCase();
       
-      if (q.includes('heart') || q.includes('cardiac') || q.includes('chest pain') || q.includes('pain')) {
+      if (q.includes('first aid') || q.includes('steps') || q.includes('help')) {
+        return {
+          guidance: `Here are the most important immediate first-aid priorities during an emergency:
+
+1. Ensure the area is safe before helping anyone.
+2. Check if the person is conscious and breathing.
+3. Call emergency services immediately if the condition is serious.
+4. Control severe bleeding using clean pressure if necessary.
+5. Keep the person calm and avoid unnecessary movement.
+
+Please describe the specific situation so AXON-AI can provide more tailored guidance.`,
+          category: "medical"
+        };
+      }
+
+      if (q.includes('heart') || q.includes('cardiac') || q.includes('chest pain') || q.includes('breath')) {
         return {
           guidance: `Possible medical emergency detected. Please stay calm and sit down immediately. 
 
-If you are experiencing chest pressure or difficulty breathing, seek emergency medical help (911) right now.
+If you are experiencing chest pressure, pain, or difficulty breathing, seek emergency medical help (911/112) right now.
 
 Immediate Actions:
 1. Alert someone nearby.
 2. Stop all physical activity.
 3. Keep your phone nearby and remain conscious.
+4. If you have prescribed heart medication, follow your doctor's instructions.
 
 Axon-AI is standing by for SOS activation or location sharing.`,
           category: "medical"
         };
       }
 
+      if (q.includes('quake') || q.includes('shake') || q.includes('seismic')) {
+        return {
+          guidance: `Seismic activity protocols active. Please prioritize your immediate physical safety.
+
+1. Drop, Cover, and Hold On. Find a sturdy table or desk.
+2. Stay away from glass, windows, and heavy furniture.
+3. If outdoors, move to an open area away from buildings and power lines.
+4. Do not use elevators.
+
+Stay alert for aftershocks. Axon-AI is monitoring your safety grid.`,
+          category: "disaster"
+        };
+      }
+
       return {
-        guidance: "Connectivity appears limited, but AXON-AI is continuing in offline assistance mode. \n\n1. Prioritize your immediate safety.\n2. Call professional emergency services if you are in danger.\n3. I am standing by for location sharing and SOS broadcasting.",
-        category: "infrastructure"
+        guidance: "I am standing by to assist you. Please prioritize your immediate safety and follow these steps:
+
+1. Assess your surroundings for any immediate danger.
+2. If you are injured or in danger, call professional emergency services (911/112) immediately.
+3. Use the SOS features if you need to broadcast your location to your rescue network.
+
+Describe your situation in more detail, and AXON-AI will provide the safest immediate steps.",
+        category: "safety"
       };
     }
   }

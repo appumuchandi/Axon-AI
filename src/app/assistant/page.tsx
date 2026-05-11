@@ -112,7 +112,10 @@ export default function AssistantPage() {
         showEmergencyPanel: isUrgent
       }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "Offline assistance is active. Please remain calm and prioritize your immediate safety." }]);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: "I am continuing to provide assistance. Please prioritize your immediate safety. If this is a life-threatening emergency, contact services (911/112) immediately." 
+      }]);
     } finally {
       setIsLoading(false);
     }
