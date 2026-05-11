@@ -31,7 +31,7 @@ import { useToast } from "@/hooks/use-toast"
 import { ThemeToggle } from "@/components/ThemeToggle"
 
 const INTELLIGENCE_MODES = [
-  { id: "Resilience", label: "🛡 Resilience", icon: Shield, topic: "General Emergency Preparedness" },
+  { id: "General", label: "🛡 General", icon: Shield, topic: "General Emergency Preparedness" },
   { id: "Seismic", label: "🌍 Seismic", icon: Activity, topic: "Earthquake Survival Steps" },
   { id: "Flood", label: "🌊 Flood", icon: Waves, topic: "Flood Water Safety" },
   { id: "Medical", label: "❤️ Medical", icon: Activity, topic: "First-Aid Actions" },
@@ -40,7 +40,7 @@ const INTELLIGENCE_MODES = [
 export default function Dashboard() {
   const [insights, setInsights] = useState<GeneratePreparednessInsightsOutput | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState(true);
-  const [activeMode, setActiveMode] = useState("Resilience");
+  const [activeMode, setActiveMode] = useState("General");
   const [isOnline, setIsOnline] = useState(true);
   const { toast } = useToast();
 
@@ -62,7 +62,7 @@ export default function Dashboard() {
       const result = await generatePreparednessInsights({ topic: mode?.topic });
       setInsights(result);
     } catch (error: any) {
-      toast({ title: "Offline assistance active", description: "Axon-AI Engine continuing in resilient mode." });
+      toast({ title: "Axon Engine Fallback", description: "Continuing with locally cached resilience intelligence." });
     } finally {
       setIsLoadingInsights(false);
     }
@@ -106,7 +106,6 @@ export default function Dashboard() {
       </header>
 
       <main className="px-5 mt-8 max-w-screen-xl mx-auto space-y-10">
-        {/* Top Section: EOC Status Grid */}
         <section className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {statusGrid.map((item, i) => (
@@ -119,7 +118,6 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* Middle Section: Axon-AI Engine Modes */}
         <section className="space-y-6">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
@@ -157,7 +155,7 @@ export default function Dashboard() {
           
           <div className="grid gap-4 md:grid-cols-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {isLoadingInsights ? (
-              Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-[2rem]" />)
+              Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-[2rem]" />)
             ) : (
               insights?.insights.map((insight: any, idx: number) => {
                 const cat = getInsightCategory(insight.type);
@@ -186,7 +184,6 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* Bottom Section: Rescue Hubs & Resilience */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 px-1">
             <NavIcon className="h-4 w-4 text-primary" />
@@ -217,7 +214,7 @@ export default function Dashboard() {
                 <Database className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h3 className="text-[11px] font-black uppercase tracking-tight leading-none">System Resilience Briefing</h3>
+                <h3 className="text-[11px] font-black uppercase tracking-tight leading-none">Axon Engine Briefing</h3>
                 <p className="text-[10px] text-muted-foreground font-semibold mt-2 leading-relaxed">Local survival protocols and GPS mesh networking are enabled for infrastructure-free operation.</p>
               </div>
             </div>

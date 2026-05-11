@@ -45,13 +45,13 @@ const prompt = ai.definePrompt({
   output: {schema: GeneratePreparednessInsightsOutputSchema},
   prompt: `You are the Axon-AI Engine. Your mission is disaster readiness and survival intelligence.
 
-Generate highly actionable and concise insights based on the topic.
+Generate exactly 4 highly actionable and concise insights based on the topic provided.
 
 CATEGORIES:
-- 'tip' (🛡 Guidance)
-- 'warning' (⚠ Alert)
-- 'action' (📡 Connectivity)
-- 'fact' (🤖 AI Insight)
+- 'tip' (🛡 Guidance): General survival guidance or safety steps.
+- 'warning' (⚠ Alert): Critical alerts or danger awareness.
+- 'action' (📡 Connectivity): Communication, power, or connectivity steps.
+- 'fact' (🤖 AI Insight): Intelligence briefings or situational awareness.
 
 Topic: {{{topic}}}`,
 });
@@ -75,9 +75,10 @@ const generatePreparednessInsightsFlow = ai.defineFlow(
       if (topic.includes('seismic') || topic.includes('earthquake')) {
         return {
           insights: [
-            { title: "Drop, Cover, Hold On", content: "Immediately drop to your hands and knees. Cover your head and neck with your arms. Hold on until shaking stops.", type: "warning" },
-            { title: "Safe Zones", content: "Stay away from glass, windows, outside doors and walls, and anything that could fall.", type: "tip" },
-            { title: "Structural Warnings", content: "Be aware that some earthquakes are actually foreshocks and a larger earthquake might occur.", type: "fact" }
+            { title: "Aftershock Risk", content: "Stay alert for aftershocks. Each shaking event can further weaken structures.", type: "warning" },
+            { title: "Safe Shelter Guidance", content: "Find a sturdy table or desk. Stay away from glass, windows, and heavy furniture.", type: "tip" },
+            { title: "Structural Hazard Awareness", content: "Check for gas leaks and structural cracks before re-entering any building.", type: "fact" },
+            { title: "Emergency Evacuation Steps", content: "Have a 'go-bag' ready and know your primary and secondary exit routes.", type: "action" }
           ]
         };
       }
@@ -85,9 +86,10 @@ const generatePreparednessInsightsFlow = ai.defineFlow(
       if (topic.includes('flood') || topic.includes('water')) {
         return {
           insights: [
-            { title: "Water Safety", content: "Do not walk, swim, or drive through flood waters. Turn Around, Don't Drown!", type: "warning" },
-            { title: "Evacuation Guidance", content: "If told to evacuate, do so immediately. Never ignore evacuation orders.", type: "action" },
-            { title: "Contamination Alerts", content: "Floodwaters may contain sewage, sharp objects, and hazardous chemicals.", type: "fact" }
+            { title: "Flood Safety Guidance", content: "Never walk or drive through moving water. Just 6 inches can knock you over.", type: "warning" },
+            { title: "Water Contamination Alert", content: "Flood water may contain sewage or chemicals. Boil water before consumption.", type: "fact" },
+            { title: "Emergency Shelter Access", content: "Locate high ground and established community shelters immediately.", type: "tip" },
+            { title: "Safe Evacuation Recommendations", content: "Follow official evacuation routes. Do not use shortcuts through unknown terrain.", type: "action" }
           ]
         };
       }
@@ -95,18 +97,21 @@ const generatePreparednessInsightsFlow = ai.defineFlow(
       if (topic.includes('medical')) {
         return {
           insights: [
-            { title: "Emergency Assistance", content: "If someone is unconscious or not breathing, call 911 immediately and start CPR if trained.", type: "action" },
-            { title: "First-Aid Actions", content: "Apply firm, steady pressure to any site of severe bleeding with a clean cloth.", type: "tip" },
-            { title: "Breathing Guidance", content: "Help the person into a comfortable position, usually sitting, and loosen tight clothing.", type: "fact" }
+            { title: "Emergency Medical Guidance", content: "If the victim is unresponsive, check for breathing and start CPR immediately if trained.", type: "action" },
+            { title: "Symptom Monitoring", content: "Watch for signs of shock: pale skin, rapid pulse, and shallow breathing.", type: "fact" },
+            { title: "First-Aid Support", content: "Apply direct pressure to wounds using clean dressings to stop severe bleeding.", type: "tip" },
+            { title: "Critical Response Actions", content: "Keep the patient warm and still until professional medical help arrives.", type: "warning" }
           ]
         };
       }
 
+      // Default / General
       return {
         insights: [
-          { title: "Local Survival Protocol", content: "Disaster-ready intelligence capacity is restricted. Prioritize standard emergency protocols and listen to local authorities.", type: "warning" },
-          { title: "Resource Preparedness", content: "Confirm you have at least 3 days of water (1 gallon per person per day) and non-perishable food supplies.", type: "action" },
-          { title: "Communication Resilience", content: "Designate an out-of-town emergency contact that all family members can call during a disaster.", type: "tip" }
+          { title: "Emergency Preparedness", content: "Verify you have 3 days of water (1 gal/person) and non-perishable food supplies.", type: "tip" },
+          { title: "Offline Assistance Active", content: "Axon-AI is operating in local mode. All critical survival data remains available.", type: "fact" },
+          { title: "Backup Communication", content: "Designate an out-of-town contact that all family members can call during a disaster.", type: "action" },
+          { title: "Resource Planning", content: "Ensure flashlights, batteries, and a first-aid kit are easily accessible in the dark.", type: "warning" }
         ]
       };
     }
