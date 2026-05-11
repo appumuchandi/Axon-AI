@@ -56,7 +56,6 @@ export default function SOSPage() {
       try {
         await navigator.share(shareData);
       } catch (error: any) {
-        // If the user cancelled the share, we don't need to show an error
         if (error.name !== 'AbortError') {
           alert(shareData.text);
         }
@@ -71,12 +70,12 @@ export default function SOSPage() {
       <header className="w-full flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Logo className="h-8 w-8" />
-          <h1 className="text-xl font-black font-headline tracking-tighter text-primary">AXON SOS</h1>
+          <h1 className="text-xl font-black font-headline tracking-tighter text-primary uppercase">SOS LINK</h1>
         </div>
         {isTriggered && (
-          <div className="flex items-center gap-2 bg-red-500/10 text-red-500 px-3 py-1 rounded-full animate-pulse">
-            <span className="w-2 h-2 rounded-full bg-red-500" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Live Alert Active</span>
+          <div className="flex items-center gap-2 bg-accent/10 text-accent px-3 py-1 rounded-full animate-pulse border border-accent/20">
+            <span className="w-2 h-2 rounded-full bg-accent" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">LIVE BROADCAST</span>
           </div>
         )}
       </header>
@@ -84,22 +83,22 @@ export default function SOSPage() {
       <div className="flex-1 w-full flex flex-col items-center justify-center max-w-md mx-auto">
         {!isTriggered && countdown === null ? (
           <div className="space-y-12 text-center">
-            <div className="relative group" onClick={handleSOS}>
-              <div className="absolute inset-[-20px] bg-red-500/10 rounded-full animate-ping duration-[2000ms]" />
-              <div className="absolute inset-[-40px] bg-red-500/5 rounded-full animate-ping duration-[3000ms] delay-500" />
+            <div className="relative group cursor-pointer" onClick={handleSOS}>
+              <div className="absolute inset-[-30px] bg-accent/10 rounded-full animate-ping duration-[3000ms]" />
+              <div className="absolute inset-[-60px] bg-accent/5 rounded-full animate-ping duration-[4000ms] delay-500" />
               
               <Button 
                 size="lg"
-                className="w-64 h-64 rounded-full bg-red-600 hover:bg-red-700 shadow-[0_0_50px_rgba(220,38,38,0.4)] flex flex-col items-center justify-center gap-4 relative transition-transform active:scale-90 border-[8px] border-white/20"
+                className="w-64 h-64 rounded-full bg-accent hover:bg-accent/90 shadow-[0_0_60px_rgba(250,128,114,0.4)] flex flex-col items-center justify-center gap-4 relative transition-all active:scale-95 border-[10px] border-white/30"
               >
                 <ShieldAlert className="h-24 w-24 text-white" />
-                <span className="text-4xl font-black text-white tracking-widest uppercase">SOS</span>
+                <span className="text-4xl font-black text-white tracking-widest">TRIGGER SOS</span>
               </Button>
             </div>
-            <div className="space-y-2">
-              <h2 className="text-xl font-bold">Emergency Trigger</h2>
-              <p className="text-muted-foreground text-sm max-w-[280px] mx-auto">
-                Tap the button to start the 5s emergency broadcast sequence.
+            <div className="space-y-3">
+              <h2 className="text-2xl font-black uppercase tracking-tighter">Immediate Response</h2>
+              <p className="text-muted-foreground text-sm max-w-[300px] mx-auto font-medium">
+                Hold the button to initiate a 5-second countdown to emergency alerting.
               </p>
             </div>
           </div>
@@ -112,7 +111,7 @@ export default function SOSPage() {
                   cy="144"
                   r="130"
                   stroke="currentColor"
-                  strokeWidth="12"
+                  strokeWidth="14"
                   fill="transparent"
                   className="text-muted/10"
                 />
@@ -121,109 +120,113 @@ export default function SOSPage() {
                   cy="144"
                   r="130"
                   stroke="currentColor"
-                  strokeWidth="12"
+                  strokeWidth="14"
                   fill="transparent"
                   strokeDasharray={816}
                   strokeDashoffset={816 - (816 * (5 - countdown)) / 5}
-                  className="text-red-500 transition-all duration-1000 linear stroke-cap-round"
+                  className="text-accent transition-all duration-1000 linear stroke-cap-round"
                 />
               </svg>
               <div className="flex flex-col items-center">
-                <span className="text-9xl font-black text-red-500 leading-none">{countdown}</span>
-                <span className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mt-2">Seconds</span>
+                <span className="text-9xl font-black text-accent leading-none tracking-tighter">{countdown}</span>
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mt-4">Broadcast Pending</span>
               </div>
             </div>
             
             <Button 
               variant="outline" 
               onClick={cancelSOS}
-              className="px-10 py-8 rounded-2xl border-2 border-muted-foreground/20 text-muted-foreground hover:bg-muted font-bold text-lg flex gap-3 group"
+              className="px-12 py-10 rounded-2xl border-2 border-muted-foreground/20 text-muted-foreground hover:bg-muted font-bold text-xl flex gap-3 group"
             >
-              <X className="h-6 w-6 group-hover:rotate-90 transition-transform" />
-              CANCEL EMERGENCY
+              <X className="h-7 w-7 group-hover:rotate-90 transition-transform" />
+              CANCEL ALERT
             </Button>
           </div>
         ) : (
           <div className="w-full space-y-6 animate-in slide-in-from-bottom-12 duration-700">
-            <Card className="border-red-500 bg-red-500/5 overflow-hidden shadow-2xl border-2">
+            <Card className="border-accent bg-accent/5 overflow-hidden shadow-2xl border-2 rounded-3xl">
               <CardContent className="p-8 space-y-8 text-center">
                 <div className="flex flex-col items-center gap-4">
-                  <div className="bg-red-500 p-4 rounded-full shadow-lg shadow-red-500/20">
-                    <AlertTriangle className="h-10 w-10 text-white animate-pulse" />
+                  <div className="bg-accent p-5 rounded-full shadow-xl shadow-accent/30">
+                    <AlertTriangle className="h-12 w-12 text-white animate-pulse" />
                   </div>
                   <div className="space-y-1">
-                    <h2 className="text-3xl font-black text-red-600 uppercase tracking-tighter">Emergency Active</h2>
-                    <p className="text-sm font-semibold text-red-600/80 uppercase tracking-widest">Distress Signal Broadcasted</p>
+                    <h2 className="text-3xl font-black text-accent uppercase tracking-tighter leading-none">SOS BROADCASTING</h2>
+                    <p className="text-xs font-bold text-accent/70 uppercase tracking-widest mt-2">Precision Location Signal Sent</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <Button className="flex flex-col gap-2 h-auto py-5 bg-red-600 text-white hover:bg-red-700 rounded-2xl">
-                    <Phone className="h-7 w-7" />
-                    <span className="text-xs font-black uppercase">Call Emergency</span>
+                  <Button className="flex flex-col gap-2 h-auto py-6 bg-accent text-white hover:bg-accent/90 rounded-2xl border-b-4 border-accent/20">
+                    <Phone className="h-8 w-8" />
+                    <span className="text-[10px] font-black uppercase">Call Emergency</span>
                   </Button>
                   <Button 
-                    className="flex flex-col gap-2 h-auto py-5 bg-primary text-white hover:bg-primary/90 rounded-2xl" 
+                    className="flex flex-col gap-2 h-auto py-6 bg-primary text-white hover:bg-primary/90 rounded-2xl border-b-4 border-primary/20" 
                     onClick={handleShareLocation}
                   >
-                    <Share2 className="h-7 w-7" />
-                    <span className="text-xs font-black uppercase">Share Precise GPS</span>
+                    <Share2 className="h-8 w-8" />
+                    <span className="text-[10px] font-black uppercase">Direct Share GPS</span>
                   </Button>
                 </div>
 
-                <div className="bg-background rounded-2xl p-5 text-left border-2 space-y-4 shadow-inner">
+                <div className="bg-background rounded-2xl p-6 text-left border-2 space-y-4 shadow-inner">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-primary font-bold">
                       <MapPin className="h-4 w-4" />
-                      <span className="text-[10px] uppercase tracking-widest">Live Coordinates</span>
+                      <span className="text-[10px] uppercase tracking-widest font-black">Satellite Fix</span>
                     </div>
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
                   </div>
                   {location ? (
                     <div className="space-y-1">
-                      <p className="font-mono text-lg font-bold tracking-tight">{location.lat.toFixed(6)}, {location.lng.toFixed(6)}</p>
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold">Accuracy: High (within 5m)</p>
+                      <p className="font-mono text-2xl font-black tracking-tighter text-foreground">{location.lat.toFixed(6)}, {location.lng.toFixed(6)}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase font-black">Accuracy: Sub-Meter Level</p>
                     </div>
                   ) : (
-                    <p className="text-xs text-muted-foreground italic">Fetching high-precision GPS...</p>
+                    <div className="flex items-center gap-3">
+                      <div className="h-2 w-2 bg-primary rounded-full animate-bounce" />
+                      <p className="text-xs text-muted-foreground italic font-medium uppercase tracking-widest">Acquiring Precise GPS...</p>
+                    </div>
                   )}
                   
-                  <div className="pt-4 border-t-2 border-dashed mt-4">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold mb-2">Attached Medical Identity</p>
-                    <div className="flex justify-between items-end">
+                  <div className="pt-5 border-t-2 border-dashed mt-5">
+                    <p className="text-[10px] text-muted-foreground uppercase font-black mb-3">Emergency Identity Attached</p>
+                    <div className="flex justify-between items-center">
                       <div className="space-y-1">
-                        <p className="text-base font-black uppercase leading-none">{profile?.fullName || "Unidentified User"}</p>
-                        <p className="text-xs font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded-md inline-block">
-                          {profile?.bloodGroup || "Blood Type: N/A"}
+                        <p className="text-xl font-black uppercase leading-none text-foreground">{profile?.fullName || "Unidentified User"}</p>
+                        <p className="text-xs font-bold text-accent bg-accent/10 px-3 py-1 rounded-lg inline-block mt-2">
+                          Blood: {profile?.bloodGroup || "N/A"}
                         </p>
                       </div>
-                      <ShieldAlert className="h-8 w-8 text-primary/20" />
+                      <ShieldAlert className="h-10 w-10 text-primary/10" />
                     </div>
                   </div>
                 </div>
 
                 <Button 
                   variant="ghost" 
-                  className="text-xs font-bold text-muted-foreground hover:text-red-500" 
+                  className="text-xs font-bold text-muted-foreground hover:text-accent transition-colors" 
                   onClick={cancelSOS}
                 >
-                  DEACTIVATE SOS PROTOCOL
+                  TERMINATE DISTRESS SIGNAL
                 </Button>
               </CardContent>
             </Card>
             
-            <Button variant="secondary" className="w-full h-16 rounded-2xl font-black text-lg flex gap-3 border-2 border-primary/20 hover:bg-primary/5 transition-all">
-              <Volume2 className="h-6 w-6" />
-              EMIT AUDIBLE BEACON
+            <Button variant="secondary" className="w-full h-16 rounded-2xl font-black text-lg flex gap-3 border-2 border-primary/10 hover:bg-primary/5 transition-all shadow-lg">
+              <Volume2 className="h-7 w-7" />
+              ACTIVATE SONIC BEACON
             </Button>
           </div>
         )}
       </div>
 
       {!isTriggered && countdown === null && (
-        <p className="text-xs text-muted-foreground max-w-xs text-center font-medium leading-relaxed">
-          The AXON SOS system triggers an automatic broadcast of your GPS and medical profile to local emergency services.
-        </p>
+        <div className="flex items-center gap-3 px-6 text-muted-foreground max-w-sm text-center font-bold text-[10px] uppercase tracking-[0.1em] opacity-60">
+          <ShieldAlert className="h-4 w-4 shrink-0" />
+          <span>Automatic broadcast of GPS and medical profile to nearest rescue coordination hub.</span>
+        </div>
       )}
 
       <Navigation />

@@ -10,20 +10,28 @@ export function Logo({ className }: { className?: string }) {
     >
       <defs>
         <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#fbbf24" />
-          <stop offset="100%" stopColor="#f97316" />
+          <stop offset="0%" stopColor="#00BFFF" />
+          <stop offset="100%" stopColor="#0099CC" />
         </linearGradient>
       </defs>
-      <path 
-        d="M50 5L89 27.5V72.5L50 95L11 72.5V27.5L50 5Z" 
+      <rect 
+        x="10" 
+        y="10" 
+        width="80" 
+        height="80" 
+        rx="20" 
         fill="url(#logo-gradient)" 
       />
       <path 
-        d="M50 22L78 72H63L50 48L37 72H22L50 22Z" 
+        d="M50 25L75 70H60L50 50L40 70H25L50 25Z" 
         fill="white" 
       />
-      <path 
-        d="M40 60H60V66H40V60Z" 
+      <rect 
+        x="35" 
+        y="58" 
+        width="30" 
+        height="5" 
+        rx="2" 
         fill="white" 
       />
     </svg>

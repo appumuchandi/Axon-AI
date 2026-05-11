@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -7,7 +6,7 @@ import { emergencyAssistantGuidance } from "@/ai/flows/emergency-assistant-guida
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Send, Bot, User, Loader2, Info, HeartPulse, ShieldAlert, Zap, AlertTriangle, Trash2 } from "lucide-react"
+import { Send, Bot, User, Loader2, Info, HeartPulse, ShieldAlert, Zap, AlertTriangle, Trash2, Mic } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Logo } from "@/components/Logo"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -26,7 +25,6 @@ export default function AssistantPage() {
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Initialize from local cache
   useEffect(() => {
     const cached = localStorage.getItem(CHAT_HISTORY_KEY);
     if (cached) {
@@ -35,18 +33,17 @@ export default function AssistantPage() {
       } catch (e) {
         setMessages([{ 
           role: 'assistant', 
-          content: "I am AXON-AI. Describe your emergency or select a category below for instant protocols." 
+          content: "I am AXON-AI. Describe your emergency situation for instant rescue protocols." 
         }]);
       }
     } else {
       setMessages([{ 
         role: 'assistant', 
-        content: "I am AXON-AI. Describe your emergency or select a category below for instant protocols." 
+        content: "I am AXON-AI. Describe your emergency situation for instant rescue protocols." 
       }]);
     }
   }, []);
 
-  // Save to cache whenever messages change
   useEffect(() => {
     if (messages.length > 0) {
       localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(messages));
@@ -89,7 +86,7 @@ export default function AssistantPage() {
     } catch (error) {
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: "Network disrupted. Please follow standard emergency procedures. Your medical profile and previous guidance remain accessible offline." 
+        content: "Network link disrupted. Falling back to local survival protocols. Please remain calm." 
       }]);
     } finally {
       setIsLoading(false);
@@ -97,10 +94,10 @@ export default function AssistantPage() {
   };
 
   const quickActions = [
-    { label: "CPR Instructions", icon: HeartPulse, query: "Show me step-by-step CPR instructions" },
-    { label: "Earthquake Safety", icon: Zap, query: "What to do during an earthquake?" },
-    { label: "Stop Bleeding", icon: AlertTriangle, query: "How to stop severe bleeding?" },
-    { label: "Evacuation Prep", icon: ShieldAlert, query: "What are the essential evacuation safety steps?" },
+    { label: "CPR Protocol", icon: HeartPulse, query: "Show me step-by-step CPR instructions" },
+    { label: "Earthquake Tips", icon: Zap, query: "What to do during an earthquake?" },
+    { label: "Bleeding Control", icon: AlertTriangle, query: "How to stop severe bleeding?" },
+    { label: "Hazard Safety", icon: ShieldAlert, query: "What are the essential safety steps for gas leaks?" },
   ];
 
   return (
@@ -109,8 +106,8 @@ export default function AssistantPage() {
         <div className="flex items-center gap-3">
           <Logo className="h-9 w-9" />
           <div>
-            <h1 className="font-black font-headline text-lg tracking-tight text-primary">AI ASSISTANT</h1>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Local-First Cache Active</p>
+            <h1 className="font-black font-headline text-lg tracking-tighter text-primary uppercase">AXON ASSIST</h1>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black opacity-70">Intelligent Response Active</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -119,8 +116,8 @@ export default function AssistantPage() {
               <Trash2 className="h-4 w-4" />
             </Button>
           )}
-          <Badge variant="outline" className="border-primary text-primary bg-primary/5 text-[9px]">
-            PERSISTENT
+          <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] font-black tracking-tight">
+            ENCRYPTED
           </Badge>
         </div>
       </header>
@@ -128,12 +125,12 @@ export default function AssistantPage() {
       <div className="flex-1 overflow-hidden flex flex-col">
         <div 
           ref={scrollRef}
-          className="flex-1 overflow-y-auto p-4 space-y-6 pb-4"
+          className="flex-1 overflow-y-auto p-4 space-y-6 pb-6"
         >
-          <div className="bg-primary/5 p-4 rounded-2xl border border-primary/20 flex gap-3 mb-6">
+          <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex gap-3 mb-6">
             <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-            <p className="text-xs text-muted-foreground leading-relaxed font-medium">
-              Protocols are saved locally. Information provided is for emergency reference only. Call 911/112 first if in danger.
+            <p className="text-[11px] text-muted-foreground leading-relaxed font-semibold uppercase tracking-tight">
+              AI guidance is for emergency reference. Priority 1: Contact professional services (911/112).
             </p>
           </div>
 
@@ -142,16 +139,16 @@ export default function AssistantPage() {
               key={i} 
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
             >
-              <div className={`flex gap-3 max-w-[90%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div className={`h-8 w-8 rounded-full shrink-0 flex items-center justify-center shadow-sm ${
-                  msg.role === 'user' ? 'bg-muted border' : 'bg-primary'
+              <div className={`flex gap-3 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div className={`h-9 w-9 rounded-xl shrink-0 flex items-center justify-center shadow-md ${
+                  msg.role === 'user' ? 'bg-muted border border-border' : 'bg-primary'
                 }`}>
-                  {msg.role === 'user' ? <User className="h-4 w-4" /> : <Logo className="h-6 w-6" />}
+                  {msg.role === 'user' ? <User className="h-5 w-5" /> : <Logo className="h-6 w-6" />}
                 </div>
-                <div className={`p-4 rounded-2xl text-sm leading-relaxed whitespace-pre-line ${
+                <div className={`p-4 rounded-2xl text-[14px] leading-relaxed whitespace-pre-line font-medium ${
                   msg.role === 'user' 
-                    ? 'bg-primary text-white rounded-tr-none shadow-lg' 
-                    : 'bg-card border rounded-tl-none shadow-sm'
+                    ? 'bg-primary text-white rounded-tr-none shadow-xl' 
+                    : 'bg-card border rounded-tl-none shadow-md'
                 }`}>
                   {msg.content}
                 </div>
@@ -161,9 +158,9 @@ export default function AssistantPage() {
 
           {isLoading && (
             <div className="flex justify-start animate-pulse">
-              <div className="flex gap-3 items-center text-primary font-bold">
+              <div className="flex gap-3 items-center text-primary font-black">
                 <Loader2 className="h-5 w-5 animate-spin" />
-                <span className="text-xs uppercase tracking-widest">Compiling Local Protocol...</span>
+                <span className="text-[10px] uppercase tracking-[0.2em]">Compiling Guidance...</span>
               </div>
             </div>
           )}
@@ -175,11 +172,13 @@ export default function AssistantPage() {
               <Button 
                 key={idx} 
                 variant="outline" 
-                className="justify-start gap-2 h-auto py-3 text-left border-primary/20 hover:bg-primary/5 hover:border-primary"
+                className="justify-start gap-3 h-auto py-4 text-left border-primary/10 hover:bg-primary/5 hover:border-primary/30 rounded-2xl bg-card shadow-sm"
                 onClick={() => handleSubmit(action.query)}
               >
-                <action.icon className="h-4 w-4 text-primary shrink-0" />
-                <span className="text-xs font-bold leading-tight">{action.label}</span>
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <action.icon className="h-4 w-4 text-primary shrink-0" />
+                </div>
+                <span className="text-xs font-black uppercase tracking-tight leading-tight">{action.label}</span>
               </Button>
             ))}
           </div>
@@ -187,25 +186,30 @@ export default function AssistantPage() {
       </div>
 
       <div className="p-4 bg-background/80 backdrop-blur-md border-t pb-20 md:pb-24">
-        <form 
-          onSubmit={handleSubmit} 
-          className="flex gap-2 max-w-screen-xl mx-auto items-center"
-        >
-          <Input 
-            placeholder="Describe emergency situation..." 
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            disabled={isLoading}
-            className="flex-1 rounded-2xl border-primary/20 focus-visible:ring-primary h-14 px-6 text-base"
-          />
-          <Button 
-            type="submit" 
-            disabled={isLoading || !query.trim()} 
-            className="rounded-2xl w-14 h-14 p-0 bg-primary hover:bg-primary/90 shadow-lg"
-          >
-            {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Send className="h-6 w-6" />}
+        <div className="flex gap-3 max-w-screen-xl mx-auto items-center">
+          <Button variant="outline" size="icon" className="h-14 w-14 rounded-2xl border-primary/10 text-primary">
+            <Mic className="h-6 w-6" />
           </Button>
-        </form>
+          <form 
+            onSubmit={handleSubmit} 
+            className="flex-1 flex gap-2"
+          >
+            <Input 
+              placeholder="Describe situation..." 
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              disabled={isLoading}
+              className="flex-1 rounded-2xl border-primary/10 focus-visible:ring-primary h-14 px-6 text-base font-medium shadow-inner"
+            />
+            <Button 
+              type="submit" 
+              disabled={isLoading || !query.trim()} 
+              className="rounded-2xl w-14 h-14 p-0 bg-primary hover:bg-primary/90 shadow-xl"
+            >
+              {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Send className="h-6 w-6" />}
+            </Button>
+          </form>
+        </div>
       </div>
 
       <Navigation />
