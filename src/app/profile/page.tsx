@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { User, HeartPulse, ShieldAlert, Phone, Languages, Save, Loader2, CheckCircle, LogIn, LogOut, CloudSync } from "lucide-react"
+import { User, HeartPulse, ShieldAlert, Phone, Save, Loader2, CheckCircle, LogIn, LogOut, Cloud } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import Link from "next/link"
 
@@ -105,7 +105,7 @@ export default function ProfilePage() {
 
       {isAuthenticated && (
         <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-center gap-3">
-          <CloudSync className="h-5 w-5 text-primary animate-pulse" />
+          <Cloud className="h-5 w-5 text-primary animate-pulse" />
           <span className="text-xs font-bold text-primary uppercase tracking-widest">Real-time Cloud Encryption Active</span>
         </div>
       )}
