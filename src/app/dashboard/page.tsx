@@ -91,8 +91,8 @@ export default function Dashboard() {
           <div className="flex items-center gap-3">
             <Logo className="h-9 w-9" />
             <div>
-              <h1 className="text-xl font-black font-headline tracking-tighter text-primary leading-none uppercase">AXON DASH</h1>
-              <p className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] opacity-60">Intelligence Hub</p>
+              <h1 className="text-xl font-black font-headline tracking-tighter text-primary leading-none uppercase">AXON-AI</h1>
+              <p className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] opacity-60">AI That Survives Disasters.</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
