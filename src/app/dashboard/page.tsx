@@ -6,31 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { 
-  AlertCircle, 
-  MapPin, 
   Shield, 
   ArrowRight, 
   Activity, 
-  Radio, 
-  Lightbulb, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Info,
-  Sparkles,
   RefreshCw,
   WifiOff,
   Database,
   Navigation as NavIcon,
   Wifi,
-  Globe,
   RadioTower,
   Cpu,
-  ShieldCheck,
-  Battery,
+  MapPin,
   Lock,
-  Search,
   Zap,
-  Waves
+  Waves,
+  AlertTriangle,
+  Sparkles
 } from "lucide-react"
 import { generatePreparednessInsights, type GeneratePreparednessInsightsOutput } from "@/ai/flows/generate-preparedness-insights"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -38,7 +29,6 @@ import { Logo } from "@/components/Logo"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { ThemeToggle } from "@/components/ThemeToggle"
-import Link from "next/link"
 
 const INTELLIGENCE_MODES = [
   { id: "Resilience", label: "🛡 Resilience", icon: Shield, topic: "General Emergency Preparedness" },
@@ -127,16 +117,6 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-
-          <Link href="/sos" className="block w-full">
-            <Button className="w-full h-16 rounded-[1.5rem] bg-accent hover:bg-accent/90 text-white font-black uppercase text-[12px] tracking-[0.2em] shadow-xl shadow-accent/20 border-[3px] border-white/10 group">
-              <span className="flex items-center gap-3">
-                <Zap className="h-5 w-5 fill-white animate-pulse" />
-                Rapid SOS Trigger
-              </span>
-              <ArrowRight className="h-4 w-4 ml-auto opacity-50 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </Link>
         </section>
 
         {/* Middle Section: Axon-AI Engine Modes */}
