@@ -241,29 +241,29 @@ export default function AssistantPage() {
                   )}
 
                   {msg.role === 'assistant' && msg.showEmergencyPanel && (
-                    <Card className="border-accent/40 border-2 bg-accent/[0.03] overflow-hidden rounded-[2rem] shadow-xl animate-in zoom-in-95 duration-500">
-                      <CardHeader className="p-5 pb-3 bg-accent/5 border-b border-accent/10">
-                        <CardTitle className="text-[10px] font-black text-accent uppercase tracking-widest flex items-center gap-2">
+                    <Card className="border-accent/30 border-2 bg-accent/[0.02] overflow-hidden rounded-[1.5rem] shadow-lg animate-in zoom-in-95 duration-500 max-w-[320px]">
+                      <CardHeader className="p-3 pb-2 bg-accent/5 border-b border-accent/10">
+                        <CardTitle className="text-[9px] font-black text-accent uppercase tracking-widest flex items-center gap-2">
                           <Bell className="h-3 w-3" />
                           Emergency Action Panel
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="p-4 grid gap-3">
+                      <CardContent className="p-3 grid gap-2">
                         <Link href="/sos" className="w-full">
-                          <Button className="w-full justify-between bg-accent hover:bg-accent/90 text-white font-black uppercase text-[10px] tracking-widest h-14 rounded-2xl px-5 shadow-lg shadow-accent/20">
-                            <span className="flex items-center gap-3">
-                              <span className="text-lg">🚨</span>
+                          <Button size="sm" className="w-full justify-between bg-accent hover:bg-accent/90 text-white font-black uppercase text-[9px] tracking-widest h-10 rounded-xl px-4 shadow-sm">
+                            <span className="flex items-center gap-2">
+                              <span className="text-sm">🚨</span>
                               Activate SOS
                             </span>
-                            <ArrowRight className="h-4 w-4 opacity-50" />
+                            <ArrowRight className="h-3 w-3 opacity-50" />
                           </Button>
                         </Link>
                         <Button 
-                          variant="outline" className="w-full justify-start gap-3 border-accent/20 hover:bg-accent/5 text-accent font-black uppercase text-[10px] tracking-widest h-14 rounded-2xl px-5"
+                          variant="outline" size="sm" className="w-full justify-start gap-2 border-accent/10 hover:bg-accent/5 text-accent font-black uppercase text-[9px] tracking-widest h-10 rounded-xl px-4"
                           onClick={() => toast({ title: "Position shared", description: "GPS coordinates sent to rescue network." })}
                         >
-                          <span className="text-lg">📍</span>
-                          Share Live Location
+                          <span className="text-sm">📍</span>
+                          Share Location
                         </Button>
                       </CardContent>
                     </Card>
@@ -274,13 +274,13 @@ export default function AssistantPage() {
                       {msg.suggestedResources.map((resource, idx) => (
                         <Button 
                           key={idx} variant="outline" size="sm" onClick={() => window.open(resource.googleMapsUrl, '_blank')}
-                          className="justify-between h-auto py-4 px-5 border-primary/10 bg-primary/[0.03] hover:bg-primary/[0.06] rounded-2xl group"
+                          className="justify-between h-auto py-3 px-4 border-primary/10 bg-primary/[0.03] hover:bg-primary/[0.06] rounded-xl group"
                         >
-                          <div className="flex items-center gap-4">
-                            <MapPin className="h-4 w-4 text-primary" />
+                          <div className="flex items-center gap-3">
+                            <MapPin className="h-3.5 w-3.5 text-primary" />
                             <div className="text-left">
-                              <p className="text-xs font-black uppercase tracking-tight">{resource.name}</p>
-                              <p className="text-[9px] text-muted-foreground font-black uppercase mt-1 opacity-70">{resource.type} • {resource.address}</p>
+                              <p className="text-[10px] font-black uppercase tracking-tight">{resource.name}</p>
+                              <p className="text-[8px] text-muted-foreground font-black uppercase mt-0.5 opacity-70">{resource.type} • {resource.address}</p>
                             </div>
                           </div>
                           <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
