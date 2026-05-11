@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -89,8 +88,8 @@ export default function SOSPage() {
         {!isTriggered && countdown === null ? (
           <div className="space-y-12 text-center">
             <div className="relative group cursor-pointer" onClick={handleSOS}>
-              <div className="absolute inset-[-30px] bg-accent/10 rounded-full animate-ping duration-[3000ms]" />
-              <div className="absolute inset-[-60px] bg-accent/5 rounded-full animate-ping duration-[4000ms] delay-500" />
+              <div className="absolute inset-[-30px] bg-accent/10 rounded-full animate-ping [animation-duration:3000ms]" />
+              <div className="absolute inset-[-60px] bg-accent/5 rounded-full animate-ping [animation-duration:4000ms] delay-500" />
               
               <Button 
                 size="lg"

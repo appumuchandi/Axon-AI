@@ -118,7 +118,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="pt-8 flex justify-center">
-                   <div className="w-20 h-20 rounded-full border-4 border-white/20 flex items-center justify-center animate-pulse duration-[2000ms]">
+                   <div className="w-20 h-20 rounded-full border-4 border-white/20 flex items-center justify-center animate-pulse [animation-duration:2000ms]">
                       <Logo className="h-10 w-10 opacity-90" />
                    </div>
                 </div>
