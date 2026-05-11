@@ -21,7 +21,6 @@ export default function SOSPage() {
     } else if (countdown === 0) {
       setIsTriggered(true);
       setCountdown(null);
-      // Play a short alert sound if possible or haptic feedback
     }
     return () => clearTimeout(timer);
   }, [countdown]);
@@ -46,6 +45,27 @@ export default function SOSPage() {
     setIsTriggered(false);
   };
 
+  const handleShareLocation = async () => {
+    const shareData = {
+      title: 'AXON SOS',
+      text: `EMERGENCY SOS: My location is ${location ? `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}` : 'Unknown'}.`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (error: any) {
+        // If the user cancelled the share, we don't need to show an error
+        if (error.name !== 'AbortError') {
+          alert(shareData.text);
+        }
+      }
+    } else {
+      alert(shareData.text);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-between p-6 pb-24">
       <header className="w-full flex items-center justify-between">
@@ -65,7 +85,6 @@ export default function SOSPage() {
         {!isTriggered && countdown === null ? (
           <div className="space-y-12 text-center">
             <div className="relative group" onClick={handleSOS}>
-              {/* Pulsing background layers */}
               <div className="absolute inset-[-20px] bg-red-500/10 rounded-full animate-ping duration-[2000ms]" />
               <div className="absolute inset-[-40px] bg-red-500/5 rounded-full animate-ping duration-[3000ms] delay-500" />
               
@@ -145,13 +164,7 @@ export default function SOSPage() {
                   </Button>
                   <Button 
                     className="flex flex-col gap-2 h-auto py-5 bg-primary text-white hover:bg-primary/90 rounded-2xl" 
-                    onClick={() => {
-                       navigator.share ? navigator.share({
-                         title: 'AXON SOS',
-                         text: `EMERGENCY SOS: My location is ${location?.lat}, ${location?.lng}.`,
-                         url: window.location.href,
-                       }) : alert('Location Shared');
-                    }}
+                    onClick={handleShareLocation}
                   >
                     <Share2 className="h-7 w-7" />
                     <span className="text-xs font-black uppercase">Share Precise GPS</span>
