@@ -30,7 +30,7 @@ export default function Home() {
             <span className="text-primary font-black">AXON-AI Responds.</span>
           </h1>
           <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-medium">
-            Trust-driven, offline-first emergency intelligence. Professional first-aid guidance and high-speed SOS triggers built to save lives when infrastructure disappears.
+            Offline-first emergency intelligence built for disasters, rural connectivity challenges, and critical real-world situations.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
             <Link href="/dashboard">
