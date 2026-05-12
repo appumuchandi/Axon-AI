@@ -87,7 +87,7 @@ export default function SOSPage() {
 
   const performNativeShare = async (loc: {lat: number, lng: number} | null) => {
     const locUrl = loc ? `https://www.google.com/maps?q=${loc.lat},${loc.lng}` : 'https://www.google.com/maps';
-    const message = `🚨 AXON-AI EMERGENCY SOS ALERT 🚨\n\nI am in an emergency situation. My medical profile is active and my current location is linked below. Please respond immediately.\n\nLocation:\n${locUrl}`;
+    const message = `🚨 AXON-AI EMERGENCY SOS 🚨\n\nI need help immediately. My medical profile is active.\n\nLive Location:\n${locUrl}`;
     
     const shareData = {
       title: 'AXON-AI SOS BROADCAST',
@@ -98,16 +98,15 @@ export default function SOSPage() {
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-        toast({ title: "Intelligence Shared", description: "SOS payload sent through system bridge." });
+        toast({ title: "Identity Broadcasted", description: "SOS payload shared via system bridge." });
       } catch (e) {
-        // Log error but don't show to user as it might just be a cancellation
         console.warn("Share protocol cancelled or limited", e);
       }
     } else {
-      // Fallback for browsers without navigator.share (copy to clipboard or direct SMS link)
+      // Fallback for browsers without navigator.share
       try {
         await navigator.clipboard.writeText(message);
-        toast({ title: "Protocol Copied", description: "SOS message copied to clipboard. Paste it in your rescue app." });
+        toast({ title: "Protocol Copied", description: "SOS details copied to clipboard. Paste in any app (WhatsApp, Email, etc)." });
         window.open(`sms:?body=${encodeURIComponent(message)}`, '_blank');
       } catch (err) {
         window.open(locUrl, '_blank');
@@ -194,11 +193,11 @@ export default function SOSPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <Button className="flex flex-col gap-2 h-auto py-6 bg-accent text-white hover:bg-accent/90 rounded-2xl" onClick={() => window.open('tel:911')}>
+                  <Button className="flex flex-col gap-2 h-auto py-6 bg-accent text-white hover:bg-accent/90 rounded-2xl shadow-xl transition-all" onClick={() => window.open('tel:911')}>
                     <Phone className="h-6 w-6" /> <span className="text-[9px] font-black uppercase">Call 911</span>
                   </Button>
                   <Button className="flex flex-col gap-2 h-auto py-6 bg-primary text-white hover:bg-primary/90 rounded-2xl shadow-lg shadow-primary/20 active:scale-95 transition-all" onClick={handleShare}>
-                    <Share2 className="h-6 w-6" /> <span className="text-[9px] font-black uppercase">Share Live</span>
+                    <Share2 className="h-6 w-6" /> <span className="text-[9px] font-black uppercase">Share With Anyone</span>
                   </Button>
                 </div>
 
