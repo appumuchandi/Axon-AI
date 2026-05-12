@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
@@ -64,12 +65,53 @@ export default function SOSPage() {
   };
 
   const handleShare = async () => {
-    const locUrl = location ? `https://maps.google.com/?q=${location.lat},${location.lng}` : 'https://maps.google.com';
-    const shareData = { title: 'AXON SOS', text: `EMERGENCY SOS: My location is linked below.`, url: locUrl };
+    // Ensure we have location or try to get it again
+    if (!location) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const newLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            setLocation(newLoc);
+            performNativeShare(newLoc);
+          },
+          () => {
+            toast({ variant: "destructive", title: "GPS Error", description: "Could not acquire precise location for sharing." });
+            performNativeShare(null);
+          }
+        );
+        return;
+      }
+    }
+    performNativeShare(location);
+  };
+
+  const performNativeShare = async (loc: {lat: number, lng: number} | null) => {
+    const locUrl = loc ? `https://www.google.com/maps?q=${loc.lat},${loc.lng}` : 'https://www.google.com/maps';
+    const message = `🚨 AXON-AI EMERGENCY SOS ALERT 🚨\n\nI am in an emergency situation. My medical profile is active and my current location is linked below. Please respond immediately.\n\nLocation:\n${locUrl}`;
+    
+    const shareData = {
+      title: 'AXON-AI SOS BROADCAST',
+      text: message,
+      url: locUrl,
+    };
+
     if (navigator.share) {
-      try { await navigator.share(shareData); } catch (e) {}
+      try {
+        await navigator.share(shareData);
+        toast({ title: "Intelligence Shared", description: "SOS payload sent through system bridge." });
+      } catch (e) {
+        // Log error but don't show to user as it might just be a cancellation
+        console.warn("Share protocol cancelled or limited", e);
+      }
     } else {
-      window.open(locUrl, '_blank');
+      // Fallback for browsers without navigator.share (copy to clipboard or direct SMS link)
+      try {
+        await navigator.clipboard.writeText(message);
+        toast({ title: "Protocol Copied", description: "SOS message copied to clipboard. Paste it in your rescue app." });
+        window.open(`sms:?body=${encodeURIComponent(message)}`, '_blank');
+      } catch (err) {
+        window.open(locUrl, '_blank');
+      }
     }
   };
 
@@ -155,7 +197,7 @@ export default function SOSPage() {
                   <Button className="flex flex-col gap-2 h-auto py-6 bg-accent text-white hover:bg-accent/90 rounded-2xl" onClick={() => window.open('tel:911')}>
                     <Phone className="h-6 w-6" /> <span className="text-[9px] font-black uppercase">Call 911</span>
                   </Button>
-                  <Button className="flex flex-col gap-2 h-auto py-6 bg-primary text-white hover:bg-primary/90 rounded-2xl" onClick={handleShare}>
+                  <Button className="flex flex-col gap-2 h-auto py-6 bg-primary text-white hover:bg-primary/90 rounded-2xl shadow-lg shadow-primary/20 active:scale-95 transition-all" onClick={handleShare}>
                     <Share2 className="h-6 w-6" /> <span className="text-[9px] font-black uppercase">Share Live</span>
                   </Button>
                 </div>
