@@ -27,14 +27,15 @@ export default function SOSPage() {
     });
   }, [profile?.emergencyContacts]);
 
-  // Proactively fetch location on mount
+  // Proactively watch location for instant sharing
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
+    if (typeof window !== 'undefined' && navigator.geolocation) {
+      const watchId = navigator.geolocation.watchPosition(
         (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        null, 
+        (err) => console.warn("GPS Tracking limited:", err.message),
         { enableHighAccuracy: true }
       );
+      return () => navigator.geolocation.clearWatch(watchId);
     }
   }, []);
 
@@ -53,7 +54,6 @@ export default function SOSPage() {
     setCountdown(null);
     setNotifiedList([]);
     
-    // Simulate notification sequence
     const contacts = parsedContacts.length > 0 ? parsedContacts : [{name: "Rescue Hub"}];
     contacts.forEach((c, i) => {
       setTimeout(() => {
@@ -62,69 +62,48 @@ export default function SOSPage() {
     });
 
     if ('vibrate' in navigator) navigator.vibrate([500, 200, 500]);
-    toast({ title: "SOS Broadcast Sent", description: "GPS and Medical Profile shared with emergency network." });
+    toast({ title: "SOS Broadcast Active", description: "Identity shared with emergency network." });
   };
 
   const startCountdown = () => {
     setCountdown(5);
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        null, { enableHighAccuracy: true }
-      );
-    }
   };
 
-  const handleShare = async () => {
-    // If location is still null, try one last immediate grab
-    if (!location) {
-      toast({ title: "Updating GPS...", description: "Acquiring precision coordinates for manual sharing." });
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          async (pos) => {
-            const newLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            setLocation(newLoc);
-            await performNativeShare(newLoc);
-          },
-          async () => {
-            toast({ variant: "destructive", title: "GPS Unavailable", description: "Sharing general emergency alert without coordinates." });
-            await performNativeShare(null);
-          },
-          { timeout: 5000 }
-        );
-        return;
-      }
-    }
-    performNativeShare(location);
-  };
-
-  const performNativeShare = async (loc: {lat: number, lng: number} | null) => {
-    const locUrl = loc ? `https://www.google.com/maps?q=${loc.lat},${loc.lng}` : null;
-    const message = loc 
+  const handleManualShare = async () => {
+    const locUrl = location ? `https://www.google.com/maps?q=${location.lat},${location.lng}` : '';
+    const message = location 
       ? `🚨 AXON-AI EMERGENCY SOS 🚨\n\nI need help immediately. My medical profile is active.\n\nLive Location:\n${locUrl}`
       : `🚨 AXON-AI EMERGENCY SOS 🚨\n\nI need help immediately. My medical profile is active. (Location Unavailable)`;
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'AXON-AI SOS BROADCAST',
+          title: 'AXON-AI EMERGENCY',
           text: message,
           url: locUrl || undefined,
         });
-        toast({ title: "SOS Payload Shared", description: "Identity broadcasted via system bridge." });
-      } catch (e) {
-        console.warn("Share protocol cancelled or limited", e);
-        // If share fails or user cancels, don't fallback to clipboard immediately unless it's a real error
+        toast({ title: "SOS Dispatched", description: "Successfully shared via system bridge." });
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          fallbackClipboardShare(message);
+        }
       }
     } else {
-      // Fallback for browsers without navigator.share
-      try {
-        await navigator.clipboard.writeText(message);
-        toast({ title: "Protocol Copied", description: "SOS details copied to clipboard. Paste in any app (WhatsApp, Email, etc)." });
-        window.open(`sms:?body=${encodeURIComponent(message)}`, '_blank');
-      } catch (err) {
-        if (locUrl) window.open(locUrl, '_blank');
-      }
+      fallbackClipboardShare(message);
+    }
+  };
+
+  const fallbackClipboardShare = async (message: string) => {
+    try {
+      await navigator.clipboard.writeText(message);
+      toast({ 
+        title: "SOS Payload Copied", 
+        description: "Direct sharing restricted. Link copied—paste into WhatsApp, X, or SMS." 
+      });
+      // Try a direct WhatsApp intent for better UX
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    } catch (err) {
+      toast({ variant: "destructive", title: "Broadcast Failed", description: "Could not copy or share emergency payload." });
     }
   };
 
@@ -136,7 +115,7 @@ export default function SOSPage() {
       <header className="w-full flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-2">
           <Logo className="h-8 w-8" />
-          <h1 className="text-xl font-black font-headline tracking-tighter text-primary uppercase">SOS Command</h1>
+          <h1 className="text-xl font-black font-headline tracking-tighter text-primary uppercase leading-none">SOS Protocol</h1>
         </div>
         <ThemeToggle />
       </header>
@@ -151,21 +130,21 @@ export default function SOSPage() {
                 <span className="text-2xl font-black text-white tracking-widest uppercase">Trigger SOS</span>
               </Button>
             </div>
-            <div className="space-y-4">
-              <h2 className="text-xl font-black uppercase tracking-tighter">Emergency Deployment</h2>
-              <p className="text-muted-foreground text-[11px] font-black uppercase tracking-widest leading-relaxed max-w-[260px] mx-auto opacity-70">
-                Precision broadcast of your location and medical profile to rescue hubs.
+            <div className="space-y-4 px-6">
+              <h2 className="text-xl font-black uppercase tracking-tighter">Immediate Response</h2>
+              <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest leading-relaxed opacity-70">
+                Synchronizes your medical identity and GPS with local rescue grids.
               </p>
             </div>
           </div>
         ) : countdown !== null ? (
           <div className="w-full space-y-10 animate-in zoom-in-95 duration-500 flex flex-col items-center">
             <div className="bg-card border border-accent/20 p-8 rounded-[2.5rem] w-full space-y-4 shadow-xl border-t-2">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-accent flex items-center gap-2">
-                <Bell className="h-3 w-3" /> SOS Mode Activating
+              <h3 className="text-[9px] font-black uppercase tracking-widest text-accent flex items-center gap-2">
+                <Bell className="h-3 w-3" /> System Activation
               </h3>
               <ul className="space-y-3">
-                {["Emergency initiated", "Locating precision GPS", "Alerting rescue mesh", "Offline modes engaged"].map((t, i) => (
+                {["Acquiring precision fix", "Verifying medical vitals", "Alerting local network", "Resilience mode active"].map((t, i) => (
                   <li key={i} className="flex items-center gap-3 text-[10px] font-black uppercase text-foreground/80 animate-in slide-in-from-left-4" style={{ animationDelay: `${i*0.1}s` }}>
                     <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" /> {t}
                   </li>
@@ -175,10 +154,10 @@ export default function SOSPage() {
             <div className="text-9xl font-black text-accent tracking-tighter animate-bounce">{countdown}</div>
             <div className="flex gap-4 w-full">
               <Button variant="outline" onClick={() => setCountdown(null)} className="flex-1 h-16 rounded-2xl border-2 font-black uppercase text-[10px] tracking-widest">
-                <X className="h-4 w-4 mr-2" /> Cancel
+                <X className="h-4 w-4 mr-2" /> Abort
               </Button>
               <Button onClick={() => setCountdown(0)} className="flex-1 h-16 rounded-2xl bg-accent hover:bg-accent/90 text-white font-black uppercase text-[10px] tracking-widest">
-                Send Now
+                Force SOS
               </Button>
             </div>
           </div>
@@ -191,12 +170,12 @@ export default function SOSPage() {
                   <div className="bg-accent p-6 rounded-full shadow-xl animate-pulse ring-8 ring-accent/10">
                     <AlertTriangle className="h-12 w-12 text-white" />
                   </div>
-                  <h2 className="text-3xl font-black text-accent uppercase tracking-tighter leading-none">SOS Activated</h2>
+                  <h2 className="text-3xl font-black text-accent uppercase tracking-tighter leading-none">Broadcast Active</h2>
                 </div>
 
                 <div className="bg-muted/30 rounded-[2rem] p-6 text-left border border-primary/10 space-y-3 shadow-inner">
                   <h3 className="text-[9px] font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-2">
-                    <Users className="h-3 w-3" /> Notifying Emergency Network
+                    <Users className="h-3 w-3" /> Responders Notified
                   </h3>
                   {(parsedContacts.length > 0 ? parsedContacts : [{name: "Rescue Hub"}]).map((c, i) => (
                     <div key={i} className="flex items-center justify-between text-[10px] font-black uppercase">
@@ -210,47 +189,27 @@ export default function SOSPage() {
                   <Button className="flex flex-col gap-2 h-auto py-6 bg-accent text-white hover:bg-accent/90 rounded-2xl shadow-xl transition-all" onClick={() => window.open('tel:911')}>
                     <Phone className="h-6 w-6" /> <span className="text-[9px] font-black uppercase">Call 911</span>
                   </Button>
-                  <Button className="flex flex-col gap-2 h-auto py-6 bg-primary text-white hover:bg-primary/90 rounded-2xl shadow-lg shadow-primary/20 active:scale-95 transition-all" onClick={handleShare}>
-                    <Share2 className="h-6 w-6" /> <span className="text-[9px] font-black uppercase tracking-tighter">Share With Anyone</span>
+                  <Button className="flex flex-col gap-2 h-auto py-6 bg-primary text-white hover:bg-primary/90 rounded-2xl shadow-lg shadow-primary/20 active:scale-95 transition-all" onClick={handleManualShare}>
+                    <Share2 className="h-6 w-6" /> <span className="text-[9px] font-black uppercase tracking-tighter">Share with Anyone</span>
                   </Button>
                 </div>
 
                 <div className="bg-background rounded-[2rem] p-6 text-left border-2 space-y-4 shadow-inner border-muted/20">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-primary">
-                      <MapPin className="h-3.5 w-3.5" /> <span className="text-[9px] font-black uppercase tracking-widest">Precision Fix</span>
+                      <MapPin className="h-3.5 w-3.5" /> <span className="text-[9px] font-black uppercase tracking-widest">Active Fix</span>
                     </div>
                     <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
                   </div>
                   {location ? (
                     <p className="font-mono text-xl font-black tracking-tighter text-foreground">{location.lat.toFixed(6)}, {location.lng.toFixed(6)}</p>
                   ) : (
-                    <p className="text-[9px] text-muted-foreground uppercase font-black">Acquiring GPS...</p>
+                    <p className="text-[9px] text-muted-foreground uppercase font-black">Syncing GPS...</p>
                   )}
-                  
-                  <div className="pt-4 border-t border-dashed space-y-3">
-                    <p className="text-[9px] text-muted-foreground uppercase font-black opacity-60">Identity Cards</p>
-                    {(parsedContacts.length > 0 ? parsedContacts : [{name: "Rescue Hub", relationship: "Local Authority", phone: "911"}]).map((c, i) => (
-                      <div key={i} className="flex items-center gap-3 bg-muted/20 p-3 rounded-xl border border-primary/5">
-                        <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center text-xs font-black text-primary">
-                          {c.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="text-left flex-1">
-                          <p className="text-[10px] font-black uppercase leading-none">{c.name}</p>
-                          <p className="text-[8px] text-muted-foreground font-black uppercase mt-1 opacity-70">{c.relationship} • {c.phone}</p>
-                        </div>
-                        {c.phone && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => window.open(`tel:${c.phone}`)}>
-                            <Phone className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
                 </div>
 
                 <Button variant="ghost" className="text-[9px] font-black text-muted-foreground uppercase tracking-widest" onClick={() => {setIsTriggered(false); setCountdown(null);}}>
-                  Terminate SOS
+                  End Session
                 </Button>
               </CardContent>
             </Card>
