@@ -4,7 +4,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { Navigation } from "@/components/Navigation"
 import { Button } from "@/components/ui/button"
-import { ShieldAlert, AlertTriangle, MapPin, Share2, Phone, X, CheckCircle2, Loader2, Users, Bell, Info, ArrowRight, ShieldCheck } from "lucide-react"
+import { ShieldAlert, AlertTriangle, MapPin, Share2, Phone, X, CheckCircle2, Loader2, Users, Bell, MessageSquare, ShieldCheck, ArrowRight } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { useEmergencyProfile } from "@/hooks/use-emergency-profile"
 import { Logo } from "@/components/Logo"
@@ -52,25 +52,48 @@ export default function SOSPage() {
     return () => clearTimeout(timer);
   }, [countdown]);
 
+  const getSOSMessage = () => {
+    const locUrl = location ? `https://www.google.com/maps?q=${location.lat},${location.lng}` : '';
+    const medicalBrief = profile ? `\n\nName: ${profile.fullName}\nBlood: ${profile.bloodGroup}\nAllergies: ${profile.allergies || 'None listed'}\nConditions: ${profile.medicalConditions || 'None listed'}` : '';
+    
+    return `🚨 AXON-AI EMERGENCY SOS 🚨\n\nI need immediate assistance. My emergency profile is active.${medicalBrief}\n\nLive Location:\n${locUrl || 'GPS tracking active...'}`;
+  };
+
+  const dispatchToContact = (phone: string, name: string) => {
+    if (!phone) {
+      toast({ variant: "destructive", title: "No Number", description: `Cannot dispatch to ${name} without a phone number.` });
+      return;
+    }
+    const message = getSOSMessage();
+    const smsUrl = `sms:${phone}${navigator.userAgent.match(/iPhone/i) ? '&' : '?'}body=${encodeURIComponent(message)}`;
+    window.open(smsUrl, '_blank');
+    setNotifiedList(prev => Array.from(new Set([...prev, name])));
+  };
+
   const triggerSOS = () => {
     setIsTriggered(true);
     setCountdown(null);
     setNotifiedList([]);
     
-    // Simulate immediate broadcast notification to saved contacts
-    const contacts = parsedContacts.length > 0 ? parsedContacts : [{ name: "Central Rescue Hub" }];
-    contacts.forEach((c, i) => {
-      setTimeout(() => {
-        setNotifiedList(prev => [...prev, c.name]);
-      }, (i + 1) * 600);
-    });
-
+    const contacts = parsedContacts.length > 0 ? parsedContacts : [];
+    
+    // Immediate feedback
     if ('vibrate' in navigator) navigator.vibrate([500, 200, 500, 200, 500]);
+    
     toast({ 
-      title: "SOS BROADCAST ACTIVE", 
-      description: `Notifying ${contacts.length} saved emergency contacts immediately.`,
+      title: "SOS PROTOCOL ACTIVATED", 
+      description: contacts.length > 0 
+        ? `Preparing immediate dispatch to ${contacts.length} rescue contacts.` 
+        : "Emergency broadcast active. GPS locked.",
       variant: "destructive"
     });
+
+    // Auto-trigger the first contact immediately if possible
+    if (contacts.length > 0 && contacts[0].phone) {
+      setTimeout(() => {
+        dispatchToContact(contacts[0].phone, contacts[0].name);
+      }, 500);
+    }
   };
 
   const startCountdown = () => {
@@ -78,19 +101,16 @@ export default function SOSPage() {
   };
 
   const handleManualShare = async () => {
+    const message = getSOSMessage();
     const locUrl = location ? `https://www.google.com/maps?q=${location.lat},${location.lng}` : '';
-    const medicalBrief = profile ? `\n\nName: ${profile.fullName}\nBlood: ${profile.bloodGroup}\nAllergies: ${profile.allergies || 'None listed'}` : '';
-    
-    const message = `🚨 AXON-AI EMERGENCY SOS 🚨\n\nI need immediate assistance. My emergency profile is active.${medicalBrief}\n\nLive Location:\n${locUrl || 'Location tracking active...'}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'AXON-AI EMERGENCY',
+          title: 'AXON-AI EMERGENCY SOS',
           text: message,
           url: locUrl || undefined,
         });
-        toast({ title: "Broadcast Dispatched", description: "Successfully shared with your emergency network." });
       } catch (err: any) {
         if (err.name !== 'AbortError') {
           fallbackClipboardShare(message);
@@ -106,7 +126,7 @@ export default function SOSPage() {
       await navigator.clipboard.writeText(message);
       toast({ 
         title: "SOS Payload Copied", 
-        description: "Direct broadcast restricted. Payload copied—paste into WhatsApp or SMS." 
+        description: "Clipboard ready. Paste into any messaging app." 
       });
       window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     } catch (err) {
@@ -140,7 +160,7 @@ export default function SOSPage() {
             <div className="space-y-4 px-6">
               <h2 className="text-xl font-black uppercase tracking-tighter">Emergency Activation</h2>
               <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest leading-relaxed opacity-70">
-                Immediately notifies your {parsedContacts.length > 0 ? parsedContacts.length : 'saved'} contacts and synchronizes GPS with local rescue grids.
+                Immediately prepares emergency messages for your {parsedContacts.length > 0 ? parsedContacts.length : 'saved'} contacts with live GPS coordinates.
               </p>
             </div>
           </div>
@@ -177,29 +197,46 @@ export default function SOSPage() {
                   <div className="bg-accent p-6 rounded-full shadow-xl animate-pulse ring-8 ring-accent/10">
                     <AlertTriangle className="h-12 w-12 text-white" />
                   </div>
-                  <h2 className="text-3xl font-black text-accent uppercase tracking-tighter leading-none">Broadcast Active</h2>
+                  <h2 className="text-3xl font-black text-accent uppercase tracking-tighter leading-none text-center">Broadcast Active</h2>
                 </div>
 
                 <div className="bg-muted/30 rounded-[2rem] p-6 text-left border border-primary/10 space-y-4 shadow-inner">
                   <h3 className="text-[9px] font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-2">
-                    <Users className="h-3 w-3" /> Contacts Notified Immediately
+                    <Users className="h-3 w-3" /> Emergency Contacts
                   </h3>
                   <div className="space-y-3">
-                    {(parsedContacts.length > 0 ? parsedContacts : [{name: "Central Rescue Hub"}]).map((c, i) => (
-                      <div key={i} className="flex items-center justify-between text-[11px] font-black uppercase">
-                        <div className="flex flex-col">
-                          <span className={cn(notifiedList.includes(c.name) ? "text-foreground" : "text-muted-foreground opacity-40")}>{c.name}</span>
-                          <span className="text-[8px] opacity-60">{(c as any).relationship || 'Contact'}</span>
+                    {parsedContacts.length > 0 ? (
+                      parsedContacts.map((c, i) => (
+                        <div key={i} className="flex items-center justify-between">
+                          <div className="flex flex-col">
+                            <span className="text-[11px] font-black uppercase text-foreground">{c.name}</span>
+                            <span className="text-[8px] opacity-60 font-black uppercase">{c.relationship} • {c.phone}</span>
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => dispatchToContact(c.phone, c.name)}
+                            className={cn(
+                              "h-9 rounded-xl px-4 text-[9px] font-black uppercase tracking-widest",
+                              notifiedList.includes(c.name) ? "border-green-500 text-green-500 bg-green-500/5" : "border-primary text-primary hover:bg-primary/5"
+                            )}
+                          >
+                            {notifiedList.includes(c.name) ? <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> : <MessageSquare className="h-3.5 w-3.5 mr-1" />}
+                            {notifiedList.includes(c.name) ? "Sent" : "Dispatch"}
+                          </Button>
                         </div>
-                        {notifiedList.includes(c.name) ? <CheckCircle2 className="h-4 w-4 text-primary animate-in zoom-in" /> : <Loader2 className="h-3.5 w-3.5 animate-spin text-primary opacity-20" />}
+                      ))
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-[10px] font-black uppercase text-muted-foreground">No contacts saved in profile.</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <Button className="flex flex-col gap-2 h-auto py-6 bg-accent text-white hover:bg-accent/90 rounded-2xl shadow-xl transition-all" onClick={() => window.open('tel:911')}>
-                    <Phone className="h-6 w-6" /> <span className="text-[9px] font-black uppercase">Emergency 911</span>
+                    <Phone className="h-6 w-6" /> <span className="text-[9px] font-black uppercase">Call 911</span>
                   </Button>
                   <Button className="flex flex-col gap-2 h-auto py-6 bg-primary text-white hover:bg-primary/90 rounded-2xl shadow-lg shadow-primary/20 active:scale-95 transition-all" onClick={handleManualShare}>
                     <Share2 className="h-6 w-6" /> <span className="text-[9px] font-black uppercase tracking-tighter">Share with Anyone</span>
@@ -209,14 +246,14 @@ export default function SOSPage() {
                 <div className="bg-background rounded-[2rem] p-6 text-left border-2 space-y-4 shadow-inner border-muted/20">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-primary">
-                      <MapPin className="h-3.5 w-3.5" /> <span className="text-[9px] font-black uppercase tracking-widest">Live GPS Fix</span>
+                      <MapPin className="h-3.5 w-3.5" /> <span className="text-[9px] font-black uppercase tracking-widest text-center">Live GPS Fix</span>
                     </div>
                     <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
                   </div>
                   {location ? (
-                    <p className="font-mono text-xl font-black tracking-tighter text-foreground">{location.lat.toFixed(6)}, {location.lng.toFixed(6)}</p>
+                    <p className="font-mono text-xl font-black tracking-tighter text-foreground text-center">{location.lat.toFixed(6)}, {location.lng.toFixed(6)}</p>
                   ) : (
-                    <p className="text-[9px] text-muted-foreground uppercase font-black">Syncing GPS Hub...</p>
+                    <p className="text-[9px] text-muted-foreground uppercase font-black text-center">Acquiring Precision GPS...</p>
                   )}
                 </div>
 
