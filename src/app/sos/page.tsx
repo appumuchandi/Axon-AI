@@ -27,6 +27,17 @@ export default function SOSPage() {
     });
   }, [profile?.emergencyContacts]);
 
+  // Proactively fetch location on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        null, 
+        { enableHighAccuracy: true }
+      );
+    }
+  }, []);
+
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (countdown !== null && countdown > 0) {
@@ -65,19 +76,21 @@ export default function SOSPage() {
   };
 
   const handleShare = async () => {
-    // Ensure we have location or try to get it again
+    // If location is still null, try one last immediate grab
     if (!location) {
+      toast({ title: "Updating GPS...", description: "Acquiring precision coordinates for manual sharing." });
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          (pos) => {
+          async (pos) => {
             const newLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
             setLocation(newLoc);
-            performNativeShare(newLoc);
+            await performNativeShare(newLoc);
           },
-          () => {
-            toast({ variant: "destructive", title: "GPS Error", description: "Could not acquire precise location for sharing." });
-            performNativeShare(null);
-          }
+          async () => {
+            toast({ variant: "destructive", title: "GPS Unavailable", description: "Sharing general emergency alert without coordinates." });
+            await performNativeShare(null);
+          },
+          { timeout: 5000 }
         );
         return;
       }
@@ -86,21 +99,22 @@ export default function SOSPage() {
   };
 
   const performNativeShare = async (loc: {lat: number, lng: number} | null) => {
-    const locUrl = loc ? `https://www.google.com/maps?q=${loc.lat},${loc.lng}` : 'https://www.google.com/maps';
-    const message = `🚨 AXON-AI EMERGENCY SOS 🚨\n\nI need help immediately. My medical profile is active.\n\nLive Location:\n${locUrl}`;
+    const locUrl = loc ? `https://www.google.com/maps?q=${loc.lat},${loc.lng}` : null;
+    const message = loc 
+      ? `🚨 AXON-AI EMERGENCY SOS 🚨\n\nI need help immediately. My medical profile is active.\n\nLive Location:\n${locUrl}`
+      : `🚨 AXON-AI EMERGENCY SOS 🚨\n\nI need help immediately. My medical profile is active. (Location Unavailable)`;
     
-    const shareData = {
-      title: 'AXON-AI SOS BROADCAST',
-      text: message,
-      url: locUrl,
-    };
-
     if (navigator.share) {
       try {
-        await navigator.share(shareData);
-        toast({ title: "Identity Broadcasted", description: "SOS payload shared via system bridge." });
+        await navigator.share({
+          title: 'AXON-AI SOS BROADCAST',
+          text: message,
+          url: locUrl || undefined,
+        });
+        toast({ title: "SOS Payload Shared", description: "Identity broadcasted via system bridge." });
       } catch (e) {
         console.warn("Share protocol cancelled or limited", e);
+        // If share fails or user cancels, don't fallback to clipboard immediately unless it's a real error
       }
     } else {
       // Fallback for browsers without navigator.share
@@ -109,7 +123,7 @@ export default function SOSPage() {
         toast({ title: "Protocol Copied", description: "SOS details copied to clipboard. Paste in any app (WhatsApp, Email, etc)." });
         window.open(`sms:?body=${encodeURIComponent(message)}`, '_blank');
       } catch (err) {
-        window.open(locUrl, '_blank');
+        if (locUrl) window.open(locUrl, '_blank');
       }
     }
   };
@@ -197,7 +211,7 @@ export default function SOSPage() {
                     <Phone className="h-6 w-6" /> <span className="text-[9px] font-black uppercase">Call 911</span>
                   </Button>
                   <Button className="flex flex-col gap-2 h-auto py-6 bg-primary text-white hover:bg-primary/90 rounded-2xl shadow-lg shadow-primary/20 active:scale-95 transition-all" onClick={handleShare}>
-                    <Share2 className="h-6 w-6" /> <span className="text-[9px] font-black uppercase">Share With Anyone</span>
+                    <Share2 className="h-6 w-6" /> <span className="text-[9px] font-black uppercase tracking-tighter">Share With Anyone</span>
                   </Button>
                 </div>
 
@@ -216,16 +230,20 @@ export default function SOSPage() {
                   
                   <div className="pt-4 border-t border-dashed space-y-3">
                     <p className="text-[9px] text-muted-foreground uppercase font-black opacity-60">Identity Cards</p>
-                    {parsedContacts.map((c, i) => (
+                    {(parsedContacts.length > 0 ? parsedContacts : [{name: "Rescue Hub", relationship: "Local Authority", phone: "911"}]).map((c, i) => (
                       <div key={i} className="flex items-center gap-3 bg-muted/20 p-3 rounded-xl border border-primary/5">
-                        <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center text-xs">👤</div>
+                        <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center text-xs font-black text-primary">
+                          {c.name.charAt(0).toUpperCase()}
+                        </div>
                         <div className="text-left flex-1">
                           <p className="text-[10px] font-black uppercase leading-none">{c.name}</p>
                           <p className="text-[8px] text-muted-foreground font-black uppercase mt-1 opacity-70">{c.relationship} • {c.phone}</p>
                         </div>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => c.phone && window.open(`tel:${c.phone}`)}>
-                          <Phone className="h-3.5 w-3.5" />
-                        </Button>
+                        {c.phone && (
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => window.open(`tel:${c.phone}`)}>
+                            <Phone className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </div>
                     ))}
                   </div>
