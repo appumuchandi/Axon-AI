@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -56,15 +57,54 @@ export default function Dashboard() {
     }
   }, []);
 
+  const getLocalInsightsFallback = (modeId: string) => {
+    if (modeId === 'Seismic') {
+      return {
+        insights: [
+          { title: "Drop, Cover, Hold", content: "Identify a sturdy table. Stay away from windows and high cabinets.", type: "tip" },
+          { title: "Gas Leak Check", content: "If you smell gas, shut off the main valve immediately and open windows.", type: "warning" },
+          { title: "Aftershock Risk", content: "Be prepared for subsequent shaking. Structural integrity may be compromised.", type: "fact" },
+          { title: "Communication", content: "Keep phone calls for emergencies only to avoid network congestion.", type: "action" }
+        ]
+      };
+    }
+    if (modeId === 'Medical') {
+      return {
+        insights: [
+          { title: "Bleeding Control", content: "Apply firm direct pressure. Do not remove original bandage if soaked.", type: "tip" },
+          { title: "CPR Awareness", content: "Check breathing. If absent, start compressions mid-chest (100-120 bpm).", type: "action" },
+          { title: "Shock Prevention", content: "Keep victim warm and lying down. Elevate legs if no limb injury.", type: "fact" },
+          { title: "Airway Clearance", content: "Tilt head back slightly to ensure open airway if victim is unconscious.", type: "warning" }
+        ]
+      };
+    }
+    return {
+      insights: [
+        { title: "Offline Resilience", content: "All core emergency profiles and local protocols are accessible offline.", type: "tip" },
+        { title: "Water Reserves", content: "Ensure 1 gallon of water per person per day is available for 72 hours.", type: "warning" },
+        { title: "Offline Mapping", content: "Your last known GPS coordinates and profile are cached for SOS use.", type: "fact" },
+        { title: "Mesh Protocol", content: "Local device sync is active. SOS can be dispatched via SMS/native apps.", type: "action" }
+      ]
+    };
+  };
+
   const fetchInsights = async (modeId: string) => {
     setIsLoadingInsights(true);
     const mode = INTELLIGENCE_MODES.find(m => m.id === modeId);
+    
+    if (!navigator.onLine) {
+      setTimeout(() => {
+        setInsights(getLocalInsightsFallback(modeId));
+        setIsLoadingInsights(false);
+      }, 500);
+      return;
+    }
+
     try {
       const result = await generatePreparednessInsights({ topic: mode?.topic });
       setInsights(result);
     } catch (error: any) {
-      // Fallback is handled inside the flow, but we can toast for awareness
-      console.warn("Axon-AI Engine Fallback engaged.");
+      setInsights(getLocalInsightsFallback(modeId));
     } finally {
       setIsLoadingInsights(false);
     }
@@ -104,6 +144,12 @@ export default function Dashboard() {
                     <span className="text-[7px] text-accent font-black uppercase tracking-[0.2em]">Offline Assistance Active</span>
                   </div>
                 )}
+                {isOnline && (
+                  <div className="flex items-center gap-1">
+                    <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                    <span className="text-[7px] text-green-500 font-black uppercase tracking-[0.2em]">Grid Link Stable</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -128,7 +174,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Emergency Intelligence Modes</h2>
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Intelligence Modes</h2>
             </div>
           </div>
 
@@ -159,7 +205,10 @@ export default function Dashboard() {
               insights?.insights.map((insight: any, idx: number) => {
                 const cat = getInsightCategory(insight.type);
                 return (
-                  <Card key={idx} className="bg-card border-none hover:shadow-xl transition-all shadow-md group rounded-[2rem] overflow-hidden">
+                  <Card key={idx} className={cn(
+                    "bg-card border-none hover:shadow-xl transition-all shadow-md group rounded-[2rem] overflow-hidden",
+                    !isOnline && "border border-accent/10"
+                  )}>
                     <CardHeader className="p-6 pb-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -189,8 +238,12 @@ export default function Dashboard() {
               <Database className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h3 className="text-[11px] font-black uppercase tracking-tight leading-none">Axon-AI Engine Status</h3>
-              <p className="text-[10px] text-muted-foreground font-semibold mt-2 leading-relaxed">Resilient mesh networking active. Emergency modes are fully operational in local assist mode.</p>
+              <h3 className="text-[11px] font-black uppercase tracking-tight leading-none">Axon-AI Resilience Status</h3>
+              <p className="text-[10px] text-muted-foreground font-semibold mt-2 leading-relaxed">
+                {isOnline 
+                  ? "Cloud diagnostic engine connected. Full preparedness briefings active." 
+                  : "Offline mode active. Using local survival intelligence cached on this device."}
+              </p>
             </div>
           </div>
         </Card>

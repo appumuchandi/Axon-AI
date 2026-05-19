@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -27,6 +28,7 @@ interface Message {
   suggestedResources?: SuggestedResource[];
   followUpQuestions?: string[];
   audioUrl?: string;
+  isOfflineResponse?: boolean;
 }
 
 const CHAT_HISTORY_KEY = "axon_ai_chat_history_v3";
@@ -84,6 +86,36 @@ export default function AssistantPage() {
     if (audioRef.current) audioRef.current.pause();
   };
 
+  const getLocalGuidanceFallback = (q: string) => {
+    const query = q.toLowerCase();
+    if (query.includes('bleed') || query.includes('blood') || query.includes('cut')) {
+      return {
+        guidance: "OFFLINE MODE: Hemorrhage protocol active. Apply direct firm pressure to the wound with clean cloth. Do not remove soaked cloth; add more layers. Keep limb elevated if possible.",
+        category: "medical",
+        followUpQuestions: ["Identify Nearest Hospital", "Wound is Deep", "Bleeding Won't Stop"]
+      };
+    }
+    if (query.includes('breath') || query.includes('choke') || query.includes('airway')) {
+      return {
+        guidance: "OFFLINE MODE: Airway protocol active. If choking and unable to cough, perform abdominal thrusts. If victim is unconscious and not breathing, begin chest-only CPR.",
+        category: "medical",
+        followUpQuestions: ["How to do CPR", "Victim Unconscious"]
+      };
+    }
+    if (query.includes('quake') || query.includes('earthquake')) {
+      return {
+        guidance: "OFFLINE MODE: Seismic protocol active. Drop, Cover, and Hold On. Stay away from glass and heavy furniture. Do not use elevators.",
+        category: "disaster",
+        followUpQuestions: ["Check for Gas Leaks", "Aftershock Steps"]
+      };
+    }
+    return {
+      guidance: "I am operating in OFFLINE RESILIENCE MODE. My full diagnostic engine is limited, but I can provide protocols for Bleeding, Breathing, or Seismic events. What is your emergency?",
+      category: "safety",
+      followUpQuestions: ["Medical Emergency", "Seismic Event", "Fire/Safety"]
+    };
+  };
+
   const handleSubmit = async (e: React.FormEvent | string) => {
     const userMessage = typeof e === 'string' ? e : query.trim();
     if (typeof e !== 'string') e.preventDefault();
@@ -93,6 +125,22 @@ export default function AssistantPage() {
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setQuery("");
     setIsLoading(true);
+
+    if (!navigator.onLine) {
+      // Immediate Local Offline Response
+      setTimeout(() => {
+        const localResponse = getLocalGuidanceFallback(userMessage);
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: localResponse.guidance,
+          category: localResponse.category,
+          followUpQuestions: localResponse.followUpQuestions,
+          isOfflineResponse: true
+        }]);
+        setIsLoading(false);
+      }, 300);
+      return;
+    }
 
     try {
       const response = await emergencyAssistantGuidance({ query: userMessage });
@@ -105,9 +153,14 @@ export default function AssistantPage() {
         followUpQuestions: response.followUpQuestions
       }]);
     } catch (error) {
+      // Server error fallback (even if online)
+      const localResponse = getLocalGuidanceFallback(userMessage);
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: "I am continuing to provide assistance. Please prioritize your immediate safety. If this is a life-threatening emergency, contact services (911/112) immediately." 
+        content: localResponse.guidance,
+        category: localResponse.category,
+        followUpQuestions: localResponse.followUpQuestions,
+        isOfflineResponse: true
       }]);
     } finally {
       setIsLoading(false);
@@ -115,6 +168,11 @@ export default function AssistantPage() {
   };
 
   const toggleSpeech = async (msgIndex: number, text: string) => {
+    if (!navigator.onLine) {
+      toast({ variant: "destructive", title: "Offline", description: "Voice synthesis requires a grid link." });
+      return;
+    }
+
     if (isSpeakingId === msgIndex) {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -151,7 +209,7 @@ export default function AssistantPage() {
   };
 
   const startListening = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitRecognition;
     if (!SpeechRecognition) {
       toast({ variant: "destructive", title: "Feature unavailable", description: "Voice input is not supported on this browser." });
       return;
@@ -174,7 +232,7 @@ export default function AssistantPage() {
             {!isOnline && (
               <div className="flex items-center gap-1 mt-1">
                 <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-                <span className="text-[8px] text-accent font-black uppercase tracking-widest">Resilient Mode Active</span>
+                <span className="text-[8px] text-accent font-black uppercase tracking-widest">Resilient Local AI Active</span>
               </div>
             )}
           </div>
@@ -198,10 +256,18 @@ export default function AssistantPage() {
                   {msg.role === 'user' ? <User className="h-5 w-5" /> : <Logo className="h-6 w-6" />}
                 </div>
                 <div className="flex flex-col gap-3">
-                  <div className={`p-5 rounded-[1.75rem] text-[15px] leading-relaxed whitespace-pre-line font-medium shadow-sm border ${
-                    msg.role === 'user' ? 'bg-primary text-white border-primary rounded-tr-none' : 'bg-card border-border rounded-tl-none'
-                  }`}>
+                  <div className={cn(
+                    "p-5 rounded-[1.75rem] text-[15px] leading-relaxed whitespace-pre-line font-medium shadow-sm border relative",
+                    msg.role === 'user' ? 'bg-primary text-white border-primary rounded-tr-none' : 'bg-card border-border rounded-tl-none',
+                    msg.isOfflineResponse && "border-accent/30"
+                  )}>
                     {msg.content}
+                    {msg.isOfflineResponse && (
+                      <div className="absolute top-2 right-4 flex items-center gap-1 opacity-40">
+                        <WifiOff className="h-3 w-3" />
+                        <span className="text-[8px] font-black uppercase">Local</span>
+                      </div>
+                    )}
                     {msg.role === 'assistant' && (
                       <div className="flex justify-end mt-2 pt-2 border-t border-border/5">
                         <Button 
@@ -258,7 +324,9 @@ export default function AssistantPage() {
                 <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
                 <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
                 <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
-                <span className="text-[9px] uppercase tracking-widest ml-2 opacity-60 font-black">Axon Diagnostic Engine Active</span>
+                <span className="text-[9px] uppercase tracking-widest ml-2 opacity-60 font-black">
+                  {isOnline ? "Axon Diagnostic Engine Active" : "Local Survival Logic Engaged"}
+                </span>
               </div>
             </div>
           )}
