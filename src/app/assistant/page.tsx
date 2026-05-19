@@ -7,11 +7,12 @@ import { textToSpeech } from "@/ai/flows/text-to-speech"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Send, User, Loader2, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, WifiOff, Stethoscope, ChevronRight } from "lucide-react"
+import { Send, User, Loader2, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, WifiOff, Stethoscope, ChevronRight, ShieldAlert } from "lucide-react"
 import { Logo } from "@/components/Logo"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { toast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
 
 interface Message {
   role: 'user' | 'assistant';
@@ -78,17 +79,47 @@ export default function AssistantPage() {
 
   const getLocalGuidanceFallback = (q: string) => {
     const query = q.toLowerCase();
-    if (query.includes('bleed') || query.includes('blood')) {
+    
+    // Medical - Cardiac
+    if (query.includes('chest') || query.includes('heart') || query.includes('pain')) {
       return {
-        guidance: "Local Emergency Engine Active: Hemorrhage protocol initiated. Apply firm direct pressure to the wound. Do not remove original bandages. Keep limb elevated.",
+        guidance: "Chest pain detected. Sit down immediately. Avoid all physical activity. Loosen tight clothing. If symptoms worsen, use the SOS button below.",
         category: "medical",
-        followUpQuestions: ["Deep wound", "Bleeding persists", "Nearest Trauma Center"]
+        followUpQuestions: ["Pain in arm/jaw?", "Hard to breathe?", "Dizzy or sweating?"]
       };
     }
+
+    // Medical - Breathing
+    if (query.includes('breath') || query.includes('choke')) {
+      return {
+        guidance: "Airway obstruction protocol: If choking and cannot speak, perform abdominal thrusts. If struggling to breathe, sit upright and keep the neck straight.",
+        category: "medical",
+        followUpQuestions: ["Turning blue?", "Victim is awake?", "Allergy history?"]
+      };
+    }
+
+    // Disaster - Fire
+    if (query.includes('fire') || query.includes('smoke')) {
+      return {
+        guidance: "Fire protocol: Evacuate immediately. Stay low to the ground to avoid smoke. Feel doors before opening. Do not use elevators.",
+        category: "safety",
+        followUpQuestions: ["Trapped in room?", "Smell gas leaks?", "Injuries detected?"]
+      };
+    }
+
+    // Disaster - Seismic
+    if (query.includes('quake') || query.includes('earthquake')) {
+      return {
+        guidance: "Seismic event active: Drop, Cover, and Hold On. Stay away from windows and heavy furniture. Stay indoors until shaking stops.",
+        category: "disaster",
+        followUpQuestions: ["Smell gas leaks?", "Building damage?", "Aftershocks?"]
+      };
+    }
+
     return {
-      guidance: "I am operating in Resilient Local Mode. Please specify if you are facing a Medical Emergency, Seismic Event, or Safety Threat so I can provide the relevant local protocols.",
+      guidance: "I am ready to assist. Please describe the emergency (e.g., 'chest pain', 'bleeding', 'fire') so I can provide the relevant local protocol immediately.",
       category: "safety",
-      followUpQuestions: ["Medical Emergency", "Seismic Protocol", "Fire Safety"]
+      followUpQuestions: ["Medical Emergency", "Fire/Smoke", "Natural Disaster", "Personal Safety"]
     };
   };
 
@@ -170,7 +201,7 @@ export default function AssistantPage() {
             <div className="flex items-center gap-1.5 mt-1">
               <div className={cn("h-1.5 w-1.5 rounded-full", isOnline ? "bg-green-500" : "bg-accent animate-pulse")} />
               <span className="text-[7px] text-muted-foreground font-black uppercase tracking-[0.2em]">
-                {isOnline ? "Grid Link Stable" : "Offline Assistant Active"}
+                {isOnline ? "Grid Link Stable" : "Offline Resilience Engaged"}
               </span>
             </div>
           </div>
@@ -196,18 +227,23 @@ export default function AssistantPage() {
                 </div>
                 <div className="flex flex-col gap-3">
                   <div className={cn(
-                    "p-6 rounded-[2rem] text-[15px] leading-relaxed font-semibold shadow-sm relative",
+                    "p-6 rounded-[2rem] text-[15px] leading-relaxed font-semibold shadow-sm relative whitespace-pre-wrap",
                     msg.role === 'user' ? 'bg-primary text-white rounded-tr-none' : 'bg-card border rounded-tl-none',
                     msg.isOfflineResponse && "border-accent/30 bg-accent/5"
                   )}>
                     {msg.content}
                     {msg.isOfflineResponse && (
-                      <div className="absolute -top-2 -right-2 bg-accent text-white p-1 rounded-full">
+                      <div className="absolute -top-2 -right-2 bg-accent text-white p-1 rounded-full shadow-lg">
                         <WifiOff className="h-3 w-3" />
                       </div>
                     )}
                     {msg.role === 'assistant' && (
-                      <div className="flex justify-end mt-4 pt-3 border-t border-muted/10">
+                      <div className="flex items-center justify-between mt-4 pt-3 border-t border-muted/10">
+                        <Link href="/sos">
+                          <Button variant="ghost" size="sm" className="text-[9px] font-black uppercase tracking-widest text-accent hover:bg-accent/10">
+                            <ShieldAlert className="h-3 w-3 mr-2" /> Activate SOS
+                          </Button>
+                        </Link>
                         <Button 
                           variant="ghost" size="icon" onClick={() => toggleSpeech(i, msg.content)}
                           className={cn("h-10 w-10 rounded-full transition-all", isSpeakingId === i ? 'bg-primary text-white scale-110' : 'text-muted-foreground hover:bg-primary/10')}
@@ -242,7 +278,7 @@ export default function AssistantPage() {
                 <div className="h-2 w-2 rounded-full bg-primary" />
                 <div className="h-2 w-2 rounded-full bg-primary" />
                 <div className="h-2 w-2 rounded-full bg-primary" />
-                <span className="text-[10px] uppercase tracking-widest ml-2">Diagnostic Engine Active</span>
+                <span className="text-[10px] uppercase tracking-widest ml-2">Analyzing Survival Intent</span>
               </div>
             </div>
           )}
