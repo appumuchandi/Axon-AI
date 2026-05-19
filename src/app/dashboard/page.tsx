@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -8,43 +7,40 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { 
   Shield, 
-  ArrowRight, 
   Activity, 
-  RefreshCw,
   WifiOff,
-  Database,
-  Navigation as NavIcon,
   Wifi,
   RadioTower,
   Cpu,
   MapPin,
-  Lock,
   Waves,
   AlertTriangle,
   Sparkles,
   Zap,
-  HeartPulse
+  HeartPulse,
+  Flame,
+  Stethoscope,
+  ChevronRight,
+  Wind
 } from "lucide-react"
 import { generatePreparednessInsights, type GeneratePreparednessInsightsOutput } from "@/ai/flows/generate-preparedness-insights"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Logo } from "@/components/Logo"
 import { cn } from "@/lib/utils"
-import { useToast } from "@/hooks/use-toast"
 import { ThemeToggle } from "@/components/ThemeToggle"
 
 const INTELLIGENCE_MODES = [
-  { id: "General", label: "🛡 General", icon: Shield, topic: "General Emergency Preparedness" },
-  { id: "Seismic", label: "🌍 Seismic", icon: Activity, topic: "Earthquake Survival Steps" },
-  { id: "Flood", label: "🌊 Flood", icon: Waves, topic: "Flood Water Safety" },
-  { id: "Medical", label: "❤️ Medical", icon: HeartPulse, topic: "First-Aid Actions" },
+  { id: "Resilience", label: "🛡 Resilience", icon: Shield, topic: "Offline Survival Protocols" },
+  { id: "Seismic", label: "🌍 Seismic", icon: Activity, topic: "Earthquake Immediate Response" },
+  { id: "Flood", label: "🌊 Flood", icon: Wind, topic: "Severe Flood & Water Safety" },
+  { id: "Medical", label: "❤️ Medical", icon: HeartPulse, topic: "Emergency Medical Triage" },
 ]
 
 export default function Dashboard() {
   const [insights, setInsights] = useState<GeneratePreparednessInsightsOutput | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState(true);
-  const [activeMode, setActiveMode] = useState("General");
+  const [activeMode, setActiveMode] = useState("Resilience");
   const [isOnline, setIsOnline] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
@@ -58,34 +54,41 @@ export default function Dashboard() {
   }, []);
 
   const getLocalInsightsFallback = (modeId: string) => {
-    if (modeId === 'Seismic') {
-      return {
+    const fallbacks: Record<string, any> = {
+      Seismic: {
         insights: [
           { title: "Drop, Cover, Hold", content: "Identify a sturdy table. Stay away from windows and high cabinets.", type: "tip" },
           { title: "Gas Leak Check", content: "If you smell gas, shut off the main valve immediately and open windows.", type: "warning" },
           { title: "Aftershock Risk", content: "Be prepared for subsequent shaking. Structural integrity may be compromised.", type: "fact" },
-          { title: "Communication", content: "Keep phone calls for emergencies only to avoid network congestion.", type: "action" }
+          { title: "Offline Mesh Link", content: "Local device sync is active. SOS can be dispatched via SMS/native apps.", type: "action" }
         ]
-      };
-    }
-    if (modeId === 'Medical') {
-      return {
+      },
+      Medical: {
         insights: [
           { title: "Bleeding Control", content: "Apply firm direct pressure. Do not remove original bandage if soaked.", type: "tip" },
           { title: "CPR Awareness", content: "Check breathing. If absent, start compressions mid-chest (100-120 bpm).", type: "action" },
           { title: "Shock Prevention", content: "Keep victim warm and lying down. Elevate legs if no limb injury.", type: "fact" },
           { title: "Airway Clearance", content: "Tilt head back slightly to ensure open airway if victim is unconscious.", type: "warning" }
         ]
-      };
-    }
-    return {
-      insights: [
-        { title: "Offline Resilience", content: "All core emergency profiles and local protocols are accessible offline.", type: "tip" },
-        { title: "Water Reserves", content: "Ensure 1 gallon of water per person per day is available for 72 hours.", type: "warning" },
-        { title: "Offline Mapping", content: "Your last known GPS coordinates and profile are cached for SOS use.", type: "fact" },
-        { title: "Mesh Protocol", content: "Local device sync is active. SOS can be dispatched via SMS/native apps.", type: "action" }
-      ]
+      },
+      Flood: {
+        insights: [
+          { title: "Elevated Ground", content: "Move to the highest floor possible. Do not climb into closed attics.", type: "tip" },
+          { title: "Current Danger", content: "Just 6 inches of moving water can knock you off your feet.", type: "warning" },
+          { title: "Contamination Alert", content: "Avoid contact with floodwater; it may contain sewage or toxins.", type: "fact" },
+          { title: "Power Protocol", content: "Turn off electricity at the main breaker if water reaches outlets.", type: "action" }
+        ]
+      },
+      Resilience: {
+        insights: [
+          { title: "Local Cache Active", content: "All core medical profiles and emergency contacts are stored on-device.", type: "tip" },
+          { title: "72-Hour Supply", content: "Ensure 1 gallon of water per person per day is available for 3 days.", type: "warning" },
+          { title: "Offline Mapping", content: "Your last known GPS coordinates and profile are cached for SOS use.", type: "fact" },
+          { title: "Low Power Mesh", content: "Connectivity is limited. Use text/SMS over voice to save power.", type: "action" }
+        ]
+      }
     };
+    return fallbacks[modeId] || fallbacks.Resilience;
   };
 
   const fetchInsights = async (modeId: string) => {
@@ -96,14 +99,14 @@ export default function Dashboard() {
       setTimeout(() => {
         setInsights(getLocalInsightsFallback(modeId));
         setIsLoadingInsights(false);
-      }, 500);
+      }, 400);
       return;
     }
 
     try {
       const result = await generatePreparednessInsights({ topic: mode?.topic });
       setInsights(result);
-    } catch (error: any) {
+    } catch (error) {
       setInsights(getLocalInsightsFallback(modeId));
     } finally {
       setIsLoadingInsights(false);
@@ -114,68 +117,54 @@ export default function Dashboard() {
     fetchInsights(activeMode);
   }, [activeMode]);
 
-  const getInsightCategory = (type: string) => {
-    switch (type) {
-      case 'tip': return { label: '🛡 Guidance', icon: Shield, color: 'text-blue-500' };
-      case 'warning': return { label: '⚠ Alert', icon: AlertTriangle, color: 'text-accent' };
-      case 'action': return { label: '📡 Connectivity', icon: RadioTower, color: 'text-green-500' };
-      default: return { label: '🤖 AI Insight', icon: Sparkles, color: 'text-primary' };
-    }
-  }
-
-  const statusGrid = [
-    { label: "Mesh Net", icon: isOnline ? Wifi : WifiOff, val: isOnline ? "Active" : "Offline", status: isOnline ? "ok" : "warn" },
-    { label: "GPS Sync", icon: MapPin, val: "Precision", status: "ok" },
-    { label: "Axon Engine", icon: Cpu, val: "Resilient", status: "ok" },
-  ];
-
   return (
     <div className="min-h-screen pb-28 bg-background transition-colors duration-500">
-      <header className="px-5 pt-7 pb-5 bg-card/80 backdrop-blur-xl border-b sticky top-0 z-20 shadow-sm">
+      <header className="px-6 pt-8 pb-6 bg-card/80 backdrop-blur-xl border-b sticky top-0 z-20">
         <div className="max-w-screen-xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Logo className="h-9 w-9" />
+          <div className="flex items-center gap-4">
+            <div className="p-2 bg-primary/10 rounded-2xl">
+              <Logo className="h-8 w-8" />
+            </div>
             <div>
-              <h1 className="text-xl font-black font-headline tracking-tighter text-primary leading-none uppercase">Axon-AI</h1>
-              <div className="flex items-center gap-1 mt-1">
-                {!isOnline && (
+              <h1 className="text-xl font-black tracking-tighter text-primary leading-none">Axon Dashboard</h1>
+              <div className="flex items-center gap-1.5 mt-1">
+                {isOnline ? (
                   <div className="flex items-center gap-1">
-                    <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-                    <span className="text-[7px] text-accent font-black uppercase tracking-[0.2em]">Offline Assistance Active</span>
+                    <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                    <span className="text-[8px] font-black uppercase tracking-widest text-green-500">Grid Link Stable</span>
                   </div>
-                )}
-                {isOnline && (
+                ) : (
                   <div className="flex items-center gap-1">
-                    <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                    <span className="text-[7px] text-green-500 font-black uppercase tracking-[0.2em]">Grid Link Stable</span>
+                    <div className="h-2 w-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(250,128,114,0.5)]" />
+                    <span className="text-[8px] font-black uppercase tracking-widest text-accent">Resilient Mode Active</span>
                   </div>
                 )}
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-          </div>
+          <ThemeToggle />
         </div>
       </header>
 
-      <main className="px-5 mt-8 max-w-screen-xl mx-auto space-y-10">
+      <main className="px-6 mt-8 max-w-screen-xl mx-auto space-y-10">
         <section className="grid grid-cols-3 gap-3">
-          {statusGrid.map((item, i) => (
-            <div key={i} className="bg-card border-2 border-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-sm">
-              <item.icon className={cn("h-4 w-4 mb-1", item.status === 'warn' ? "text-accent" : "text-primary")} />
-              <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground opacity-60 text-center">{item.label}</span>
-              <span className={cn("text-[9px] font-black uppercase", item.status === 'warn' ? "text-accent" : "text-foreground")}>{item.val}</span>
+          {[
+            { label: "Mesh Net", icon: isOnline ? Wifi : WifiOff, val: isOnline ? "Synced" : "Local", color: isOnline ? "text-primary" : "text-accent" },
+            { label: "GPS Fix", icon: MapPin, val: "Locked", color: "text-primary" },
+            { label: "AI Brain", icon: Cpu, val: "Resilient", color: "text-primary" },
+          ].map((item, i) => (
+            <div key={i} className="bg-card border border-primary/5 p-5 rounded-[2rem] flex flex-col items-center justify-center gap-1 shadow-sm">
+              <item.icon className={cn("h-5 w-5 mb-1", item.color)} />
+              <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground opacity-50">{item.label}</span>
+              <span className={cn("text-[10px] font-black uppercase", item.color)}>{item.val}</span>
             </div>
           ))}
         </section>
 
         <section className="space-y-6">
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Intelligence Modes</h2>
-            </div>
+          <div className="flex items-center gap-3 px-1">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Intelligence Layers</h2>
           </div>
 
           <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
@@ -186,67 +175,61 @@ export default function Dashboard() {
                 size="sm"
                 onClick={() => setActiveMode(mode.id)}
                 className={cn(
-                  "rounded-full px-6 font-black text-[10px] uppercase transition-all duration-300 border-2",
+                  "rounded-full px-6 h-11 font-black text-[10px] uppercase transition-all duration-300 border-2",
                   activeMode === mode.id 
-                    ? "bg-primary shadow-lg border-primary scale-105" 
-                    : "border-primary/10 text-muted-foreground hover:border-primary/40"
+                    ? "bg-primary shadow-xl border-primary scale-105" 
+                    : "border-primary/10 text-muted-foreground hover:border-primary/30"
                 )}
               >
-                <mode.icon className="h-3.5 w-3.5 mr-2" />
+                <mode.icon className="h-4 w-4 mr-2" />
                 {mode.label}
               </Button>
             ))}
           </div>
           
-          <div className="grid gap-4 md:grid-cols-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="grid gap-5 md:grid-cols-2">
             {isLoadingInsights ? (
-              Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-[2rem]" />)
+              Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-40 w-full rounded-[2.5rem]" />)
             ) : (
-              insights?.insights.map((insight: any, idx: number) => {
-                const cat = getInsightCategory(insight.type);
-                return (
-                  <Card key={idx} className={cn(
-                    "bg-card border-none hover:shadow-xl transition-all shadow-md group rounded-[2rem] overflow-hidden",
-                    !isOnline && "border border-accent/10"
-                  )}>
-                    <CardHeader className="p-6 pb-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={cn("p-2 bg-muted/30 rounded-xl", cat.color)}>
-                            <cat.icon className="h-4 w-4" />
-                          </div>
-                          <CardTitle className="text-sm font-black text-foreground uppercase tracking-tight">{insight.title}</CardTitle>
+              insights?.insights.map((insight: any, idx: number) => (
+                <Card key={idx} className="bg-card border-none hover:shadow-xl transition-all shadow-md group rounded-[2.5rem] overflow-hidden">
+                  <div className={cn(
+                    "h-1.5 w-full",
+                    insight.type === 'warning' ? "bg-accent" : insight.type === 'action' ? "bg-green-500" : "bg-primary"
+                  )} />
+                  <CardHeader className="p-7 pb-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-muted/30 rounded-xl">
+                          {insight.type === 'warning' ? <AlertTriangle className="h-4 w-4 text-accent" /> : <Shield className="h-4 w-4 text-primary" />}
                         </div>
-                        <Badge variant="secondary" className="text-[8px] font-black uppercase opacity-60 bg-muted/50 border-none">
-                          {cat.label}
-                        </Badge>
+                        <CardTitle className="text-sm font-black text-foreground uppercase">{insight.title}</CardTitle>
                       </div>
-                    </CardHeader>
-                    <CardContent className="p-6 pt-2">
-                      <p className="text-[13px] text-muted-foreground leading-relaxed font-semibold">{insight.content}</p>
-                    </CardContent>
-                  </Card>
-                );
-              })
+                      <Badge variant="secondary" className="text-[8px] font-black uppercase bg-muted/50">
+                        {insight.type}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-7 pt-2">
+                    <p className="text-[13px] text-muted-foreground leading-relaxed font-semibold">{insight.content}</p>
+                  </CardContent>
+                </Card>
+              ))
             )}
           </div>
         </section>
 
-        <Card className="border-none bg-primary/5 rounded-[2rem] p-7 shadow-sm border border-primary/10">
-          <div className="flex items-center gap-4">
-            <div className="bg-primary/10 p-3 rounded-xl">
-              <Database className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h3 className="text-[11px] font-black uppercase tracking-tight leading-none">Axon-AI Resilience Status</h3>
-              <p className="text-[10px] text-muted-foreground font-semibold mt-2 leading-relaxed">
-                {isOnline 
-                  ? "Cloud diagnostic engine connected. Full preparedness briefings active." 
-                  : "Offline mode active. Using local survival intelligence cached on this device."}
-              </p>
-            </div>
+        <section className="bg-primary/5 rounded-[2.5rem] p-8 border border-primary/10 flex items-center gap-6">
+          <div className="bg-primary/10 p-4 rounded-2xl shrink-0">
+            <RadioTower className="h-6 w-6 text-primary animate-pulse" />
           </div>
-        </Card>
+          <div className="space-y-1">
+            <h3 className="text-sm font-black uppercase">Resilient Sync Protocol</h3>
+            <p className="text-xs text-muted-foreground font-semibold">
+              Your identity and survival data are locked to this device. In case of total grid failure, AXON-AI remains functional.
+            </p>
+          </div>
+        </section>
       </main>
 
       <Navigation />

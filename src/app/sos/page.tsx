@@ -1,10 +1,9 @@
-
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
 import { Navigation } from "@/components/Navigation"
 import { Button } from "@/components/ui/button"
-import { ShieldAlert, AlertTriangle, MapPin, Share2, Phone, X, CheckCircle2, Loader2, Users, Bell, MessageSquare, ShieldCheck, ArrowRight } from "lucide-react"
+import { ShieldAlert, AlertTriangle, MapPin, Share2, Phone, X, CheckCircle2, Loader2, Users, Bell, MessageSquare, ShieldCheck, ArrowRight, RadioTower, Sparkles } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { useEmergencyProfile } from "@/hooks/use-emergency-profile"
 import { Logo } from "@/components/Logo"
@@ -13,10 +12,9 @@ import { cn } from "@/lib/utils"
 import { toast } from "@/hooks/use-toast"
 
 export default function SOSPage() {
-  const [countdown, setCountdown] = useState<number | null>(null);
-  const [isTriggered, setIsTriggered] = useState(false);
-  const [notifiedList, setNotifiedList] = useState<string[]>([]);
+  const [step, setStep] = useState<'idle' | 'confirm' | 'init' | 'active'>('idle');
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [notifiedList, setNotifiedList] = useState<string[]>([]);
   const { profile } = useEmergencyProfile();
 
   const parsedContacts = useMemo(() => {
@@ -33,240 +31,215 @@ export default function SOSPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && navigator.geolocation) {
-      const watchId = navigator.geolocation.watchPosition(
+      navigator.geolocation.getCurrentPosition(
         (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        (err) => console.warn("GPS Tracking limited:", err.message),
+        null,
         { enableHighAccuracy: true }
       );
-      return () => navigator.geolocation.clearWatch(watchId);
     }
   }, []);
 
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (countdown !== null && countdown > 0) {
-      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-    } else if (countdown === 0) {
-      triggerSOS();
-    }
-    return () => clearTimeout(timer);
-  }, [countdown]);
+  const triggerInitialization = () => {
+    setStep('init');
+    setTimeout(() => {
+      setStep('active');
+      if ('vibrate' in navigator) navigator.vibrate([500, 200, 500, 200, 500]);
+    }, 2500);
+  };
 
   const getSOSMessage = () => {
     const locUrl = location ? `https://www.google.com/maps?q=${location.lat},${location.lng}` : '';
-    const medicalBrief = profile ? `\n\nName: ${profile.fullName}\nBlood: ${profile.bloodGroup}\nAllergies: ${profile.allergies || 'None listed'}\nConditions: ${profile.medicalConditions || 'None listed'}` : '';
-    
-    return `🚨 AXON-AI EMERGENCY SOS 🚨\n\nI need immediate assistance. My emergency profile is active.${medicalBrief}\n\nLive Location:\n${locUrl || 'GPS tracking active...'}`;
+    const medicalBrief = profile ? `\n\nName: ${profile.fullName}\nBlood: ${profile.bloodGroup}\nAllergies: ${profile.allergies || 'None'}` : '';
+    return `🚨 AXON-AI EMERGENCY ALERT 🚨\n\nI need urgent assistance. My emergency profile is active.${medicalBrief}\n\nLast known location:\n${locUrl || 'Acquiring GPS...'}\n\nPlease contact me immediately.`;
+  };
+
+  const handleShare = async () => {
+    const message = getSOSMessage();
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'AXON-AI SOS', text: message });
+      } catch (err) {
+        fallbackCopy(message);
+      }
+    } else {
+      fallbackCopy(message);
+    }
+  };
+
+  const fallbackCopy = async (message: string) => {
+    await navigator.clipboard.writeText(message);
+    toast({ title: "SOS Payload Copied", description: "Paste into any app to alert others." });
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const dispatchToContact = (phone: string, name: string) => {
-    if (!phone) {
-      toast({ variant: "destructive", title: "No Number", description: `Cannot dispatch to ${name} without a phone number.` });
-      return;
-    }
     const message = getSOSMessage();
     const smsUrl = `sms:${phone}${navigator.userAgent.match(/iPhone/i) ? '&' : '?'}body=${encodeURIComponent(message)}`;
     window.open(smsUrl, '_blank');
     setNotifiedList(prev => Array.from(new Set([...prev, name])));
   };
 
-  const triggerSOS = () => {
-    setIsTriggered(true);
-    setCountdown(null);
-    setNotifiedList([]);
-    
-    const contacts = parsedContacts.length > 0 ? parsedContacts : [];
-    
-    // Immediate feedback
-    if ('vibrate' in navigator) navigator.vibrate([500, 200, 500, 200, 500]);
-    
-    toast({ 
-      title: "SOS PROTOCOL ACTIVATED", 
-      description: contacts.length > 0 
-        ? `Preparing immediate dispatch to ${contacts.length} rescue contacts.` 
-        : "Emergency broadcast active. GPS locked.",
-      variant: "destructive"
-    });
-
-    // Auto-trigger the first contact immediately if possible
-    if (contacts.length > 0 && contacts[0].phone) {
-      setTimeout(() => {
-        dispatchToContact(contacts[0].phone, contacts[0].name);
-      }, 500);
-    }
-  };
-
-  const startCountdown = () => {
-    setCountdown(5);
-  };
-
-  const handleManualShare = async () => {
-    const message = getSOSMessage();
-    const locUrl = location ? `https://www.google.com/maps?q=${location.lat},${location.lng}` : '';
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'AXON-AI EMERGENCY SOS',
-          text: message,
-          url: locUrl || undefined,
-        });
-      } catch (err: any) {
-        if (err.name !== 'AbortError') {
-          fallbackClipboardShare(message);
-        }
-      }
-    } else {
-      fallbackClipboardShare(message);
-    }
-  };
-
-  const fallbackClipboardShare = async (message: string) => {
-    try {
-      await navigator.clipboard.writeText(message);
-      toast({ 
-        title: "SOS Payload Copied", 
-        description: "Clipboard ready. Paste into any messaging app." 
-      });
-      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-    } catch (err) {
-      toast({ variant: "destructive", title: "Broadcast Failed", description: "Could not copy emergency payload." });
-    }
-  };
-
   return (
     <div className={cn(
-      "min-h-screen bg-background flex flex-col items-center justify-between p-6 pb-28 transition-all duration-1000",
-      isTriggered && "bg-accent/[0.05] ring-inset ring-[12px] ring-accent/15"
+      "min-h-screen bg-background p-6 pb-32 flex flex-col transition-all duration-1000",
+      step === 'active' && "bg-accent/[0.03] ring-inset ring-[16px] ring-accent/10"
     )}>
-      <header className="w-full flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-2">
-          <Logo className="h-8 w-8" />
-          <h1 className="text-xl font-black font-headline tracking-tighter text-primary uppercase leading-none">SOS Protocol</h1>
+      <header className="flex items-center justify-between mb-12">
+        <div className="flex items-center gap-3">
+          <Logo className="h-9 w-9" />
+          <h1 className="text-xl font-black tracking-tighter text-primary uppercase">SOS Command</h1>
         </div>
         <ThemeToggle />
       </header>
 
-      <div className="flex-1 w-full flex flex-col items-center justify-center max-w-md mx-auto">
-        {!isTriggered && countdown === null ? (
-          <div className="text-center space-y-12">
-            <div className="relative group flex justify-center" onClick={startCountdown}>
-              <div className="absolute inset-[-50px] bg-accent/10 rounded-full animate-pulse opacity-50" />
-              <Button className="w-64 h-64 rounded-full bg-accent hover:bg-accent/95 shadow-[0_0_80px_rgba(250,128,114,0.4)] flex flex-col items-center justify-center gap-4 relative transition-all active:scale-95 border-[12px] border-white/20">
+      <main className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto w-full">
+        {step === 'idle' && (
+          <div className="text-center space-y-12 animate-in zoom-in-95 duration-500">
+            <div className="relative group flex justify-center" onClick={() => setStep('confirm')}>
+              <div className="absolute inset-[-60px] bg-accent/10 rounded-full animate-pulse opacity-50" />
+              <Button className="w-64 h-64 rounded-full bg-accent hover:bg-accent/95 shadow-[0_0_80px_rgba(250,128,114,0.3)] flex flex-col items-center justify-center gap-4 border-[14px] border-white/20 transition-all active:scale-95 group-hover:scale-105">
                 <ShieldAlert className="h-24 w-24 text-white" />
                 <span className="text-2xl font-black text-white tracking-widest uppercase">Trigger SOS</span>
               </Button>
             </div>
-            <div className="space-y-4 px-6">
+            <div className="space-y-3 px-8">
               <h2 className="text-xl font-black uppercase tracking-tighter">Emergency Activation</h2>
-              <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest leading-relaxed opacity-70">
-                Immediately prepares emergency messages for your {parsedContacts.length > 0 ? parsedContacts.length : 'saved'} contacts with live GPS coordinates.
+              <p className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
+                Single tap initiates emergency broadcast to saved rescue contacts.
               </p>
             </div>
           </div>
-        ) : countdown !== null ? (
-          <div className="w-full space-y-10 animate-in zoom-in-95 duration-500 flex flex-col items-center">
-            <div className="bg-card border border-accent/20 p-8 rounded-[2.5rem] w-full space-y-4 shadow-xl border-t-2">
-              <h3 className="text-[9px] font-black uppercase tracking-widest text-accent flex items-center gap-2">
-                <Bell className="h-3 w-3" /> Broadcast Initialization
-              </h3>
-              <ul className="space-y-3">
-                {["Acquiring precision GPS fix", "Reading saved rescue numbers", "Encrypting medical identity", "Establishing resilient link"].map((t, i) => (
-                  <li key={i} className="flex items-center gap-3 text-[10px] font-black uppercase text-foreground/80 animate-in slide-in-from-left-4" style={{ animationDelay: `${i*0.1}s` }}>
-                    <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" /> {t}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="text-9xl font-black text-accent tracking-tighter animate-bounce">{countdown}</div>
-            <div className="flex gap-4 w-full">
-              <Button variant="outline" onClick={() => setCountdown(null)} className="flex-1 h-16 rounded-2xl border-2 font-black uppercase text-[10px] tracking-widest">
-                <X className="h-4 w-4 mr-2" /> Abort
-              </Button>
-              <Button onClick={() => setCountdown(0)} className="flex-1 h-16 rounded-2xl bg-accent hover:bg-accent/90 text-white font-black uppercase text-[10px] tracking-widest">
-                Force Dispatch
-              </Button>
+        )}
+
+        {step === 'confirm' && (
+          <div className="w-full space-y-10 text-center animate-in slide-in-from-bottom-12 duration-500">
+            <div className="bg-card border-2 border-accent/20 p-10 rounded-[3rem] shadow-2xl space-y-8">
+              <div className="bg-accent/10 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto">
+                <AlertTriangle className="h-10 w-10 text-accent animate-pulse" />
+              </div>
+              <div className="space-y-4">
+                <h2 className="text-2xl font-black text-accent uppercase tracking-tighter">Confirm Emergency?</h2>
+                <p className="text-sm font-semibold text-muted-foreground leading-relaxed">
+                  AXON-AI will broadcast your live location and medical identity to your rescue network immediately.
+                </p>
+              </div>
+              <div className="flex flex-col gap-4">
+                <Button onClick={triggerInitialization} className="h-16 rounded-[1.5rem] bg-accent hover:bg-accent/90 text-white font-black uppercase tracking-widest text-xs shadow-xl shadow-accent/20">
+                  <ShieldCheck className="h-5 w-5 mr-3" /> Initiate Dispatch
+                </Button>
+                <Button variant="ghost" onClick={() => setStep('idle')} className="h-14 font-black uppercase text-[10px] tracking-widest">
+                  Cancel Protocol
+                </X>
+              </div>
             </div>
           </div>
-        ) : (
-          <div className="w-full space-y-6 animate-in slide-in-from-bottom-12 duration-700">
-            <Card className="border-accent border-2 bg-card rounded-[2.5rem] overflow-hidden shadow-2xl relative">
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-accent animate-pulse" />
-              <CardContent className="p-8 space-y-8 text-center">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="bg-accent p-6 rounded-full shadow-xl animate-pulse ring-8 ring-accent/10">
-                    <AlertTriangle className="h-12 w-12 text-white" />
+        )}
+
+        {step === 'init' && (
+          <div className="w-full space-y-8 animate-in zoom-in-95 duration-700 flex flex-col items-center">
+            <div className="bg-card border p-10 rounded-[3rem] w-full space-y-6 shadow-2xl relative overflow-hidden">
+               <div className="absolute top-0 left-0 right-0 h-1 bg-primary animate-pulse" />
+               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-3">
+                  <Sparkles className="h-4 w-4" /> System Readiness
+               </h3>
+               <ul className="space-y-4">
+                  {[
+                    { label: "Acquiring GPS Precision", icon: MapPin },
+                    { label: "Verifying Grid Connectivity", icon: RadioTower },
+                    { label: "Preparing Medical Identity", icon: Users },
+                    { label: "Establishing Secure Mesh", icon: ShieldCheck }
+                  ].map((t, i) => (
+                    <li key={i} className="flex items-center gap-4 text-[11px] font-black uppercase animate-in slide-in-from-left-6" style={{ animationDelay: `${i*0.15}s` }}>
+                      <t.icon className="h-4 w-4 text-primary" /> {t.label}
+                      <Loader2 className="h-3 w-3 ml-auto animate-spin opacity-50" />
+                    </li>
+                  ))}
+               </ul>
+            </div>
+            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-primary animate-[loading_2.5s_ease-in-out_forwards]" />
+            </div>
+          </div>
+        )}
+
+        {step === 'active' && (
+          <div className="w-full space-y-6 animate-in slide-in-from-bottom-12 duration-1000">
+            <Card className="border-accent border-4 bg-card rounded-[3.5rem] overflow-hidden shadow-[0_0_100px_rgba(250,128,114,0.2)] relative">
+              <div className="absolute top-0 left-0 right-0 h-2 bg-accent animate-pulse" />
+              <CardContent className="p-10 space-y-8">
+                <div className="text-center space-y-4">
+                  <div className="bg-accent p-6 rounded-[2rem] w-fit mx-auto shadow-xl ring-8 ring-accent/10 animate-pulse">
+                    <ShieldAlert className="h-14 w-14 text-white" />
                   </div>
-                  <h2 className="text-3xl font-black text-accent uppercase tracking-tighter leading-none text-center">Broadcast Active</h2>
+                  <h2 className="text-4xl font-black text-accent uppercase tracking-tighter">Broadcast Active</h2>
                 </div>
 
-                <div className="bg-muted/30 rounded-[2rem] p-6 text-left border border-primary/10 space-y-4 shadow-inner">
-                  <h3 className="text-[9px] font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-2">
-                    <Users className="h-3 w-3" /> Emergency Contacts
+                <div className="bg-muted/30 rounded-[2.5rem] p-7 border border-primary/5 space-y-5">
+                  <h3 className="text-[9px] font-black uppercase tracking-widest text-primary flex items-center gap-3">
+                    <Users className="h-4 w-4" /> Rescue Network
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {parsedContacts.length > 0 ? (
                       parsedContacts.map((c, i) => (
                         <div key={i} className="flex items-center justify-between">
                           <div className="flex flex-col">
-                            <span className="text-[11px] font-black uppercase text-foreground">{c.name}</span>
-                            <span className="text-[8px] opacity-60 font-black uppercase">{c.relationship} • {c.phone}</span>
+                            <span className="text-[12px] font-black uppercase text-foreground">{c.name}</span>
+                            <span className="text-[8px] opacity-60 font-black uppercase tracking-tight">{c.relationship} • {c.phone}</span>
                           </div>
                           <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => dispatchToContact(c.phone, c.name)}
+                            variant="outline" size="sm" onClick={() => dispatchToContact(c.phone, c.name)}
                             className={cn(
-                              "h-9 rounded-xl px-4 text-[9px] font-black uppercase tracking-widest",
-                              notifiedList.includes(c.name) ? "border-green-500 text-green-500 bg-green-500/5" : "border-primary text-primary hover:bg-primary/5"
+                              "h-10 rounded-xl px-5 text-[9px] font-black uppercase tracking-widest",
+                              notifiedList.includes(c.name) ? "border-green-500 text-green-500" : "border-primary text-primary hover:bg-primary/5"
                             )}
                           >
-                            {notifiedList.includes(c.name) ? <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> : <MessageSquare className="h-3.5 w-3.5 mr-1" />}
-                            {notifiedList.includes(c.name) ? "Sent" : "Dispatch"}
+                            {notifiedList.includes(c.name) ? "Notified" : "Dispatch"}
                           </Button>
                         </div>
                       ))
                     ) : (
-                      <div className="text-center py-4">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground">No contacts saved in profile.</p>
-                      </div>
+                      <p className="text-[10px] text-center font-black uppercase opacity-40">No rescue contacts initialized.</p>
                     )}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <Button className="flex flex-col gap-2 h-auto py-6 bg-accent text-white hover:bg-accent/90 rounded-2xl shadow-xl transition-all" onClick={() => window.open('tel:911')}>
-                    <Phone className="h-6 w-6" /> <span className="text-[9px] font-black uppercase">Call 911</span>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button className="h-20 bg-accent hover:bg-accent/90 text-white rounded-[1.5rem] flex flex-col gap-1 shadow-xl" onClick={() => window.open('tel:911')}>
+                    <Phone className="h-6 w-6" /> <span className="text-[9px] font-black uppercase">Emergency 911</span>
                   </Button>
-                  <Button className="flex flex-col gap-2 h-auto py-6 bg-primary text-white hover:bg-primary/90 rounded-2xl shadow-lg shadow-primary/20 active:scale-95 transition-all" onClick={handleManualShare}>
-                    <Share2 className="h-6 w-6" /> <span className="text-[9px] font-black uppercase tracking-tighter">Share with Anyone</span>
+                  <Button className="h-20 bg-primary hover:bg-primary/90 text-white rounded-[1.5rem] flex flex-col gap-1 shadow-xl shadow-primary/20" onClick={handleShare}>
+                    <Share2 className="h-6 w-6" /> <span className="text-[9px] font-black uppercase">Share With Anyone</span>
                   </Button>
                 </div>
 
-                <div className="bg-background rounded-[2rem] p-6 text-left border-2 space-y-4 shadow-inner border-muted/20">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-primary">
-                      <MapPin className="h-3.5 w-3.5" /> <span className="text-[9px] font-black uppercase tracking-widest text-center">Live GPS Fix</span>
-                    </div>
-                    <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
-                  </div>
-                  {location ? (
-                    <p className="font-mono text-xl font-black tracking-tighter text-foreground text-center">{location.lat.toFixed(6)}, {location.lng.toFixed(6)}</p>
-                  ) : (
-                    <p className="text-[9px] text-muted-foreground uppercase font-black text-center">Acquiring Precision GPS...</p>
-                  )}
+                <div className="bg-background rounded-[2.5rem] p-7 border-2 border-muted/20 space-y-4 text-center">
+                   <div className="flex items-center justify-between text-primary mb-2">
+                      <MapPin className="h-4 w-4" /> <span className="text-[9px] font-black uppercase tracking-widest">Live GPS Signal</span>
+                      <div className="w-3 h-3 rounded-full bg-primary animate-ping" />
+                   </div>
+                   {location ? (
+                    <p className="font-mono text-2xl font-black tracking-tighter">{location.lat.toFixed(6)}, {location.lng.toFixed(6)}</p>
+                   ) : (
+                    <p className="text-[10px] font-black uppercase animate-pulse">Locking Signal...</p>
+                   )}
                 </div>
 
-                <Button variant="ghost" className="text-[9px] font-black text-muted-foreground uppercase tracking-widest" onClick={() => {setIsTriggered(false); setCountdown(null);}}>
-                  Reset SOS Protocol
+                <Button variant="ghost" className="w-full text-[10px] font-black text-muted-foreground uppercase tracking-widest" onClick={() => setStep('idle')}>
+                  Deactivate Protocol
                 </Button>
               </CardContent>
             </Card>
           </div>
         )}
-      </div>
+      </main>
 
       <Navigation />
+      <style jsx>{`
+        @keyframes loading {
+          from { width: 0%; }
+          to { width: 100%; }
+        }
+      `}</style>
     </div>
   )
 }

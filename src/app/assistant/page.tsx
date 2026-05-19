@@ -1,38 +1,30 @@
-
 "use client"
 
 import { useState, useRef, useEffect } from "react"
 import { Navigation } from "@/components/Navigation"
 import { emergencyAssistantGuidance } from "@/ai/flows/emergency-assistant-guidance"
 import { textToSpeech } from "@/ai/flows/text-to-speech"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Send, User, Loader2, HeartPulse, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, Bell, ArrowRight, ShieldCheck, WifiOff, Stethoscope } from "lucide-react"
+import { Send, User, Loader2, Trash2, Mic, MapPin, ExternalLink, Volume2, MicOff, WifiOff, Stethoscope, ChevronRight } from "lucide-react"
 import { Logo } from "@/components/Logo"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { toast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
-interface SuggestedResource {
-  name: string;
-  type: string;
-  address: string;
-  googleMapsUrl: string;
-}
-
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   category?: string;
-  suggestedResources?: SuggestedResource[];
+  suggestedResources?: any[];
   followUpQuestions?: string[];
   audioUrl?: string;
   isOfflineResponse?: boolean;
 }
 
-const CHAT_HISTORY_KEY = "axon_ai_chat_history_v3";
-const INITIAL_AI_MESSAGE = "I am AXON-AI, your emergency intelligence companion. Describe your situation or symptoms, and I will provide the safest immediate protocols.";
+const CHAT_HISTORY_KEY = "axon_ai_chat_history_v4";
+const INITIAL_AI_MESSAGE = "I am AXON-AI, your emergency intelligence companion. Describe your symptoms or the disaster situation, and I will provide immediate survival protocols.";
 
 export default function AssistantPage() {
   const [query, setQuery] = useState("");
@@ -46,10 +38,9 @@ export default function AssistantPage() {
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    const handleStatus = () => setIsOnline(navigator.onLine);
+    window.addEventListener('online', handleStatus);
+    window.addEventListener('offline', handleStatus);
     
     const cached = localStorage.getItem(CHAT_HISTORY_KEY);
     if (cached) {
@@ -63,8 +54,8 @@ export default function AssistantPage() {
     }
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', handleStatus);
+      window.removeEventListener('offline', handleStatus);
     };
   }, []);
 
@@ -83,43 +74,27 @@ export default function AssistantPage() {
   const clearChat = () => {
     setMessages([{ role: 'assistant', content: INITIAL_AI_MESSAGE }]);
     localStorage.removeItem(CHAT_HISTORY_KEY);
-    if (audioRef.current) audioRef.current.pause();
   };
 
   const getLocalGuidanceFallback = (q: string) => {
     const query = q.toLowerCase();
-    if (query.includes('bleed') || query.includes('blood') || query.includes('cut')) {
+    if (query.includes('bleed') || query.includes('blood')) {
       return {
-        guidance: "OFFLINE MODE: Hemorrhage protocol active. Apply direct firm pressure to the wound with clean cloth. Do not remove soaked cloth; add more layers. Keep limb elevated if possible.",
+        guidance: "Local Emergency Engine Active: Hemorrhage protocol initiated. Apply firm direct pressure to the wound. Do not remove original bandages. Keep limb elevated.",
         category: "medical",
-        followUpQuestions: ["Identify Nearest Hospital", "Wound is Deep", "Bleeding Won't Stop"]
-      };
-    }
-    if (query.includes('breath') || query.includes('choke') || query.includes('airway')) {
-      return {
-        guidance: "OFFLINE MODE: Airway protocol active. If choking and unable to cough, perform abdominal thrusts. If victim is unconscious and not breathing, begin chest-only CPR.",
-        category: "medical",
-        followUpQuestions: ["How to do CPR", "Victim Unconscious"]
-      };
-    }
-    if (query.includes('quake') || query.includes('earthquake')) {
-      return {
-        guidance: "OFFLINE MODE: Seismic protocol active. Drop, Cover, and Hold On. Stay away from glass and heavy furniture. Do not use elevators.",
-        category: "disaster",
-        followUpQuestions: ["Check for Gas Leaks", "Aftershock Steps"]
+        followUpQuestions: ["Deep wound", "Bleeding persists", "Nearest Trauma Center"]
       };
     }
     return {
-      guidance: "I am operating in OFFLINE RESILIENCE MODE. My full diagnostic engine is limited, but I can provide protocols for Bleeding, Breathing, or Seismic events. What is your emergency?",
+      guidance: "I am operating in Resilient Local Mode. Please specify if you are facing a Medical Emergency, Seismic Event, or Safety Threat so I can provide the relevant local protocols.",
       category: "safety",
-      followUpQuestions: ["Medical Emergency", "Seismic Event", "Fire/Safety"]
+      followUpQuestions: ["Medical Emergency", "Seismic Protocol", "Fire Safety"]
     };
   };
 
   const handleSubmit = async (e: React.FormEvent | string) => {
     const userMessage = typeof e === 'string' ? e : query.trim();
     if (typeof e !== 'string') e.preventDefault();
-    
     if (!userMessage || isLoading) return;
 
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
@@ -127,188 +102,131 @@ export default function AssistantPage() {
     setIsLoading(true);
 
     if (!navigator.onLine) {
-      // Immediate Local Offline Response
       setTimeout(() => {
-        const localResponse = getLocalGuidanceFallback(userMessage);
+        const local = getLocalGuidanceFallback(userMessage);
         setMessages(prev => [...prev, { 
           role: 'assistant', 
-          content: localResponse.guidance,
-          category: localResponse.category,
-          followUpQuestions: localResponse.followUpQuestions,
+          content: local.guidance,
+          category: local.category,
+          followUpQuestions: local.followUpQuestions,
           isOfflineResponse: true
         }]);
         setIsLoading(false);
-      }, 300);
+      }, 500);
       return;
     }
 
     try {
       const response = await emergencyAssistantGuidance({ query: userMessage });
-      
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: response.guidance,
         category: response.category,
-        suggestedResources: response.suggestedResources,
-        followUpQuestions: response.followUpQuestions
+        followUpQuestions: response.followUpQuestions,
+        suggestedResources: response.suggestedResources
       }]);
     } catch (error) {
-      // Server error fallback (even if online)
-      const localResponse = getLocalGuidanceFallback(userMessage);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: localResponse.guidance,
-        category: localResponse.category,
-        followUpQuestions: localResponse.followUpQuestions,
-        isOfflineResponse: true
-      }]);
+      const local = getLocalGuidanceFallback(userMessage);
+      setMessages(prev => [...prev, { role: 'assistant', content: local.guidance, category: local.category, isOfflineResponse: true }]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const toggleSpeech = async (msgIndex: number, text: string) => {
-    if (!navigator.onLine) {
-      toast({ variant: "destructive", title: "Offline", description: "Voice synthesis requires a grid link." });
+    if (!isOnline) {
+      toast({ variant: "destructive", title: "Cloud Link Limited", description: "Voice synthesis requires a grid connection." });
       return;
     }
-
     if (isSpeakingId === msgIndex) {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        setIsSpeakingId(null);
-      }
+      audioRef.current?.pause();
+      setIsSpeakingId(null);
       return;
     }
-
-    const message = messages[msgIndex];
     try {
-      let audioUrl = message.audioUrl;
-      if (!audioUrl) {
-        setIsLoading(true);
-        const ttsResponse = await textToSpeech(text);
-        audioUrl = ttsResponse.media;
-        setMessages(prev => {
-          const updated = [...prev];
-          updated[msgIndex] = { ...updated[msgIndex], audioUrl };
-          return updated;
-        });
-      }
-
+      setIsLoading(true);
+      const { media } = await textToSpeech(text);
       if (audioRef.current) {
-        audioRef.current.src = audioUrl;
+        audioRef.current.src = media;
         audioRef.current.play();
         setIsSpeakingId(msgIndex);
         audioRef.current.onended = () => setIsSpeakingId(null);
       }
-    } catch (error) {
-      toast({ variant: "destructive", title: "Voice link limited", description: "Continuing with text guidance." });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Audio Failed" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const startListening = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitRecognition;
-    if (!SpeechRecognition) {
-      toast({ variant: "destructive", title: "Feature unavailable", description: "Voice input is not supported on this browser." });
-      return;
-    }
-    const recognition = new SpeechRecognition();
-    recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    recognition.onresult = (event: any) => setQuery(event.results[0][0].transcript);
-    recognition.start();
-  };
-
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground transition-colors duration-500">
+    <div className="flex flex-col h-screen bg-background text-foreground transition-all">
       <audio ref={audioRef} hidden />
-      <header className="p-4 border-b flex items-center justify-between bg-card/80 backdrop-blur-md sticky top-0 z-10 shadow-sm">
-        <div className="flex items-center gap-3">
+      <header className="p-5 border-b flex items-center justify-between bg-card/80 backdrop-blur-xl sticky top-0 z-10">
+        <div className="flex items-center gap-4">
           <Logo className="h-9 w-9" />
           <div>
-            <h1 className="font-black font-headline text-lg tracking-tighter text-primary uppercase leading-none">Axon Assist</h1>
-            {!isOnline && (
-              <div className="flex items-center gap-1 mt-1">
-                <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-                <span className="text-[8px] text-accent font-black uppercase tracking-widest">Resilient Local AI Active</span>
-              </div>
-            )}
+            <h1 className="font-black text-lg tracking-tighter text-primary uppercase leading-none">Axon Assist</h1>
+            <div className="flex items-center gap-1.5 mt-1">
+              <div className={cn("h-1.5 w-1.5 rounded-full", isOnline ? "bg-green-500" : "bg-accent animate-pulse")} />
+              <span className="text-[7px] text-muted-foreground font-black uppercase tracking-[0.2em]">
+                {isOnline ? "Grid Link Stable" : "Offline Assistant Active"}
+              </span>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {messages.length > 1 && (
-            <Button variant="ghost" size="icon" onClick={clearChat} className="h-8 w-8 text-muted-foreground hover:text-accent">
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
+          <Button variant="ghost" size="icon" onClick={clearChat} className="h-10 w-10 text-muted-foreground hover:text-accent rounded-xl">
+            <Trash2 className="h-5 w-5" />
+          </Button>
           <ThemeToggle />
         </div>
       </header>
 
       <div className="flex-1 overflow-hidden flex flex-col">
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-8 pb-6">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-10 pb-20 no-scrollbar">
           {messages.map((msg, i) => (
-            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-              <div className={`flex gap-3 max-w-[90%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div className={`h-9 w-9 rounded-xl shrink-0 flex items-center justify-center shadow-md ${msg.role === 'user' ? 'bg-muted border' : 'bg-primary'}`}>
-                  {msg.role === 'user' ? <User className="h-5 w-5" /> : <Logo className="h-6 w-6" />}
+            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-4 duration-500`}>
+              <div className={`flex gap-4 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div className={cn(
+                  "h-10 w-10 rounded-2xl shrink-0 flex items-center justify-center shadow-md",
+                  msg.role === 'user' ? 'bg-secondary border' : 'bg-primary'
+                )}>
+                  {msg.role === 'user' ? <User className="h-6 w-6" /> : <Logo className="h-7 w-7" />}
                 </div>
                 <div className="flex flex-col gap-3">
                   <div className={cn(
-                    "p-5 rounded-[1.75rem] text-[15px] leading-relaxed whitespace-pre-line font-medium shadow-sm border relative",
-                    msg.role === 'user' ? 'bg-primary text-white border-primary rounded-tr-none' : 'bg-card border-border rounded-tl-none',
-                    msg.isOfflineResponse && "border-accent/30"
+                    "p-6 rounded-[2rem] text-[15px] leading-relaxed font-semibold shadow-sm relative",
+                    msg.role === 'user' ? 'bg-primary text-white rounded-tr-none' : 'bg-card border rounded-tl-none',
+                    msg.isOfflineResponse && "border-accent/30 bg-accent/5"
                   )}>
                     {msg.content}
                     {msg.isOfflineResponse && (
-                      <div className="absolute top-2 right-4 flex items-center gap-1 opacity-40">
+                      <div className="absolute -top-2 -right-2 bg-accent text-white p-1 rounded-full">
                         <WifiOff className="h-3 w-3" />
-                        <span className="text-[8px] font-black uppercase">Local</span>
                       </div>
                     )}
                     {msg.role === 'assistant' && (
-                      <div className="flex justify-end mt-2 pt-2 border-t border-border/5">
+                      <div className="flex justify-end mt-4 pt-3 border-t border-muted/10">
                         <Button 
                           variant="ghost" size="icon" onClick={() => toggleSpeech(i, msg.content)}
-                          className={`h-8 w-8 rounded-full ${isSpeakingId === i ? 'bg-accent text-white scale-110' : 'text-muted-foreground hover:text-primary'}`}
+                          className={cn("h-10 w-10 rounded-full transition-all", isSpeakingId === i ? 'bg-primary text-white scale-110' : 'text-muted-foreground hover:bg-primary/10')}
                         >
-                          <Volume2 className={`h-4 w-4 ${isSpeakingId === i ? 'animate-pulse' : ''}`} />
+                          <Volume2 className={cn("h-5 w-5", isSpeakingId === i && "animate-pulse")} />
                         </Button>
                       </div>
                     )}
                   </div>
 
-                  {msg.role === 'assistant' && msg.followUpQuestions && msg.followUpQuestions.length > 0 && (
-                    <div className="flex flex-wrap gap-2 animate-in fade-in duration-500">
+                  {msg.role === 'assistant' && msg.followUpQuestions && (
+                    <div className="flex flex-wrap gap-2 animate-in fade-in duration-700">
                       {msg.followUpQuestions.map((q, idx) => (
                         <Button 
                           key={idx} variant="outline" size="sm" onClick={() => handleSubmit(q)}
-                          className="rounded-full px-5 h-10 text-[10px] font-black uppercase tracking-tight border-primary/20 hover:bg-primary/5 text-primary bg-card/50 shadow-sm"
+                          className="rounded-full px-5 h-10 text-[10px] font-black uppercase border-primary/20 hover:bg-primary/5 text-primary bg-card/50"
                         >
-                          <Stethoscope className="h-3 w-3 mr-2 opacity-50" />
+                          <Stethoscope className="h-3.5 w-3.5 mr-2 opacity-50" />
                           {q}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {msg.role === 'assistant' && msg.suggestedResources && msg.suggestedResources.length > 0 && (
-                    <div className="grid gap-2 mt-1">
-                      {msg.suggestedResources.map((resource, idx) => (
-                        <Button 
-                          key={idx} variant="outline" size="sm" onClick={() => window.open(resource.googleMapsUrl, '_blank')}
-                          className="justify-between h-auto py-3 px-4 border-primary/10 bg-primary/[0.03] hover:bg-primary/[0.06] rounded-2xl group"
-                        >
-                          <div className="flex items-center gap-3">
-                            <MapPin className="h-3.5 w-3.5 text-primary" />
-                            <div className="text-left">
-                              <p className="text-[10px] font-black uppercase tracking-tight">{resource.name}</p>
-                              <p className="text-[8px] text-muted-foreground font-black uppercase mt-0.5 opacity-70">{resource.type} • {resource.address}</p>
-                            </div>
-                          </div>
-                          <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
                         </Button>
                       ))}
                     </div>
@@ -319,38 +237,33 @@ export default function AssistantPage() {
           ))}
 
           {isLoading && (
-            <div className="flex justify-start items-center gap-3 px-2 py-4">
-              <div className="flex gap-2 items-center text-primary font-black">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
-                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
-                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
-                <span className="text-[9px] uppercase tracking-widest ml-2 opacity-60 font-black">
-                  {isOnline ? "Axon Diagnostic Engine Active" : "Local Survival Logic Engaged"}
-                </span>
+            <div className="flex justify-start items-center gap-4 px-2">
+              <div className="flex gap-2 items-center text-primary font-black animate-pulse">
+                <div className="h-2 w-2 rounded-full bg-primary" />
+                <div className="h-2 w-2 rounded-full bg-primary" />
+                <div className="h-2 w-2 rounded-full bg-primary" />
+                <span className="text-[10px] uppercase tracking-widest ml-2">Diagnostic Engine Active</span>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      <div className="p-4 bg-background/80 backdrop-blur-md border-t pb-20 md:pb-24">
-        <div className="flex gap-3 max-w-screen-xl mx-auto items-center">
+      <div className="p-6 bg-background/80 backdrop-blur-xl border-t pb-24">
+        <div className="max-w-screen-xl mx-auto flex gap-4">
           <Button 
-            variant="outline" size="icon" onClick={startListening}
-            className={cn(
-              "h-14 w-14 rounded-2xl border-primary/10 transition-all",
-              isListening ? "bg-accent text-white border-accent scale-105 shadow-lg" : "text-primary hover:bg-primary/5"
-            )}
+            variant="outline" size="icon" onClick={() => setIsListening(!isListening)}
+            className={cn("h-14 w-14 rounded-2xl border-primary/10 transition-all", isListening && "bg-accent text-white border-accent animate-pulse scale-110 shadow-lg")}
           >
-            {isListening ? <MicOff className="h-6 w-6 animate-pulse" /> : <Mic className="h-6 w-6" />}
+            {isListening ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
           </Button>
-          <form onSubmit={handleSubmit} className="flex-1 flex gap-2">
+          <form onSubmit={handleSubmit} className="flex-1 flex gap-3">
             <Input 
-              placeholder={isListening ? "Listening..." : "Describe symptoms or emergency..."} 
+              placeholder={isListening ? "Listening..." : "Describe emergency or symptoms..."} 
               value={query} onChange={(e) => setQuery(e.target.value)} disabled={isLoading}
-              className="flex-1 rounded-2xl border-primary/10 focus-visible:ring-primary h-14 px-6 text-[15px] font-medium shadow-inner"
+              className="flex-1 rounded-2xl border-primary/10 focus-visible:ring-primary h-14 px-6 text-[15px] font-semibold bg-card/50"
             />
-            <Button type="submit" disabled={isLoading || !query.trim()} className="rounded-2xl w-14 h-14 p-0 bg-primary hover:bg-primary/90 shadow-lg transition-all active:scale-90">
+            <Button type="submit" disabled={isLoading || !query.trim()} className="rounded-2xl w-14 h-14 p-0 bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20">
               {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Send className="h-6 w-6" />}
             </Button>
           </form>
