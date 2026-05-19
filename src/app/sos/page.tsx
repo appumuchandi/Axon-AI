@@ -129,7 +129,7 @@ export default function SOSPage() {
                 </Button>
                 <Button variant="ghost" onClick={() => setStep('idle')} className="h-14 font-black uppercase text-[10px] tracking-widest">
                   Cancel Protocol
-                </X>
+                </Button>
               </div>
             </div>
           </div>
