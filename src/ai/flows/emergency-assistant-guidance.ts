@@ -69,74 +69,73 @@ const emergencyAssistantGuidanceFlow = ai.defineFlow(
       return output;
     } catch (error) {
       // HIGH-FIDELITY ZERO-DELAY FALLBACK ENGINE
-      // This bypasses generic "I am offline" messages in favor of context-aware guidance.
       const q = input.query.toLowerCase();
       
-      // Cardiac / Chest Pain
-      if (q.includes('chest') || q.includes('heart') || q.includes('pain')) {
+      // Cardiac / Chest Pain / Triage Responses (Sweaty, Dizzy)
+      if (q.includes('chest') || q.includes('heart') || q.includes('pain') || q.includes('sweat') || q.includes('dizzy') || q.includes('arm') || q.includes('jaw')) {
         return {
-          guidance: "Chest pain protocol initiated. Please try to remain as calm and still as possible.\n\n1. Sit down immediately and avoid any physical activity.\n2. Loosen tight clothing around the neck and waist.\n3. If symptoms worsen or spread to the jaw/arm, activate SOS immediately.",
+          guidance: "Cardiac stress protocol active. If you are experiencing chest pain combined with sweating or dizziness, this is a high-priority situation.\n\n1. Stop all activity and sit down immediately.\n2. Loosen tight clothing and try to breathe slowly and deeply.\n3. If symptoms spread to the jaw or arm, activate SOS for immediate dispatch.",
           category: 'medical',
-          followUpQuestions: ["Are you having difficulty breathing?", "Is the pain spreading to your arm or jaw?", "Do you feel dizzy or sweaty?"]
-        };
-      }
-
-      // Bleeding
-      if (q.includes('bleed') || q.includes('blood') || q.includes('cut') || q.includes('wound')) {
-        return {
-          guidance: "Hemorrhage control initiated. Immediate action required.\n\n1. Apply firm, direct pressure to the wound with a clean cloth.\n2. If the cloth becomes soaked, add another layer on top; do not remove the first one.\n3. Keep the injured area elevated above heart level if possible.",
-          category: 'medical',
-          followUpQuestions: ["Is the bleeding pulsing or spurting?", "Is the victim pale or dizzy?", "Is the wound deep or gaping?"]
+          followUpQuestions: ["Are you having difficulty breathing?", "Is the pain spreading to your arm or jaw?", "Do you have a history of heart issues?"]
         };
       }
 
       // Airway / Choking / Breathing
-      if (q.includes('breath') || q.includes('choke') || q.includes('airway') || q.includes('cant breathe')) {
+      if (q.includes('breath') || q.includes('choke') || q.includes('airway') || q.includes('cant breathe') || q.includes('shortness')) {
         return {
-          guidance: "Airway and breathing protocol active.\n\n1. If the person is choking and cannot speak, perform 5 abdominal thrusts (Heimlich maneuver).\n2. If struggling to breathe, help the person sit upright and keep their neck straight.\n3. Check for obstructions in the mouth.",
+          guidance: "Respiratory emergency protocol active. Oxygenation is the priority.\n\n1. If choking and unable to cough or speak, perform 5 abdominal thrusts (Heimlich maneuver).\n2. If struggling to breathe, sit upright in a chair to keep the airway open.\n3. Do not attempt to walk or exert yourself.",
           category: 'medical',
-          followUpQuestions: ["Are they turning blue?", "Is the person conscious?", "Is this an allergic reaction?"]
+          followUpQuestions: ["Are your lips or nails turning blue?", "Are you wheezing?", "Is this an allergic reaction?"]
+        };
+      }
+
+      // Stroke / Neurological (Headache, Numbness)
+      if (q.includes('headache') || q.includes('numb') || q.includes('slur') || q.includes('face') || q.includes('stroke')) {
+        return {
+          guidance: "Neurological alert initiated. We need to check for stroke indicators (FAST).\n\n1. F - Face: Is one side of the face drooping?\n2. A - Arms: Can you raise both arms, or does one drift down?\n3. S - Speech: Is your speech slurred or strange?\n4. T - Time: If any signs are present, activate SOS immediately.",
+          category: 'medical',
+          followUpQuestions: ["Do you have sudden vision changes?", "Is the headache the worst of your life?", "Is there weakness on one side?"]
+        };
+      }
+
+      // Bleeding
+      if (q.includes('bleed') || q.includes('blood') || q.includes('cut') || q.includes('wound') || q.includes('injury')) {
+        return {
+          guidance: "Hemorrhage control protocol active.\n\n1. Apply firm, direct pressure to the wound with the cleanest available cloth.\n2. Maintain constant pressure; do not lift the cloth to check the wound.\n3. Elevate the limb above the heart if possible.",
+          category: 'medical',
+          followUpQuestions: ["Is the bleeding pulsing or spurting?", "Is there an object stuck in the wound?", "Are you feeling faint?"]
         };
       }
 
       // Fire / Smoke
-      if (q.includes('fire') || q.includes('smoke') || q.includes('burn')) {
+      if (q.includes('fire') || q.includes('smoke') || q.includes('burn') || q.includes('hot')) {
         return {
-          guidance: "Fire safety protocol active. Immediate evacuation is the priority.\n\n1. Evacuate the building immediately using the nearest exit.\n2. Stay low to the floor where the air is cleaner.\n3. Feel doors with the back of your hand; if hot, do not open.",
+          guidance: "Fire safety protocol active. Evacuation is your only priority.\n\n1. Get out immediately. Do not stop to collect belongings.\n2. Stay low to the floor where the air is cooler and clearer.\n3. Before opening any door, feel it with the back of your hand. If hot, use another exit.",
           category: 'safety',
-          followUpQuestions: ["Are you trapped in a room?", "Can you smell gas?", "Are there injuries from burns?"]
+          followUpQuestions: ["Are you trapped?", "Is there gas smell?", "Can you see an exit?"]
         };
       }
 
       // Earthquake
-      if (q.includes('quake') || q.includes('earthquake') || q.includes('shake')) {
+      if (q.includes('quake') || q.includes('earthquake') || q.includes('shake') || q.includes('tremor')) {
         return {
-          guidance: "Seismic survival protocol active.\n\n1. DROP, COVER, and HOLD ON immediately.\n2. Stay under a sturdy table or desk. Stay away from windows.\n3. If outdoors, move to an open area away from buildings and power lines.",
+          guidance: "Seismic survival protocol active.\n\n1. DROP, COVER, and HOLD ON.\n2. Stay under a sturdy desk or table. Away from glass and windows.\n3. If outdoors, move to an open area away from power lines and buildings.",
           category: 'disaster',
-          followUpQuestions: ["Do you smell gas?", "Is there structural damage?", "Is anyone trapped?"]
+          followUpQuestions: ["Is there structural damage?", "Do you smell gas?", "Are there aftershocks?"]
         };
       }
 
-      // Unconscious
-      if (q.includes('unconscious') || q.includes('passed out') || q.includes('not waking up')) {
+      // General Medical (Sick, fever, etc)
+      if (q.includes('sick') || q.includes('fever') || q.includes('ill') || q.includes('vomit') || q.includes('doctor')) {
         return {
-          guidance: "Unresponsive victim protocol active.\n\n1. Check for breathing and a pulse.\n2. If breathing, place them in the recovery position (on their side).\n3. If NOT breathing, prepare to perform chest compressions (100-120 per minute).",
+          guidance: "General medical triage initiated. Please rest and monitor your vitals.\n\n1. Stay hydrated and track your temperature if possible.\n2. If symptoms include high fever, severe rash, or sudden confusion, notify your rescue contacts.\n3. Keep your profile updated for first responders.",
           category: 'medical',
-          followUpQuestions: ["Is the victim breathing?", "Is there a head injury?", "How long have they been unresponsive?"]
-        };
-      }
-
-      // Flood / Water
-      if (q.includes('flood') || q.includes('water') || q.includes('rising')) {
-        return {
-          guidance: "Flood emergency protocol active.\n\n1. Move to higher ground immediately. Do not stay in a basement.\n2. Never walk, swim, or drive through moving water.\n3. Avoid contact with floodwater; it may be contaminated or charged.",
-          category: 'disaster',
-          followUpQuestions: ["Are you trapped by rising water?", "Is the power still on?", "Is there a medical emergency?"]
+          followUpQuestions: ["How high is the fever?", "Are you experiencing pain?", "When did symptoms start?"]
         };
       }
 
       return {
-        guidance: "I am AXON-AI, your emergency assistant. Please describe the situation or symptoms (e.g., 'chest pain', 'fire') so I can provide the correct survival protocol immediately.",
+        guidance: "I am AXON-AI, your emergency assistant. Please describe your symptoms or the situation (e.g., 'chest pain', 'bleeding', 'fire') so I can provide the correct survival protocol immediately.",
         category: 'safety',
         followUpQuestions: ["Medical Emergency", "Fire/Smoke", "Natural Disaster", "Personal Safety"]
       };
