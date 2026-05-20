@@ -25,7 +25,7 @@ interface Message {
   timestamp: string;
 }
 
-const CHAT_HISTORY_KEY = "axon_ai_chat_history_v6";
+const CHAT_HISTORY_KEY = "axon_ai_chat_history_v7";
 const INITIAL_AI_MESSAGE = "I am AXON-AI, your emergency intelligence companion. Describe your symptoms or the disaster situation, and I will provide immediate survival protocols.";
 
 export default function AssistantPage() {
@@ -78,83 +78,76 @@ export default function AssistantPage() {
     localStorage.removeItem(CHAT_HISTORY_KEY);
   };
 
-  const getLocalGuidanceFallback = (q: string) => {
+  const getLocalGuidanceFallback = (q: string, history: Message[]) => {
     const query = q.toLowerCase();
+    const h = history.map(m => m.content.toLowerCase()).join(' ');
+    const combined = query + ' ' + h;
     
     // Cardiac / Chest Pain / Triage responses (Sweaty, Dizzy)
-    if (query.includes('chest') || query.includes('heart') || query.includes('pain') || query.includes('sweat') || query.includes('dizzy') || query.includes('arm') || query.includes('jaw')) {
+    if (combined.includes('chest') || combined.includes('heart') || query.includes('pain') || combined.includes('sweat') || combined.includes('dizzy') || combined.includes('arm') || combined.includes('jaw')) {
       return {
-        guidance: "Cardiac stress protocol active. If you are experiencing chest pain combined with sweating or dizziness, this is a high-priority medical situation.\n\n1. Sit down immediately and avoid all physical activity.\n2. Loosen tight clothing around the neck and waist.\n3. Activate SOS immediately if symptoms spread to your jaw or arm.",
+        guidance: "Cardiac alert. Symptoms like sweating or dizziness combined with chest discomfort are high-priority medical indicators.\n\n1. Sit down immediately and avoid all activity.\n2. Loosen tight clothing around the neck and waist.\n3. Activate SOS immediately if symptoms spread to your jaw or arm.",
         category: "medical",
         followUpQuestions: ["Is the pain spreading to your arm or jaw?", "Are you having difficulty breathing?", "Do you feel dizzy or sweaty?"]
       };
     }
 
     // Breathing / Choking
-    if (query.includes('breath') || query.includes('choke') || query.includes('airway') || query.includes('cant breathe')) {
+    if (combined.includes('breath') || combined.includes('choke') || combined.includes('airway') || query.includes('cant breathe')) {
       return {
-        guidance: "Airway obstruction protocol: If choking and cannot speak, perform 5 abdominal thrusts (Heimlich) immediately. If struggling to breathe, sit upright and keep the neck straight to maximize airflow.",
+        guidance: "Airway obstruction protocol: If choking and cannot speak, perform 5 abdominal thrusts (Heimlich) immediately. If struggling to breathe, sit upright to maximize airflow.",
         category: "medical",
         followUpQuestions: ["Is the person turning blue?", "Are they conscious?", "Is this an allergic reaction?"]
       };
     }
 
     // Stroke / Headache / Numbness
-    if (query.includes('headache') || query.includes('numb') || query.includes('slur') || query.includes('stroke') || query.includes('face')) {
+    if (combined.includes('headache') || combined.includes('numb') || combined.includes('slur') || combined.includes('stroke') || combined.includes('face')) {
       return {
-        guidance: "Neurological alert. Please check for F.A.S.T. signs: Face drooping, Arm weakness, and Speech difficulty. If any are present, activate SOS immediately for potential stroke triage.",
+        guidance: "Neurological alert. Please check for F.A.S.T. signs: Face drooping, Arm weakness, and Speech difficulty. If any are present, activate SOS immediately.",
         category: "medical",
         followUpQuestions: ["Is your speech slurred?", "Is the headache sudden and severe?", "Is there weakness on one side?"]
       };
     }
 
     // Bleeding
-    if (query.includes('bleed') || query.includes('blood') || query.includes('cut') || query.includes('wound') || query.includes('injury')) {
+    if (combined.includes('bleed') || combined.includes('blood') || combined.includes('cut') || combined.includes('wound') || combined.includes('injury')) {
       return {
-        guidance: "Hemorrhage protocol: Apply firm, direct pressure to the wound with a clean cloth. Elevate the injury above the heart level. Do not remove the cloth if it becomes soaked; add more layers.",
+        guidance: "Hemorrhage protocol: Apply firm, direct pressure with a clean cloth. Elevate the injury above heart level. Do not remove the cloth if it becomes soaked; add more layers.",
         category: "medical",
         followUpQuestions: ["Is the bleeding pulsing?", "Is the wound deep?", "Are they feeling pale or dizzy?"]
       };
     }
 
     // Disaster - Fire
-    if (query.includes('fire') || query.includes('smoke') || query.includes('burn')) {
+    if (combined.includes('fire') || combined.includes('smoke') || combined.includes('burn')) {
       return {
-        guidance: "Fire protocol: Evacuate immediately. Stay low to the ground to avoid smoke. Feel doors with the back of your hand before opening. Use the nearest exit and stay out.",
+        guidance: "Fire protocol: Evacuate immediately. Stay low to the ground. Feel doors with the back of your hand before opening. Use the nearest exit.",
         category: "safety",
         followUpQuestions: ["Are you trapped in a room?", "Can you smell gas leaks?", "Are there injuries?"]
       };
     }
 
     // Disaster - Seismic
-    if (query.includes('quake') || query.includes('earthquake') || query.includes('shake')) {
+    if (combined.includes('quake') || combined.includes('earthquake') || combined.includes('shake')) {
       return {
-        guidance: "Seismic event active: Drop, Cover, and Hold On. Stay away from windows and heavy furniture. Stay indoors until shaking stops entirely.",
+        guidance: "Seismic event active: Drop, Cover, and Hold On. Stay away from windows and heavy furniture. Stay indoors until shaking stops.",
         category: "disaster",
         followUpQuestions: ["Do you smell gas?", "Is there structural damage?", "Are there aftershocks?"]
       };
     }
 
-    // Unconscious
-    if (query.includes('unconscious') || query.includes('passed out') || query.includes('not waking')) {
-      return {
-        guidance: "Unresponsive victim protocol: Check for breathing. If breathing, place them on their side (recovery position). If NOT breathing, prepare for chest compressions (CPR).",
-        category: "medical",
-        followUpQuestions: ["Is the victim breathing?", "How long have they been unresponsive?", "Is there a head injury?"]
-      };
-    }
-
-    // General Medical Intent (sick, doctor, etc)
-    if (query.includes('medical') || query.includes('sick') || query.includes('fever') || query.includes('ill') || query.includes('vomit')) {
+    // General Medical Intent
+    if (combined.includes('medical') || combined.includes('sick') || combined.includes('fever') || combined.includes('ill') || combined.includes('vomit')) {
        return {
-        guidance: "I've detected a medical triage request. Please describe your most severe symptom so I can provide the correct survival protocol (e.g., 'chest pain', 'bleeding', 'difficulty breathing').",
+        guidance: "Medical triage initiated. Please describe your most severe symptom so I can provide the correct protocol (e.g., 'chest pain', 'bleeding').",
         category: "medical",
         followUpQuestions: ["Chest Pain", "Difficulty Breathing", "Severe Bleeding", "Fever/Illness"]
       };
     }
 
     return {
-      guidance: "I am ready to assist. Please describe your symptoms or the emergency (e.g., 'chest pain', 'bleeding', 'fire') so I can provide the relevant protocol immediately.",
+      guidance: "I am ready to assist. Please describe your symptoms or the emergency (e.g., 'chest pain', 'fire') so I can provide the relevant protocol immediately.",
       category: "safety",
       followUpQuestions: ["Medical Emergency", "Fire/Smoke", "Natural Disaster", "Personal Safety"]
     };
@@ -165,12 +158,18 @@ export default function AssistantPage() {
     if (typeof e !== 'string') e.preventDefault();
     if (!userMessage || isLoading) return;
 
-    setMessages(prev => [...prev, { role: 'user', content: userMessage, timestamp: new Date().toLocaleTimeString() }]);
+    const currentTimestamp = new Date().toLocaleTimeString();
+    const newUserMessage: Message = { role: 'user', content: userMessage, timestamp: currentTimestamp };
+    const updatedMessages = [...messages, newUserMessage];
+    
+    setMessages(updatedMessages);
     setQuery("");
     setIsLoading(true);
 
+    const historyForAi = updatedMessages.map(m => ({ role: m.role, content: m.content }));
+
     try {
-      const response = await emergencyAssistantGuidance({ query: userMessage });
+      const response = await emergencyAssistantGuidance({ query: userMessage, history: historyForAi });
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: response.guidance,
@@ -181,7 +180,7 @@ export default function AssistantPage() {
         isOfflineResponse: !navigator.onLine
       }]);
     } catch (error) {
-      const local = getLocalGuidanceFallback(userMessage);
+      const local = getLocalGuidanceFallback(userMessage, updatedMessages);
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: local.guidance, 
