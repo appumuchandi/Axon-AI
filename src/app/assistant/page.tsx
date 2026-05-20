@@ -37,6 +37,7 @@ export default function AssistantPage() {
   const [isOnline, setIsOnline] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
@@ -53,6 +54,35 @@ export default function AssistantPage() {
       }
     } else {
       setMessages([{ role: 'assistant', content: INITIAL_AI_MESSAGE, timestamp: new Date().toLocaleTimeString() }]);
+    }
+
+    // Initialize Speech Recognition
+    if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0])
+          .map((result: any) => result.transcript)
+          .join('');
+        setQuery(transcript);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error);
+        setIsListening(false);
+        if (event.error !== 'no-speech') {
+          toast({ variant: "destructive", title: "Voice Link Error", description: "Could not establish clear audio intelligence." });
+        }
+      };
     }
 
     return () => {
@@ -72,6 +102,26 @@ export default function AssistantPage() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading]);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      toast({ variant: "destructive", title: "System Limitation", description: "Your browser does not support native voice intelligence." });
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      try {
+        setQuery("");
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (e) {
+        console.error("Failed to start speech recognition", e);
+      }
+    }
+  };
 
   const clearChat = () => {
     setMessages([{ role: 'assistant', content: INITIAL_AI_MESSAGE, timestamp: new Date().toLocaleTimeString() }]);
@@ -157,6 +207,10 @@ export default function AssistantPage() {
     const userMessage = typeof e === 'string' ? e : query.trim();
     if (typeof e !== 'string') e.preventDefault();
     if (!userMessage || isLoading) return;
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+    }
 
     const currentTimestamp = new Date().toLocaleTimeString();
     const newUserMessage: Message = { role: 'user', content: userMessage, timestamp: currentTimestamp };
@@ -321,8 +375,8 @@ export default function AssistantPage() {
       <div className="p-6 bg-background/80 backdrop-blur-xl border-t pb-24">
         <div className="max-w-screen-xl mx-auto flex gap-4">
           <Button 
-            variant="outline" size="icon" onClick={() => setIsListening(!isListening)}
-            className={cn("h-14 w-14 rounded-2xl border-primary/10 transition-all", isListening && "bg-accent text-white border-accent animate-pulse scale-110 shadow-lg")}
+            variant="outline" size="icon" onClick={toggleListening}
+            className={cn("h-14 w-14 rounded-2xl border-primary/10 transition-all shadow-md active:scale-95", isListening && "bg-accent text-white border-accent animate-pulse scale-110 shadow-lg")}
           >
             {isListening ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
           </Button>
