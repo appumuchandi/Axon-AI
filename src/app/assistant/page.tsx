@@ -22,9 +22,10 @@ interface Message {
   followUpQuestions?: string[];
   audioUrl?: string;
   isOfflineResponse?: boolean;
+  timestamp: string;
 }
 
-const CHAT_HISTORY_KEY = "axon_ai_chat_history_v4";
+const CHAT_HISTORY_KEY = "axon_ai_chat_history_v5";
 const INITIAL_AI_MESSAGE = "I am AXON-AI, your emergency intelligence companion. Describe your symptoms or the disaster situation, and I will provide immediate survival protocols.";
 
 export default function AssistantPage() {
@@ -48,10 +49,10 @@ export default function AssistantPage() {
       try {
         setMessages(JSON.parse(cached));
       } catch (e) {
-        setMessages([{ role: 'assistant', content: INITIAL_AI_MESSAGE }]);
+        setMessages([{ role: 'assistant', content: INITIAL_AI_MESSAGE, timestamp: new Date().toLocaleTimeString() }]);
       }
     } else {
-      setMessages([{ role: 'assistant', content: INITIAL_AI_MESSAGE }]);
+      setMessages([{ role: 'assistant', content: INITIAL_AI_MESSAGE, timestamp: new Date().toLocaleTimeString() }]);
     }
 
     return () => {
@@ -73,37 +74,37 @@ export default function AssistantPage() {
   }, [messages, isLoading]);
 
   const clearChat = () => {
-    setMessages([{ role: 'assistant', content: INITIAL_AI_MESSAGE }]);
+    setMessages([{ role: 'assistant', content: INITIAL_AI_MESSAGE, timestamp: new Date().toLocaleTimeString() }]);
     localStorage.removeItem(CHAT_HISTORY_KEY);
   };
 
   const getLocalGuidanceFallback = (q: string) => {
     const query = q.toLowerCase();
     
-    // Medical - Cardiac
+    // Medical - Cardiac / Chest Pain
     if (query.includes('chest') || query.includes('heart') || query.includes('pain')) {
       return {
-        guidance: "Chest pain detected. Sit down immediately. Avoid all physical activity. Loosen tight clothing. If symptoms worsen, use the SOS button below.",
+        guidance: "Chest pain protocol initiated. Please try to remain as calm and still as possible.\n\n1. Sit down immediately and avoid any physical activity.\n2. Loosen tight clothing around the neck and waist.\n3. If symptoms worsen, activate SOS.",
         category: "medical",
-        followUpQuestions: ["Pain in arm/jaw?", "Hard to breathe?", "Dizzy or sweating?"]
+        followUpQuestions: ["Is the pain spreading to your arm or jaw?", "Are you having difficulty breathing?", "Do you feel dizzy or sweaty?"]
       };
     }
 
     // Medical - Breathing
     if (query.includes('breath') || query.includes('choke')) {
       return {
-        guidance: "Airway obstruction protocol: If choking and cannot speak, perform abdominal thrusts. If struggling to breathe, sit upright and keep the neck straight.",
+        guidance: "Airway obstruction protocol: If choking and cannot speak, perform abdominal thrusts immediately. If struggling to breathe, sit upright and keep the neck straight.",
         category: "medical",
-        followUpQuestions: ["Turning blue?", "Victim is awake?", "Allergy history?"]
+        followUpQuestions: ["Is the person turning blue?", "Are they conscious?", "Is this an allergic reaction?"]
       };
     }
 
     // Disaster - Fire
     if (query.includes('fire') || query.includes('smoke')) {
       return {
-        guidance: "Fire protocol: Evacuate immediately. Stay low to the ground to avoid smoke. Feel doors before opening. Do not use elevators.",
+        guidance: "Fire protocol: Evacuate immediately. Stay low to the ground to avoid smoke inhalation. Feel doors with the back of your hand before opening. Do not use elevators.",
         category: "safety",
-        followUpQuestions: ["Trapped in room?", "Smell gas leaks?", "Injuries detected?"]
+        followUpQuestions: ["Are you trapped in a room?", "Can you smell gas leaks?", "Are there injuries?"]
       };
     }
 
@@ -112,12 +113,21 @@ export default function AssistantPage() {
       return {
         guidance: "Seismic event active: Drop, Cover, and Hold On. Stay away from windows and heavy furniture. Stay indoors until shaking stops.",
         category: "disaster",
-        followUpQuestions: ["Smell gas leaks?", "Building damage?", "Aftershocks?"]
+        followUpQuestions: ["Do you smell gas?", "Is there structural damage?", "Are there aftershocks?"]
+      };
+    }
+
+    // Unconscious
+    if (query.includes('unconscious') || query.includes('passed out')) {
+      return {
+        guidance: "Unresponsive victim protocol: Check for breathing and a pulse. If breathing, place them on their side (recovery position). If NOT breathing, prepare for chest compressions.",
+        category: "medical",
+        followUpQuestions: ["Is the victim breathing?", "How long have they been unresponsive?", "Is there a head injury?"]
       };
     }
 
     return {
-      guidance: "I am ready to assist. Please describe the emergency (e.g., 'chest pain', 'bleeding', 'fire') so I can provide the relevant local protocol immediately.",
+      guidance: "I am ready to assist. Please describe the emergency (e.g., 'chest pain', 'bleeding', 'fire') so I can provide the relevant protocol immediately.",
       category: "safety",
       followUpQuestions: ["Medical Emergency", "Fire/Smoke", "Natural Disaster", "Personal Safety"]
     };
@@ -128,24 +138,9 @@ export default function AssistantPage() {
     if (typeof e !== 'string') e.preventDefault();
     if (!userMessage || isLoading) return;
 
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setMessages(prev => [...prev, { role: 'user', content: userMessage, timestamp: new Date().toLocaleTimeString() }]);
     setQuery("");
     setIsLoading(true);
-
-    if (!navigator.onLine) {
-      setTimeout(() => {
-        const local = getLocalGuidanceFallback(userMessage);
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: local.guidance,
-          category: local.category,
-          followUpQuestions: local.followUpQuestions,
-          isOfflineResponse: true
-        }]);
-        setIsLoading(false);
-      }, 500);
-      return;
-    }
 
     try {
       const response = await emergencyAssistantGuidance({ query: userMessage });
@@ -154,11 +149,20 @@ export default function AssistantPage() {
         content: response.guidance,
         category: response.category,
         followUpQuestions: response.followUpQuestions,
-        suggestedResources: response.suggestedResources
+        suggestedResources: response.suggestedResources,
+        timestamp: new Date().toLocaleTimeString(),
+        isOfflineResponse: !navigator.onLine
       }]);
     } catch (error) {
       const local = getLocalGuidanceFallback(userMessage);
-      setMessages(prev => [...prev, { role: 'assistant', content: local.guidance, category: local.category, isOfflineResponse: true }]);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: local.guidance, 
+        category: local.category, 
+        followUpQuestions: local.followUpQuestions,
+        isOfflineResponse: true,
+        timestamp: new Date().toLocaleTimeString() 
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -201,7 +205,7 @@ export default function AssistantPage() {
             <div className="flex items-center gap-1.5 mt-1">
               <div className={cn("h-1.5 w-1.5 rounded-full", isOnline ? "bg-green-500" : "bg-accent animate-pulse")} />
               <span className="text-[7px] text-muted-foreground font-black uppercase tracking-[0.2em]">
-                {isOnline ? "Grid Link Stable" : "Offline Resilience Engaged"}
+                {isOnline ? "Grid Link Stable" : "Resilient Local Mode Active"}
               </span>
             </div>
           </div>
@@ -232,6 +236,9 @@ export default function AssistantPage() {
                     msg.isOfflineResponse && "border-accent/30 bg-accent/5"
                   )}>
                     {msg.content}
+                    <div className="text-[8px] uppercase tracking-widest opacity-40 mt-3 font-black text-right">
+                      {msg.timestamp}
+                    </div>
                     {msg.isOfflineResponse && (
                       <div className="absolute -top-2 -right-2 bg-accent text-white p-1 rounded-full shadow-lg">
                         <WifiOff className="h-3 w-3" />

@@ -3,7 +3,7 @@
  * @fileOverview AXON-AI Advanced Emergency Intelligence Assistant.
  * 
  * Provides diagnostic-style emergency assistance with deep intent detection.
- * Inspired by platforms like Ada and Infermedica for structured emergency triage.
+ * Optimized for zero-delay triage and high-fidelity local fallback logic.
  */
 
 import {ai} from '@/ai/genkit';
@@ -42,13 +42,16 @@ const emergencyAssistantPrompt = ai.definePrompt({
   prompt: `You are AXON-AI, an expert Emergency Intelligence Engine. 
 
 MISSION:
-Act as a calm, highly trained Emergency Medical Dispatcher. Your goal is to provide immediate life-saving steps while gathering critical details.
+Act as a calm, highly trained Emergency Medical Dispatcher. Provide immediate life-saving steps while gathering critical details.
+
+CRITICAL INSTRUCTION:
+If the user describes a clear emergency (e.g., "chest pain", "bleeding", "fire"), skip all introductions. Provide immediate survival protocols and ask diagnostic follow-up questions to assess risk level.
 
 INTERACTION STYLE:
 1. CALM & DIRECT: No fluff. Use clear, numbered lists for actions.
-2. DIAGNOSTIC: If the situation is vague, ask one critical question.
+2. DIAGNOSTIC: Ask 1-3 critical questions to narrow down life-threatening risks.
 3. ADAPTIVE: Tailor guidance for specific injuries (Bleeding, Cardiac, Choking, Stroke, Chest Pain) or disasters (Seismic, Flood, Fire).
-4. SAFETY FIRST: Remind them to contact local emergency services (911/112) at the end of the response.
+4. SAFETY FIRST: Remind them to contact local emergency services (911/112) if necessary.
 
 User Input: {{{query}}}`,
 });
@@ -65,76 +68,77 @@ const emergencyAssistantGuidanceFlow = ai.defineFlow(
       if (!output) throw new Error('AI Timeout');
       return output;
     } catch (error) {
-      // HIGH-FIDELITY RESILIENT FALLBACK ENGINE
+      // HIGH-FIDELITY ZERO-DELAY FALLBACK ENGINE
+      // This bypasses generic "I am offline" messages in favor of context-aware guidance.
       const q = input.query.toLowerCase();
       
       // Cardiac / Chest Pain
-      if (q.includes('chest') || q.includes('heart') || q.includes('pain in chest')) {
+      if (q.includes('chest') || q.includes('heart') || q.includes('pain')) {
         return {
-          guidance: "Chest pain protocol initiated. Please try to remain as calm and still as possible.\n\n1. Sit down and avoid any physical exertion.\n2. Loosen tight clothing around the neck and waist.\n3. If you have prescribed nitroglycerin, take it now.\n4. Prepare for immediate medical transport.",
+          guidance: "Chest pain protocol initiated. Please try to remain as calm and still as possible.\n\n1. Sit down immediately and avoid any physical activity.\n2. Loosen tight clothing around the neck and waist.\n3. If symptoms worsen or spread to the jaw/arm, activate SOS immediately.",
           category: 'medical',
-          followUpQuestions: ["Difficulty breathing?", "Pain in arm/jaw?", "Dizziness/Sweating?"]
+          followUpQuestions: ["Are you having difficulty breathing?", "Is the pain spreading to your arm or jaw?", "Do you feel dizzy or sweaty?"]
         };
       }
 
       // Bleeding
-      if (q.includes('bleed') || q.includes('blood') || q.includes('cut')) {
+      if (q.includes('bleed') || q.includes('blood') || q.includes('cut') || q.includes('wound')) {
         return {
-          guidance: "Hemorrhage control initiated. Immediate action required.\n\n1. Apply firm, direct pressure to the wound with a clean cloth or bandage.\n2. If the cloth becomes soaked, do not remove it; add another layer on top.\n3. Keep the injured area elevated above heart level if possible.\n4. If bleeding is life-threatening and on a limb, consider a tourniquet if trained.",
+          guidance: "Hemorrhage control initiated. Immediate action required.\n\n1. Apply firm, direct pressure to the wound with a clean cloth.\n2. If the cloth becomes soaked, add another layer on top; do not remove the first one.\n3. Keep the injured area elevated above heart level if possible.",
           category: 'medical',
-          followUpQuestions: ["Wound is deep/gaping", "Victim is pale/dizzy", "Bleeding is pulsing"]
+          followUpQuestions: ["Is the bleeding pulsing or spurting?", "Is the victim pale or dizzy?", "Is the wound deep or gaping?"]
         };
       }
 
-      // Airway / Choking
+      // Airway / Choking / Breathing
       if (q.includes('breath') || q.includes('choke') || q.includes('airway') || q.includes('cant breathe')) {
         return {
-          guidance: "Airway and breathing protocol active.\n\n1. If the person is choking and cannot speak, perform 5 back blows followed by 5 abdominal thrusts (Heimlich maneuver).\n2. If they are struggling to breathe but conscious, help them sit upright.\n3. Check for any obstructions in the mouth.\n4. If they stop breathing, begin chest-only CPR immediately.",
+          guidance: "Airway and breathing protocol active.\n\n1. If the person is choking and cannot speak, perform 5 abdominal thrusts (Heimlich maneuver).\n2. If struggling to breathe, help the person sit upright and keep their neck straight.\n3. Check for obstructions in the mouth.",
           category: 'medical',
-          followUpQuestions: ["Victim is unconscious?", "Turning blue?", "Allergic reaction?"]
+          followUpQuestions: ["Are they turning blue?", "Is the person conscious?", "Is this an allergic reaction?"]
         };
       }
 
-      // Fire
-      if (q.includes('fire') || q.includes('smoke') || q.includes('burning')) {
+      // Fire / Smoke
+      if (q.includes('fire') || q.includes('smoke') || q.includes('burn')) {
         return {
-          guidance: "Fire safety protocol active. Immediate evacuation is the priority.\n\n1. Evacuate the building immediately using the nearest exit.\n2. If there is smoke, stay low to the floor where the air is cleaner.\n3. Feel doors with the back of your hand before opening; if hot, find another route.\n4. Do not use elevators.",
+          guidance: "Fire safety protocol active. Immediate evacuation is the priority.\n\n1. Evacuate the building immediately using the nearest exit.\n2. Stay low to the floor where the air is cleaner.\n3. Feel doors with the back of your hand; if hot, do not open.",
           category: 'safety',
-          followUpQuestions: ["Trapped in room?", "Smell gas?", "Injuries from burns?"]
+          followUpQuestions: ["Are you trapped in a room?", "Can you smell gas?", "Are there injuries from burns?"]
         };
       }
 
       // Earthquake
       if (q.includes('quake') || q.includes('earthquake') || q.includes('shake')) {
         return {
-          guidance: "Seismic survival protocol active.\n\n1. DROP, COVER, and HOLD ON immediately.\n2. Stay under a sturdy table or desk. Stay away from windows and heavy furniture.\n3. If outdoors, move to an open area away from buildings, power lines, and trees.\n4. Stay where you are until the shaking stops.",
+          guidance: "Seismic survival protocol active.\n\n1. DROP, COVER, and HOLD ON immediately.\n2. Stay under a sturdy table or desk. Stay away from windows.\n3. If outdoors, move to an open area away from buildings and power lines.",
           category: 'disaster',
-          followUpQuestions: ["Smell gas leaks?", "Structural damage?", "People trapped?"]
-        };
-      }
-
-      // Flood
-      if (q.includes('flood') || q.includes('water') || q.includes('rising')) {
-        return {
-          guidance: "Flood emergency protocol active.\n\n1. Move to higher ground immediately. If in a building, go to the highest floor.\n2. Never walk, swim, or drive through moving water. Just 6 inches can knock you over.\n3. Avoid contact with floodwater; it may be contaminated or electrically charged.\n4. Turn off utilities at the main switches if safe to do so.",
-          category: 'disaster',
-          followUpQuestions: ["Trapped by water?", "Power is still on?", "Medical emergency?"]
+          followUpQuestions: ["Do you smell gas?", "Is there structural damage?", "Is anyone trapped?"]
         };
       }
 
       // Unconscious
       if (q.includes('unconscious') || q.includes('passed out') || q.includes('not waking up')) {
         return {
-          guidance: "Unresponsive victim protocol active.\n\n1. Check for breathing and a pulse.\n2. If breathing, place them in the recovery position (on their side).\n3. If NOT breathing, begin chest compressions immediately (100-120 per minute).\n4. Do not leave the victim alone; stay with them until help arrives.",
+          guidance: "Unresponsive victim protocol active.\n\n1. Check for breathing and a pulse.\n2. If breathing, place them in the recovery position (on their side).\n3. If NOT breathing, prepare to perform chest compressions (100-120 per minute).",
           category: 'medical',
-          followUpQuestions: ["Victim is breathing?", "How to do CPR?", "Head injury suspected?"]
+          followUpQuestions: ["Is the victim breathing?", "Is there a head injury?", "How long have they been unresponsive?"]
+        };
+      }
+
+      // Flood / Water
+      if (q.includes('flood') || q.includes('water') || q.includes('rising')) {
+        return {
+          guidance: "Flood emergency protocol active.\n\n1. Move to higher ground immediately. Do not stay in a basement.\n2. Never walk, swim, or drive through moving water.\n3. Avoid contact with floodwater; it may be contaminated or charged.",
+          category: 'disaster',
+          followUpQuestions: ["Are you trapped by rising water?", "Is the power still on?", "Is there a medical emergency?"]
         };
       }
 
       return {
-        guidance: "I am AXON-AI, your emergency assistant. Please describe the situation or your symptoms clearly (e.g., 'chest pain', 'severe bleeding', 'house fire') so I can provide the correct survival protocol immediately.",
+        guidance: "I am AXON-AI, your emergency assistant. Please describe the situation or symptoms (e.g., 'chest pain', 'fire') so I can provide the correct survival protocol immediately.",
         category: 'safety',
-        followUpQuestions: ["Medical Issue", "Natural Disaster", "Fire/Smoke", "Personal Safety"]
+        followUpQuestions: ["Medical Emergency", "Fire/Smoke", "Natural Disaster", "Personal Safety"]
       };
     }
   }
