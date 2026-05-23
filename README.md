@@ -69,9 +69,23 @@ AXON-AI is designed for:
 - Emergency Responder Integration  
 - AI-Based Risk Prediction Systems  
 
+---
+# 🌐 Live Demo
+https://axon-ai-jade-delta.vercel.app/
 
 ---
 
+# 💻 Installation
+
+git clone https://github.com/appumuchandi/Axon-AI
+
+cd axon-ai
+
+npm install
+
+npm run dev
+
+---
 
 # 👨‍💻 Team
 
