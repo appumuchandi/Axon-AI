@@ -1,5 +1,4 @@
-
-import type {Metadata} from 'next';
+import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { FirebaseClientProvider } from "@/firebase/client-provider";
@@ -7,6 +6,12 @@ import { FirebaseClientProvider } from "@/firebase/client-provider";
 export const metadata: Metadata = {
   title: 'AXON-AI | Emergency Intelligence Platform',
   description: 'AI-powered emergency assistance and disaster resilience platform.',
+  manifest: '/manifest.json',
+  themeColor: '#00BFFF',
+  icons: {
+    icon: '/icon-192.png',
+    apple: '/icon-192.png',
+  },
 };
 
 export default function RootLayout({
