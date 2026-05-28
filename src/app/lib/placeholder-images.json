@@ -1,0 +1,22 @@
+{
+  "placeholderImages": [
+    {
+      "id": "hero-emergency",
+      "description": "Emergency services responding to a situation",
+      "imageUrl": "https://picsum.photos/seed/axon1/1200/600",
+      "imageHint": "emergency rescue"
+    },
+    {
+      "id": "first-aid-kit",
+      "description": "A well-stocked first aid kit",
+      "imageUrl": "https://picsum.photos/seed/axon2/400/300",
+      "imageHint": "first aid"
+    },
+    {
+      "id": "disaster-relief",
+      "description": "Satellite view of disaster response",
+      "imageUrl": "https://picsum.photos/seed/axon3/800/400",
+      "imageHint": "disaster response"
+    }
+  ]
+}
